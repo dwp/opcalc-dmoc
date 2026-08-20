@@ -1,0 +1,127 @@
+{#
+  app/views/a14-tables.html
+
+  One macro that renders any of the A14 tables from what routes.js has stored,
+  so the six tables across the three A14 forms all behave the same way.
+
+  Use it by importing at the top of an A14 form page, below the extends line:
+
+    {% from "a14-tables.html" import a14Table %}
+
+  Then replace a static govukTable with a call. For the benefit weeks table on
+  the BWE/BWC tab:
+
+    {{ a14Table(
+      data.a14BenefitWeeks,
+      [
+        { text: "Start date", field: "bwDateOfChange" },
+        { text: "Pay day", field: "benefitPayDay" },
+        { text: "Ben week", field: "benefitWeekType" },
+        { text: "Part week(s)", field: "partWeeks" }
+      ],
+      "No benefit weeks recorded",
+      "a14BenefitWeeks",
+      "/A14pcispc/a14#bwe-bwc"
+    ) }}
+
+  The arguments are:
+
+    rows       the stored array - data.a14BenefitWeeks, data.a14Exclusions,
+               data.a14Benefits, data.a14OtherIncome, data.a14Dependants,
+               data.a14NonDependants
+    columns    what to show, in order. field is the name attribute of the
+               input on the sub-page. A date input's three fields are also
+               joined under its prefix, so use the prefix rather than -day
+    emptyText  the line shown when nothing has been added yet
+    key        the same array name again, so Delete knows what to remove from
+    returnTo   where Delete comes back to - this page and tab
+
+  If a column is blank when you expect a value, the field name does not match
+  the input on the sub-page. Add ?show-fields=yes to the page address to list
+  the field names actually stored against each row.
+#}
+
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/details/macro.njk" import govukDetails %}
+
+{% macro a14Table(rows, columns, emptyText, key, returnTo) %}
+
+  {% set list = rows if rows else [] %}
+
+  {# The Actions column only appears once there is a row to act on, so an
+     empty table does not carry a header for something that is not there. #}
+  {% set head = [] %}
+  {% for column in columns %}
+    {% set _ = head.push({ text: column.text }) %}
+  {% endfor %}
+  {% if list | length and key %}
+    {% set _ = head.push({ text: "Actions" }) %}
+  {% endif %}
+
+  {% set tableRows = [] %}
+
+  {% for row in list %}
+    {% set cells = [] %}
+    {% for column in columns %}
+      {% set names = column.field if column.field is iterable and column.field is not string else [column.field] %}
+      {% set found = [] %}
+      {% for name in names %}
+        {% if row[name] and not found | length %}
+          {% set _ = found.push(row[name]) %}
+        {% endif %}
+      {% endfor %}
+      {% set _ = cells.push({ text: found[0] if found | length else "" }) %}
+    {% endfor %}
+    {% if key %}
+      {# Edit reopens the sub-page this entry was made on, prefilled. Rows
+         saved before Edit existed have no page recorded, so they only offer
+         Delete - add them again and Edit appears. #}
+      {% set actions = [] %}
+
+      {% if row._page %}
+        {% set _ = actions.push('<a class="govuk-link" href="/a14-row-edit?key=' + key +
+          '&index=' + loop.index0 +
+          '&returnTo=' + (returnTo | urlencode) +
+          '">Edit<span class="govuk-visually-hidden"> row ' + loop.index + '</span></a>') %}
+      {% endif %}
+
+      {% set _ = actions.push('<a class="govuk-link" href="/a14-row-delete?key=' + key +
+        '&index=' + loop.index0 +
+        '&returnTo=' + (returnTo | urlencode) +
+        '">Delete<span class="govuk-visually-hidden"> row ' + loop.index + '</span></a>') %}
+
+      {% set _ = cells.push({ html: actions | join(' | ') }) %}
+    {% endif %}
+    {% set _ = tableRows.push(cells) %}
+  {% endfor %}
+
+  {% if not list | length %}
+    {% set cells = [{ html: '<span class="govuk-hint">' + emptyText + '</span>' }] %}
+    {% for column in columns %}
+      {% if not loop.first %}
+        {% set _ = cells.push({ text: "" }) %}
+      {% endif %}
+    {% endfor %}
+    {% set _ = tableRows.push(cells) %}
+  {% endif %}
+
+  {{ govukTable({ head: head, rows: tableRows }) }}
+
+{% endmacro %}
+
+
+{#
+  Lists the field names stored against each row, so a column that comes out
+  blank can be matched to the right input name. Add ?show-fields=yes to the
+  page address to see it.
+#}
+{% macro a14Fields(rows, title) %}
+  {% set list = rows if rows else [] %}
+
+  {% if list | length %}
+    {{ govukDetails({
+      summaryText: "Field names stored for " + title,
+      html: '<code class="govuk-body-s">' + (list[0] | dump) + '</code>'
+    }) }}
+  {% endif %}
+{% endmacro %}

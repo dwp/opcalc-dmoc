@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-  Copy form – OpCalc – GOV.UK Prototype Kit
+  Non-dependant's earnings – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
@@ -37,7 +37,7 @@
 {% block containerStart %}
   {{ govukBackLink({
     text: "Back",
-    href: "/a14/a14forms"
+    href: "/nondependants"
   }) }}
 {% endblock %}
 
@@ -47,42 +47,43 @@
     <div class="govuk-grid-column-two-thirds">
 
       <h1 class="govuk-heading-l">
-        Copy form
+        Non-dependant's earnings
       </h1>
 
-      <p class="govuk-body">
-        Copy form A14 Forms dated 10/07/2015 to:
-      </p>
+      <form action="/nondependants" method="post">
 
-      <form action="/a14forms" method="post">
+        {{ govukInput({
+          id: "nd-earnings-name",
+          name: "ndEarningsName",
+          label: {
+            text: "Name"
+          },
+          value: data.ndEarningsName
+        }) }}
 
-        {{ govukDateInput({
-          id: "copy-start-date",
-          namePrefix: "copyStartDate",
-          fieldset: {
-            legend: {
-              text: "Start date"
-            }
+        {{ govukInput({
+          id: "nd-earnings-amount",
+          name: "ndEarningsAmount",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Earnings"
           },
           hint: {
-            text: "Form cannot be copied to itself. Choose a different start date."
+            text: "Please enter a valid earnings amount"
           },
-          items: [
-            { name: "day", classes: "govuk-input--width-2", value: data["copyStartDate-day"] if data["copyStartDate-day"] else "10" },
-            { name: "month", classes: "govuk-input--width-2", value: data["copyStartDate-month"] if data["copyStartDate-month"] else "07" },
-            { name: "year", classes: "govuk-input--width-4", value: data["copyStartDate-year"] if data["copyStartDate-year"] else "2015" }
-          ]
+          value: data.ndEarningsAmount if data.ndEarningsAmount else "0.00"
         }) }}
 
         <div class="govuk-button-group">
           {{ govukButton({
-            text: "Continue",
+            text: "Save",
             type: "submit"
           }) }}
 
           {{ govukButton({
             text: "Cancel",
-            href: "/a14forms",
+            href: "/nondependants",
             classes: "govuk-button--secondary"
           }) }}
         </div>
@@ -90,7 +91,7 @@
       </form>
 
       <p>
-        <a href="#">Get help copying a form</a>
+        <a href="#">Get help with non-dependant's earnings</a>
       </p>
 
     </div>

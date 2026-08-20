@@ -1,13 +1,59 @@
 {% extends "layouts/main.html" %}
 
+{# ------------------------------------------------------------------------- #}
+{# The benefit list                                                          #}
+{# ------------------------------------------------------------------------- #}
+{#                                                                           #}
+{# The value is the code stored against the case. It decides which A14 form  #}
+{# and which DCC open later, so these codes must match the benefits object   #}
+{# at the top of the A14 section in routes.js.                               #}
+{#                                                                           #}
+{# available: false greys the option out. Only the three benefits with an    #}
+{# A14 form built are selectable. To turn one on, set it to true here and    #}
+{# set available: true against the same code in routes.js.                   #}
+
+{% set benefits = [
+  { value: "AA",      text: "Attendance Allowance (AA)",                     available: false },
+  { value: "BA",      text: "Bereavement Allowance (BA)",                    available: false },
+  { value: "DLA",     text: "Disability Living Allowance (DLA)",             available: false },
+  { value: "ESA",     text: "Employment and Support Allowance (ESA)",        available: true },
+  { value: "IB",      text: "Incapacity Benefit (IB)",                       available: false },
+  { value: "IS",      text: "Income Support (IS)",                           available: false },
+  { value: "IS-JSA",  text: "Income Support/Jobseeker’s Allowance (IS/JSA)", available: true },
+  { value: "IS-PC",   text: "Income Support/Pension Credit (IS/PC)",         available: true },
+  { value: "IVB",     text: "Invalidity Benefit (IVB)",                      available: false },
+  { value: "IVB-IB",  text: "Invalidity/Incapacity Benefit (IVB/IB)",        available: false },
+  { value: "JSA",     text: "Jobseeker’s Allowance (JSA)",                   available: false },
+  { value: "MA",      text: "Maternity Allowance (MA)",                      available: false },
+  { value: "PIB",     text: "Passported Incapacity Benefit (PIB)",           available: false },
+  { value: "PC",      text: "Pension Credit (PC)",                           available: false },
+  { value: "RP",      text: "Retirement Pension (RP)",                       available: false },
+  { value: "SDA",     text: "Severe Disablement Allowance (SDA)",            available: false },
+  { value: "SB",      text: "Sickness Benefit (SB)",                         available: false },
+  { value: "WMA",     text: "Widowed Mother’s Allowance (WMA)",              available: false },
+  { value: "WPA",     text: "Widowed Parent’s Allowance (WPA)",              available: false },
+  { value: "WP",      text: "Widow’s Pension (WP)",                          available: false }
+] %}
+
+{% set benefitItems = [] %}
+
+{% for benefit in benefits %}
+  {% set _ = benefitItems.push({
+    value: benefit.value,
+    text: benefit.text,
+    checked: data.benefit == benefit.value,
+    disabled: not benefit.available
+  }) %}
+{% endfor %}
+
 {% block pageTitle %}
-  Start page – OpCalc – GOV.UK Prototype Kit
+  {{ "Error: " if data.benefitError }}Which benefit is this case for? – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
   {{ dwpHeader({
     serviceName: "OpCalc",
-    serviceHref: "/",
+    serviceHref: "/onboarding/landing-page",
     container: true
   }) }}
 {% endblock %}
@@ -40,195 +86,54 @@
     }
   }) }}
 {% endblock %}
- 
+
 {% block content %}
- 
+
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
- 
-      <h1 class="govuk-heading-l">
-        Which benefit is this case for?
-      </h1>
- 
-      <!-- <p>
-        This sets the tabs, calculations and forms avaliable for the rest of the case.
-      </p> -->
 
-      <div id="changedName-hint" class="govuk-hint">
-      This sets the tabs, calculations and forms avaliable for the rest of the case
-    </div>
+      {% if data.benefitError %}
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: [
+            {
+              text: data.benefitError,
+              href: "#benefit"
+            }
+          ]
+        }) }}
+      {% endif %}
 
+      {# The question is the only thing on the page, so the legend is the
+         heading rather than sitting above one. #}
+      <form action="/select-benefit-continue" method="post" novalidate>
 
-      <div class="govuk-form-group">
-  <fieldset class="govuk-fieldset">
-    <div class="govuk-radios" data-module="govuk-radios">
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive" name="whereDoYouLive" type="radio" value="england">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive">
-          Attendance Allowance (AA)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive-2" name="whereDoYouLive" type="radio" value="scotland">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive-2">
-          Bereavement Allowance (BA)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive-3" name="whereDoYouLive" type="radio" value="wales">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive-3">
-          Disability Living Allowance (DLA)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive-4" name="whereDoYouLive" type="radio" value="northern-ireland">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive-4">
-          Employment and Support Allowance (ESA)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive" name="whereDoYouLive" type="radio" value="england">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive">
-          Incapacity Benefit (IB)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive-2" name="whereDoYouLive" type="radio" value="scotland">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive-2">
-          Income Support (IS)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive-3" name="whereDoYouLive" type="radio" value="wales">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive-3">
-          Income Support/Jobseeker’s Allowance (IS/JSA)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive-4" name="whereDoYouLive" type="radio" value="northern-ireland">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive-4">
-          Income Support/Pension Credit (IS/PC)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive" name="whereDoYouLive" type="radio" value="england">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive">
-          Invalidity Benefit (IVB)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive-2" name="whereDoYouLive" type="radio" value="scotland">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive-2">
-          Invalidity/Incapacity Benefit (IVB/IB)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive-3" name="whereDoYouLive" type="radio" value="wales">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive-3">
-          Jobseeker’s Allowance (JSA)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive-4" name="whereDoYouLive" type="radio" value="northern-ireland">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive-4">
-          Maternity Allowance (MA)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive-4" name="whereDoYouLive" type="radio" value="northern-ireland">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive-4">
-          Passported Incapacity Benefit (PIB)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive-4" name="whereDoYouLive" type="radio" value="northern-ireland">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive-4">
-          Pension Credit (PC)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive-4" name="whereDoYouLive" type="radio" value="northern-ireland">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive-4">
-          Retirement Pension (RP)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive-4" name="whereDoYouLive" type="radio" value="northern-ireland">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive-4">
-          Severe Disablement Allowance (SDA)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive-4" name="whereDoYouLive" type="radio" value="northern-ireland">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive-4">
-          Sickness Benefit (SB)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive-4" name="whereDoYouLive" type="radio" value="northern-ireland">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive-4">
-          Widowed Mother’s Allowance (WMA)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive-4" name="whereDoYouLive" type="radio" value="northern-ireland">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive-4">
-          Widowed Parent’s Allowance (WPA)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive-4" name="whereDoYouLive" type="radio" value="northern-ireland">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive-4">
-          Widow’s Pension (WP)
-        </label>
-      </div>
-    </div>
-  </fieldset>
-</div>
- 
-     <!-- {% from "govuk/components/select/macro.njk" import govukSelect %}
- 
-{{ govukSelect({
-  id: "sort",
-  name: "sort",
-  label: {
-    text: "Choose a benefit"
-  },
-  items: [
-    {
-      value: "published",
-      text: "Attendance Allowance (AA)"
-    },
-    {
-      value: "updated",
-      text: "Berevement Allowance (BA)",
-      selected: true
-    },
-    {
-      value: "views",
-      text: "DLA Care & Mobility"
-    },
-    {
-      value: "comments",
-      text: "DLA Mobility Component"
-    },
-    {
-      value: "comments",
-      text: "Employment and Support Allowance (ESA)"
-    },
-     {
-      value: "comments",
-      text: "Incapacity Benefit (IB)"
-    }
-  ]
-}) }} -->
- 
-{{ govukButton({
-        text: "Continue",
-        href: "/customer-details/benefits-details"
-      }) }}
- 
+        {{ govukRadios({
+          idPrefix: "benefit",
+          name: "benefit",
+          fieldset: {
+            legend: {
+              text: "Which benefit is this case for?",
+              isPageHeading: true,
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          hint: {
+            text: "This sets the tabs, calculations and forms available for the rest of the case. Benefits without an A14 form in this prototype cannot be selected."
+          },
+          errorMessage: { text: data.benefitError } if data.benefitError else false,
+          items: benefitItems
+        }) }}
+
+        {{ govukButton({
+          text: "Continue",
+          type: "submit",
+          preventDoubleClick: true
+        }) }}
+
+      </form>
+
     </div>
   </div>
- 
+
 {% endblock %}

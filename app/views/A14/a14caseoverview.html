@@ -7,7 +7,7 @@
 {% block header %}
   {{ dwpHeader({
     serviceName: "OpCalc",
-    serviceHref: "/landingpage",
+    serviceHref: "/onboarding/landing-page",
     container: true
   }) }}
 {% endblock %}
@@ -35,16 +35,9 @@
 {% endblock %}
 
 {% block containerStart %}
-  {{ govukBreadcrumbs({
-    items: [
-      {
-        text: "OpCalc",
-        href: "/landingpage"
-      },
-      {
-        text: "Case overview"
-      }
-    ]
+  {{ govukBackLink({
+    text: "Back",
+    href: "javascript:window.history.back()"
   }) }}
 {% endblock %}
 
@@ -74,12 +67,12 @@
           [
             { text: "Customer Details" },
             { text: "Mr Max Martin" },
-            { html: '<a class="govuk-link" href="/customerdetails">View<span class="govuk-visually-hidden"> customer details</span></a> | <a class="govuk-link" href="/customerdetails">Edit<span class="govuk-visually-hidden"> customer details</span></a>' }
+            { html: '<a class="govuk-link" href="/customer-details/check-your-answers">View<span class="govuk-visually-hidden"> customer details</span></a> | <a class="govuk-link" href="/customer-details/personal-details">Edit<span class="govuk-visually-hidden"> customer details</span></a>' }
           ],
           [
             { text: "A14 Forms" },
             { text: "A14PC: 10/07/2015 to 16/07/2026, 13 forms" },
-            { html: '<a class="govuk-link" href="/a14forms">View<span class="govuk-visually-hidden"> the A14 forms</span></a> | <a class="govuk-link" href="/a14isjsa">Edit<span class="govuk-visually-hidden"> the A14 form</span></a>' }
+            { html: '<a class="govuk-link" href="a14forms.html">View<span class="govuk-visually-hidden"> the A14 forms</span></a> | <a class="govuk-link" href="/A14/A14">Edit<span class="govuk-visually-hidden"> the A14 form</span></a>' }
           ],
           [
             { text: "QB16 Entry Details" },
@@ -99,9 +92,9 @@
       </h2>
 
       <ul class="govuk-list">
-        <li><a class="govuk-link" href="/a14forms">Print A14 PDFs</a></li>
-        <li><a class="govuk-link" href="/a14caseprintselection">Print PDFs for this case</a></li>
-        <li><a class="govuk-link" href="/opcalctype">Back to the full case overview</a></li>
+        <li><a class="govuk-link" href="/A14/a14forms.html">Print A14 PDFs</a></li>
+        <li><a class="govuk-link" href="/A14/a14caseprintselection">Print PDFs for this case</a></li>
+        <li><a class="govuk-link" href="/onboarding/case-overview">Back to the full case overview</a></li>
       </ul>
 
     </div>

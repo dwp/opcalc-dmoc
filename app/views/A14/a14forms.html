@@ -7,7 +7,7 @@
 {% block header %}
   {{ dwpHeader({
     serviceName: "OpCalc",
-    serviceHref: "/landingpage",
+    serviceHref: "/onboarding/landing-page",
     container: true
   }) }}
 {% endblock %}
@@ -37,7 +37,7 @@
 {% block containerStart %}
   {{ govukBackLink({
     text: "Back",
-    href: "/opcalctype"
+    href: "a14caseoverview"
   }) }}
 {% endblock %}
 
@@ -63,7 +63,7 @@
 
       <p class="govuk-body">Select a form to print its PDF on its own, or print PDFs for every form on this case.</p>
 
-      <form action="/a14PDF" method="post">
+      <form action="/A14/a14PDF" method="post">
 
         <fieldset class="govuk-fieldset">
 
@@ -117,9 +117,9 @@
                   <td class="govuk-table__cell">{{ a14.generated }}</td>
                   <td class="govuk-table__cell">{{ a14.reason }}</td>
                   <td class="govuk-table__cell">
-                    <a class="govuk-link" href="/a14PDF">View<span class="govuk-visually-hidden"> {{ a14.ref }}</span></a>
+                    <a class="govuk-link" href="/A14/a14PDF">View<span class="govuk-visually-hidden"> {{ a14.ref }}</span></a>
                     |
-                    <a class="govuk-link" href="/copyforma14">Copy<span class="govuk-visually-hidden"> {{ a14.ref }}</span></a>
+                    <a class="govuk-link" href="/A14/Copy">Copy<span class="govuk-visually-hidden"> {{ a14.ref }}</span></a>
                   </td>
                 </tr>
               {% endfor %}
@@ -146,7 +146,7 @@
 
           {{ govukButton({
             text: "Back to case overview",
-            href: "/opcalctype",
+            href: "/Onboarding/case-overview",
             classes: "govuk-button--secondary"
           }) }}
         </div>
@@ -156,8 +156,8 @@
       <h2 class="govuk-heading-m">Manage forms</h2>
 
       <ul class="govuk-list">
-        <li><a class="govuk-link" href="/newform">New A14 form</a></li>
-        <li><a class="govuk-link" href="/a14isjsa">Edit the selected form</a></li>
+        <li><a class="govuk-link" href="/a14/newform">New A14 form</a></li>
+        <li><a class="govuk-link" href="/a14">Edit the selected form</a></li>
         <li><a class="govuk-link" href="#">Delete the selected form</a></li>
       </ul>
 

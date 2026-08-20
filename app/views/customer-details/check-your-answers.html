@@ -7,7 +7,7 @@
 {% block header %}
   {{ dwpHeader({
     serviceName: "OpCalc",
-    serviceHref: "/",
+    serviceHref: "/onboarding/landing-page",
     container: true
   }) }}
 {% endblock %}
@@ -61,7 +61,7 @@
             actions: {
               items: [
                 {
-                  href: "#",
+                  href: "/customer-details/personal-details",
                   text: "Change",
                   visuallyHiddenText: "Question 1"
                 }
@@ -79,7 +79,7 @@
             actions: {
               items: [
                 {
-                  href: "#",
+                  href: "/customer-details/appointee-other-details",
                   text: "Change",
                   visuallyHiddenText: "Question 2"
                 }
@@ -97,7 +97,7 @@
             actions: {
               items: [
                 {
-                  href: "#",
+                  href: "/customer-details/benefit-details",
                   text: "Change",
                   visuallyHiddenText: "Question 3"
                 }
@@ -115,7 +115,7 @@
         You are confirming that, to the best of your knowledge, the details you are providing are correct.
       </p> -->
 
-      <form action="/case-overview-confirmation" method="post" novalidate>
+      <form action="/Onboarding/case-overview-confirmation" method="post" novalidate>
 
         {{ govukButton({
           text: "Confirm and create case"

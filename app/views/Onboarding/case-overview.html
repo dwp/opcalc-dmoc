@@ -1,0 +1,273 @@
+{% extends "layouts/main.html" %}
+
+{#
+  The one case overview.
+
+  This page had a task list with statuses; /A14/a14caseoverview had a table
+  with View and Edit actions. Two pages showing the same case, disagreeing
+  about how to show it. This is both, in one component.
+
+  A task list is the wrong pattern here: it is designed for a run of tasks
+  with exactly one link each. A case record needs View and Edit side by side,
+  and only a table gives you that. So the statuses stay - as tags in a Status
+  column - and the actions sit next to them.
+
+  Statuses are worked out from the case rather than hard-coded, so a row turns
+  green when the thing it names has actually been done.
+#}
+
+{% set customerName = data.firstName + " " + data.surname if data.surname else "Mr Max Martin" %}
+{% set caseRef = data.nino if data.nino else "AB 12 34 56 C" %}
+
+{# Written as single expressions rather than if blocks: a block at the top
+   level of a template that extends another does not always run, and a value
+   set inside one comes out empty.
+
+   Dates are padded so 16/7/2026 reads as 16/07/2026, matching how every other
+   date in OpCalc is shown. #}
+{% set fromDay = ("0" + data["discrepancyFrom-day"]) if data["discrepancyFrom-day"] | length == 1 else data["discrepancyFrom-day"] %}
+{% set fromMonth = ("0" + data["discrepancyFrom-month"]) if data["discrepancyFrom-month"] | length == 1 else data["discrepancyFrom-month"] %}
+{% set toDay = ("0" + data["discrepancyTo-day"]) if data["discrepancyTo-day"] | length == 1 else data["discrepancyTo-day"] %}
+{% set toMonth = ("0" + data["discrepancyTo-month"]) if data["discrepancyTo-month"] | length == 1 else data["discrepancyTo-month"] %}
+
+{% set discrepancyPeriod = (
+  fromDay + "/" + fromMonth + "/" + data["discrepancyFrom-year"] +
+  " to " +
+  toDay + "/" + toMonth + "/" + data["discrepancyTo-year"]
+) if (data["discrepancyFrom-year"] and data["discrepancyTo-year"]) else "" %}
+
+{% set a14Reference = (
+  (data.benefitLabel if data.benefitLabel else "A14 forms") +
+  (", " + discrepancyPeriod if discrepancyPeriod else "")
+) if data.a14Complete else "" %}
+
+{% block pageTitle %}
+  Case overview – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+
+      {# Set by routes.js when something has just been done, and cleared as
+         soon as you navigate away - so it confirms an action rather than
+         hanging around on every visit.
+
+         Written as plain markup rather than calling govukNotificationBanner.
+         The macro is only available on a page if your kit registers it as a
+         global, and if it is not, the call renders nothing at all - silently.
+         This is the same markup the macro produces, so it looks identical and
+         cannot fail that way. #}
+      {% if data.caseBanner %}
+        <div class="govuk-notification-banner govuk-notification-banner--success"
+             role="alert"
+             aria-labelledby="govuk-notification-banner-title"
+             data-module="govuk-notification-banner">
+          <div class="govuk-notification-banner__header">
+            <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
+              Success
+            </h2>
+          </div>
+          <div class="govuk-notification-banner__content">
+            {% if data.caseBanner == "a14" %}
+              <h3 class="govuk-notification-banner__heading">A14 forms generated</h3>
+              <p class="govuk-body">
+                {{ data.benefitLabel if data.benefitLabel else "The A14 forms" }}{{ " covering " + discrepancyPeriod if discrepancyPeriod }}.
+              </p>
+            {% elif data.caseBanner == "dcc" %}
+              <h3 class="govuk-notification-banner__heading">Diminishing capital calculation run</h3>
+            {% elif data.caseBanner == "saved" %}
+              <h3 class="govuk-notification-banner__heading">Case saved</h3>
+            {% else %}
+              <h3 class="govuk-notification-banner__heading">Done</h3>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+
+      <h1 class="govuk-heading-l">Case overview</h1>
+
+      <p class="govuk-body">
+        {{ customerName }} &nbsp;·&nbsp; {{ caseRef }}{{ " · " + discrepancyPeriod if discrepancyPeriod }}
+      </p>
+
+      {#
+        Every row is described the same way, so the table below is built from
+        this rather than written out ten times.
+
+          status   completed | incomplete | inactive
+          ref      what identifies the record, when there is one
+          view     where to look at it
+          edit     where to change it
+          start    where to create it, when it does not exist yet
+
+        A row with no view, edit or start shows no actions - which is how the
+        parts of OpCalc that are not built yet stay honest.
+      #}
+      {% set records = [
+        {
+          name: "Customer details",
+          status: "completed" if data.surname or data.nino else "incomplete",
+          ref: customerName,
+          view: "/customer-details/check-your-answers",
+          edit: "/customer-details/personal-details",
+          start: "/customer-details/personal-details"
+        },
+        {
+          name: "A14 forms",
+          status: "completed" if data.a14Complete else "incomplete",
+          ref: a14Reference,
+          view: "/A14/a14forms",
+          edit: "/a14",
+          start: "/A14/newform"
+        },
+        {
+          name: "BA3 entry details",
+          status: "inactive"
+        },
+        {
+          name: "QB16 entry details",
+          status: "completed" if data.qb16Complete else "incomplete",
+          ref: "",
+          view: "/qb16listofentries",
+          edit: "/qb16listofentries",
+          start: "/qb16listofentries"
+        },
+        {
+          name: "Family credit calculations",
+          status: "inactive"
+        },
+        {
+          name: "Housing cost loans",
+          status: "inactive"
+        },
+        {
+          name: "Diminishing capital calculation",
+          status: "completed" if data.dccComplete else "incomplete",
+          ref: "",
+          view: "/opcalctype",
+          edit: "/opcalctype",
+          start: "/opcalctype"
+        },
+        {
+          name: "Average hours calculation",
+          status: "inactive"
+        },
+        {
+          name: "Average earnings calculation",
+          status: "inactive"
+        },
+        {
+          name: "QB33 entry details",
+          status: "inactive"
+        }
+      ] %}
+
+      {% set tags = {
+        "completed": '<strong class="govuk-tag govuk-tag--green">Completed</strong>',
+        "incomplete": '<strong class="govuk-tag govuk-tag--blue">Incomplete</strong>',
+        "inactive": '<strong class="govuk-tag govuk-tag--grey">Inactive</strong>'
+      } %}
+
+      {% set rows = [] %}
+
+      {% for record in records %}
+        {% set actions = [] %}
+
+        {% if record.status == "completed" %}
+          {% if record.view %}
+            {% set _ = actions.push('<a class="govuk-link" href="' + record.view +
+              '">View<span class="govuk-visually-hidden"> ' + record.name + '</span></a>') %}
+          {% endif %}
+          {% if record.edit %}
+            {% set _ = actions.push('<a class="govuk-link" href="' + record.edit +
+              '">Edit<span class="govuk-visually-hidden"> ' + record.name + '</span></a>') %}
+          {% endif %}
+        {% elif record.status == "incomplete" and record.start %}
+          {% set _ = actions.push('<a class="govuk-link" href="' + record.start +
+            '">Start<span class="govuk-visually-hidden"> ' + record.name + '</span></a>') %}
+        {% endif %}
+
+        {% set _ = rows.push([
+          { text: record.name },
+          { text: record.ref if record.ref else "" },
+          { html: tags[record.status] },
+          { html: actions | join(' | ') if actions | length else '' }
+        ]) %}
+      {% endfor %}
+
+      {{ govukTable({
+        caption: "Records held for this case",
+        captionClasses: "govuk-visually-hidden",
+        head: [
+          { text: "Type" },
+          { text: "Reference" },
+          { text: "Status" },
+          { text: "Actions" }
+        ],
+        rows: rows
+      }) }}
+
+      <h2 class="govuk-heading-m">Printing</h2>
+
+      <ul class="govuk-list">
+        <li><a class="govuk-link" href="/A14/a14forms">Print A14 PDFs</a></li>
+        <li><a class="govuk-link" href="/A14/a14caseprintselection">Print PDFs for this case</a></li>
+      </ul>
+
+      {# Nothing here needs saving, so these navigate rather than submit. There
+         is no form involved, which is why govukButton with href is right. #}
+      <div class="govuk-button-group">
+        {{ govukButton({
+          text: "Close case",
+          href: "/onboarding/landing-page"
+        }) }}
+
+        {{ govukButton({
+          text: "Save as draft",
+          href: "/onboarding/landing-page",
+          classes: "govuk-button--secondary"
+        }) }}
+
+        {{ govukButton({
+          text: "Delete case",
+          href: "/onboarding/deletecase",
+          classes: "govuk-button--warning"
+        }) }}
+      </div>
+
+    </div>
+  </div>
+
+{% endblock %}

@@ -1,13 +1,18 @@
 {% extends "layouts/main.html" %}
 
+{# routes.js puts a list on data.newFormErrors when something fails           #}
+{# validation. One field here, so one bucket.                                 #}
+
+{% set errors = data.newFormErrors if data.newFormErrors else [] %}
+
 {% block pageTitle %}
-  Create new A14 Forms – OpCalc – GOV.UK Prototype Kit
+  {{ "Error: " if errors | length }}Create new A14 Forms – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
   {{ dwpHeader({
     serviceName: "OpCalc",
-    serviceHref: "/landingpage",
+    serviceHref: "/onboarding/landing-page",
     container: true
   }) }}
 {% endblock %}
@@ -37,7 +42,7 @@
 {% block containerStart %}
   {{ govukBackLink({
     text: "Back",
-    href: "/opcalctype"
+    href: "/onboarding/landing-page"
   }) }}
 {% endblock %}
 
@@ -46,12 +51,42 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
 
+      {% if errors | length %}
+        {% set errorList = [] %}
+        {% for error in errors %}
+          {% set _ = errorList.push({ text: error.message, href: error.href }) %}
+        {% endfor %}
+
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: errorList
+        }) }}
+      {% endif %}
+
       <h1 class="govuk-heading-l">
         Create new A14 Forms
       </h1>
 
-      <form action="/newform" method="post">
+      {# Which form Continue opens depends on the benefit chosen at the start
+         of the case, so it is worth showing rather than leaving it a
+         surprise. #}
+      {% if data.benefitLabel %}
+        {{ govukInsetText({
+          text: "This case is " + data.benefitLabel + ", so Continue opens the A14 form for that benefit."
+        }) }}
+      {% else %}
+        {{ govukWarningText({
+          text: "No benefit has been chosen for this case, so there is no A14 form to open.",
+          iconFallbackText: "Warning"
+        }) }}
 
+        <p><a class="govuk-link" href="/customer-details/select-benefit">Choose a benefit</a></p>
+      {% endif %}
+
+      <form action="/newform" method="post" novalidate>
+
+        {# Defaults to the start of the discrepancy period, as the hint says,
+           by falling back to what was entered on benefit details. #}
         {{ govukDateInput({
           id: "a14-start-date",
           namePrefix: "a14StartDate",
@@ -63,10 +98,23 @@
           hint: {
             text: "This defaults to the start of the discrepancy period. It can be later than that date, but not earlier - if it needs to be earlier, cancel and amend the Discrepancy Period From date on the Benefit details tab instead."
           },
+          errorMessage: { text: errors[0].message } if errors[0] else false,
           items: [
-            { name: "day", classes: "govuk-input--width-2", value: data["a14StartDate-day"] },
-            { name: "month", classes: "govuk-input--width-2", value: data["a14StartDate-month"] },
-            { name: "year", classes: "govuk-input--width-4", value: data["a14StartDate-year"] }
+            {
+              name: "day",
+              value: data["a14StartDate-day"] if data["a14StartDate-day"] else data["discrepancyFrom-day"],
+              classes: "govuk-input--width-2 govuk-input--error" if errors[0] else "govuk-input--width-2"
+            },
+            {
+              name: "month",
+              value: data["a14StartDate-month"] if data["a14StartDate-month"] else data["discrepancyFrom-month"],
+              classes: "govuk-input--width-2 govuk-input--error" if errors[0] else "govuk-input--width-2"
+            },
+            {
+              name: "year",
+              value: data["a14StartDate-year"] if data["a14StartDate-year"] else data["discrepancyFrom-year"],
+              classes: "govuk-input--width-4 govuk-input--error" if errors[0] else "govuk-input--width-4"
+            }
           ]
         }) }}
 
@@ -81,15 +129,20 @@
               hint: {
                 text: "Selected by default - copies all entries from the previous A14 so you do not need to re-enter them"
               },
-              checked: true
+              checked: data.copyLatestData if data.newFormErrors else true
             }
           ]
         }) }}
 
+        {# Continue is a submit button with no href. It carried both before,
+           and govukButton renders an <a> whenever an href is present - so it
+           was a link to /A14/a14.html and the form's action never ran. That
+           is why every case opened the IS/PC form. #}
         <div class="govuk-button-group">
           {{ govukButton({
             text: "Continue",
-            type: "submit"
+            type: "submit",
+            preventDoubleClick: true
           }) }}
 
           {{ govukButton({

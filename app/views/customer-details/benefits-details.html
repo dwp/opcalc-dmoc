@@ -1,13 +1,36 @@
 {% extends "layouts/main.html" %}
 
+{# routes.js puts a list on data.benefitDetailsErrors when something fails    #}
+{# validation. Sorted here by field so each component can ask for its own.    #}
+
+{% set errors = data.benefitDetailsErrors if data.benefitDetailsErrors else [] %}
+
+{% set fromError = [] %}
+{% set toError = [] %}
+{% set weekError = [] %}
+{% set weekTypeError = [] %}
+
+{% set errorsByField = {
+  "discrepancy-from": fromError,
+  "discrepancy-to": toError,
+  "initial-benefit-week": weekError,
+  "benefit-week-type": weekTypeError
+} %}
+
+{% for error in errors %}
+  {% if errorsByField[error.field] %}
+    {% set _ = errorsByField[error.field].push(error) %}
+  {% endif %}
+{% endfor %}
+
 {% block pageTitle %}
-  Start page – OpCalc – GOV.UK Prototype Kit
+  {{ "Error: " if errors | length }}Benefit details – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
   {{ dwpHeader({
     serviceName: "OpCalc",
-    serviceHref: "/",
+    serviceHref: "/onboarding/landing-page",
     container: true
   }) }}
 {% endblock %}
@@ -15,7 +38,7 @@
 {% block containerStart %}
   {{ govukBackLink({
     text: "Back",
-    href: "javascript:window.history.back()"
+    href: "/customer-details/select-benefit"
   }) }}
 {% endblock %}
 
@@ -46,148 +69,148 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
 
-      <h1 class="govuk-heading-l">
-        Benefits Details
-      </h1>
+      {% if errors | length %}
+        {% set errorList = [] %}
+        {% for error in errors %}
+          {% set _ = errorList.push({ text: error.message, href: error.href }) %}
+        {% endfor %}
 
-      <form class="form" action="/customer-details/check-your-answers" method="post">
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: errorList
+        }) }}
+      {% endif %}
 
-        <!-- <div class="govuk-form-group">
-  <label class="govuk-label" for="sort">
-    Benefit line
-  </label>
-  <select class="govuk-select" id="sort" name="sort">
-    <option value="ESA">Employment and Support Allowance</option>
-    <option value="JSA" selected>Job Seekers Allowance</option>
-    <option value="views">Pension Credit</option>
-    <option value="comments">Income Support</option>
-  </select>
-</div> -->
+      <h1 class="govuk-heading-l">Benefit details</h1>
 
-<div class="govuk-form-group">
-  <fieldset class="govuk-fieldset" role="group" aria-describedby="passport-issued-hint">
-    <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
-      <h1 class="govuk-fieldset__heading">
-        Discrepancy period
-      </h1>
-    </legend>
-    <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
-      <h2 class="govuk-fieldset__heading">
-        From
-      </h2>
-    </legend>
+      {# The benefit decides which A14 form Continue opens, so it is worth
+         showing rather than leaving it invisible in the session. #}
+      {% if data.benefit %}
+        {{ govukSummaryList({
+          rows: [
+            {
+              key: { text: "Benefit" },
+              value: { text: data.benefitLabel if data.benefitLabel else data.benefit },
+              actions: {
+                items: [
+                  { href: "/customer-details/select-benefit", text: "Change", visuallyHiddenText: "the benefit this case is for" }
+                ]
+              }
+            }
+          ]
+        }) }}
+      {% else %}
+        {{ govukWarningText({
+          text: "No benefit has been chosen for this case yet, so there is no A14 form to open.",
+          iconFallbackText: "Warning"
+        }) }}
 
-    <div class="govuk-date-input" id="passport-issued">
-      <div class="govuk-date-input__item">
-        <div class="govuk-form-group">
-          <label class="govuk-label govuk-date-input__label" for="passport-issued-day">
-            Day
-          </label>
-          <input class="govuk-input govuk-date-input__input govuk-input--width-2" id="passport-issued-day" name="passport-issued-day" type="text" inputmode="numeric">
-        </div>
-      </div>
-      <div class="govuk-date-input__item">
-        <div class="govuk-form-group">
-          <label class="govuk-label govuk-date-input__label" for="passport-issued-month">
-            Month
-          </label>
-          <input class="govuk-input govuk-date-input__input govuk-input--width-2" id="passport-issued-month" name="passport-issued-month" type="text" inputmode="numeric">
-        </div>
-      </div>
-      <div class="govuk-date-input__item">
-        <div class="govuk-form-group">
-          <label class="govuk-label govuk-date-input__label" for="passport-issued-year">
-            Year
-          </label>
-          <input class="govuk-input govuk-date-input__input govuk-input--width-4" id="passport-issued-year" name="passport-issued-year" type="text" inputmode="numeric">
-        </div>
-      </div>
-    </div>
-    
-  </fieldset>
-</div>
+        <p><a class="govuk-link" href="/customer-details/select-benefit">Choose a benefit</a></p>
+      {% endif %}
 
-<div class="govuk-form-group">
-  <fieldset class="govuk-fieldset" role="group" aria-describedby="passport-issued-hint">
-   
-    <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
-      <h2 class="govuk-fieldset__heading">
-        To
-      </h2>
-    </legend>
+      <form class="form" action="/benefit-details-continue" method="post" novalidate>
 
-    <div class="govuk-date-input" id="passport-issued">
-      <div class="govuk-date-input__item">
-        <div class="govuk-form-group">
-          <label class="govuk-label govuk-date-input__label" for="passport-issued-day">
-            Day
-          </label>
-          <input class="govuk-input govuk-date-input__input govuk-input--width-2" id="passport-issued-day" name="passport-issued-day" type="text" inputmode="numeric">
-        </div>
-      </div>
-      <div class="govuk-date-input__item">
-        <div class="govuk-form-group">
-          <label class="govuk-label govuk-date-input__label" for="passport-issued-month">
-            Month
-          </label>
-          <input class="govuk-input govuk-date-input__input govuk-input--width-2" id="passport-issued-month" name="passport-issued-month" type="text" inputmode="numeric">
-        </div>
-      </div>
-      <div class="govuk-date-input__item">
-        <div class="govuk-form-group">
-          <label class="govuk-label govuk-date-input__label" for="passport-issued-year">
-            Year
-          </label>
-          <input class="govuk-input govuk-date-input__input govuk-input--width-4" id="passport-issued-year" name="passport-issued-year" type="text" inputmode="numeric">
-        </div>
-      </div>
-    </div>
-    
-  </fieldset>
-</div>
+        <h2 class="govuk-heading-m">Discrepancy period</h2>
 
-<div class="govuk-form-group">
-  <label class="govuk-label" for="sort">
-    Initial benefit week
-  </label>
-  <select class="govuk-select" id="sort" name="sort">
-    <option value="published" selected>Monday</option>
-    <option value="updated" >Tuesday</option>
-    <option value="updated">Wednesday</option>
-    <option value="views">Thursday</option>
-    <option value="comments">Friday</option>
-  </select>
-</div>
+        {{ govukDateInput({
+          id: "discrepancy-from",
+          namePrefix: "discrepancyFrom",
+          fieldset: {
+            legend: {
+              text: "From",
+              classes: "govuk-fieldset__legend--s"
+            }
+          },
+          hint: { text: "For example, 27 10 2008" },
+          errorMessage: { text: fromError[0].message } if fromError[0] else false,
+          items: [
+            {
+              name: "day",
+              value: data["discrepancyFrom-day"],
+              classes: "govuk-input--width-2 govuk-input--error" if fromError[0] else "govuk-input--width-2"
+            },
+            {
+              name: "month",
+              value: data["discrepancyFrom-month"],
+              classes: "govuk-input--width-2 govuk-input--error" if fromError[0] else "govuk-input--width-2"
+            },
+            {
+              name: "year",
+              value: data["discrepancyFrom-year"],
+              classes: "govuk-input--width-4 govuk-input--error" if fromError[0] else "govuk-input--width-4"
+            }
+          ]
+        }) }}
 
-<div class="govuk-form-group">
-  <fieldset class="govuk-fieldset">
-    <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
-      <h1 class="govuk-fieldset__heading">
-        Benefit week type
-      </h1>
-    </legend>
-    <div class="govuk-radios" data-module="govuk-radios">
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive" name="whereDoYouLive" type="radio" value="england">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive">
-          BWE (Benefit Week Ending)
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="whereDoYouLive-2" name="whereDoYouLive" type="radio" value="scotland">
-        <label class="govuk-label govuk-radios__label" for="whereDoYouLive-2">
-          BWC (Benefit Week Commencing)
-        </label>
-      </div>
-    </div>
-  </fieldset>
-</div>
+        {{ govukDateInput({
+          id: "discrepancy-to",
+          namePrefix: "discrepancyTo",
+          fieldset: {
+            legend: {
+              text: "To",
+              classes: "govuk-fieldset__legend--s"
+            }
+          },
+          hint: { text: "For example, 16 7 2026" },
+          errorMessage: { text: toError[0].message } if toError[0] else false,
+          items: [
+            {
+              name: "day",
+              value: data["discrepancyTo-day"],
+              classes: "govuk-input--width-2 govuk-input--error" if toError[0] else "govuk-input--width-2"
+            },
+            {
+              name: "month",
+              value: data["discrepancyTo-month"],
+              classes: "govuk-input--width-2 govuk-input--error" if toError[0] else "govuk-input--width-2"
+            },
+            {
+              name: "year",
+              value: data["discrepancyTo-year"],
+              classes: "govuk-input--width-4 govuk-input--error" if toError[0] else "govuk-input--width-4"
+            }
+          ]
+        }) }}
+
+        {# Set from the benefit when it was chosen, but still changeable. #}
+        {{ govukSelect({
+          id: "initial-benefit-week",
+          name: "initialBenefitWeek",
+          label: { text: "Initial benefit week" },
+          hint: { text: "Set from the benefit type. Change it if this case is different." },
+          errorMessage: { text: weekError[0].message } if weekError[0] else false,
+          items: [
+            { value: "", text: "Select a day", selected: not data.initialBenefitWeek },
+            { value: "Monday", text: "Monday", selected: data.initialBenefitWeek == "Monday" },
+            { value: "Tuesday", text: "Tuesday", selected: data.initialBenefitWeek == "Tuesday" },
+            { value: "Wednesday", text: "Wednesday", selected: data.initialBenefitWeek == "Wednesday" },
+            { value: "Thursday", text: "Thursday", selected: data.initialBenefitWeek == "Thursday" },
+            { value: "Friday", text: "Friday", selected: data.initialBenefitWeek == "Friday" }
+          ]
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "benefit-week-type",
+          name: "benefitWeekType",
+          fieldset: {
+            legend: {
+              text: "Benefit week type",
+              classes: "govuk-fieldset__legend--s"
+            }
+          },
+          errorMessage: { text: weekTypeError[0].message } if weekTypeError[0] else false,
+          items: [
+            { value: "BWE", text: "BWE (Benefit Week Ending)", checked: data.benefitWeekType == "BWE" },
+            { value: "BWC", text: "BWC (Benefit Week Commencing)", checked: data.benefitWeekType == "BWC" }
+          ]
+        }) }}
 
         {{ govukButton({
           text: "Continue",
-          href: "/customer-details/check-your-answers"
+          type: "submit",
+          preventDoubleClick: true
         }) }}
- 
+
       </form>
 
     </div>
