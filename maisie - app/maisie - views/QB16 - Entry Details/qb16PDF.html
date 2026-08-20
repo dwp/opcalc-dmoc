@@ -1,0 +1,158 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Print QB16 calculation – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/viewqb16"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  {# The preview is styled to look like the printed page, so caseworkers can #}
+  {# check it before sending it to the printer. The border and shadow are    #}
+  {# only there to make it read as a sheet of paper - print styles hide      #}
+  {# everything except the document itself.                                   #}
+  <style>
+    .opcalc-pdf {
+      background-color: #ffffff;
+      border: 1px solid #b1b4b6;
+      box-shadow: 0 2px 6px rgba(11, 12, 12, 0.16);
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+    .opcalc-pdf__masthead {
+      border-bottom: 2px solid #0b0c0c;
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+    }
+    @media print {
+      .dwp-header,
+      .dwp-footer,
+      .govuk-back-link,
+      .govuk-button-group,
+      .opcalc-pdf-actions {
+        display: none;
+      }
+      .opcalc-pdf {
+        border: 0;
+        box-shadow: none;
+        padding: 0;
+      }
+    }
+  </style>
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+
+      <h1 class="govuk-heading-l">Print QB16 calculation</h1>
+
+      <p class="govuk-body">Check the PDF below, then print it.</p>
+
+      <div class="opcalc-pdf">
+
+        <div class="opcalc-pdf__masthead">
+          <h2 class="govuk-heading-m govuk-!-margin-bottom-1">QB16 NET OVER/UNDERPAYMENT CALCULATION</h2>
+          <p class="govuk-body-s govuk-!-margin-bottom-0">OpCalc &middot; Department for Work and Pensions</p>
+        </div>
+
+        {{ govukSummaryList({
+          classes: "govuk-summary-list--no-border govuk-body-s",
+          rows: [
+            { key: { text: "NINO" }, value: { text: data.nino if data.nino else "AB 12 34 56 C" } },
+            { key: { text: "Name" }, value: { text: "Mr Max Martin" } },
+            { key: { text: "Printed on" }, value: { text: "6 August 2026" } }
+          ]
+        }) }}
+
+        <h3 class="govuk-heading-s">QB16 net over or underpayment calculation</h3>
+
+        {{ govukTable({
+          classes: "govuk-table--small-text-until-tablet",
+          caption: "Weekly breakdown of gross amounts",
+          captionClasses: "govuk-visually-hidden",
+          head: [
+            { text: "From" }, { text: "To" }, { text: "Weeks", format: "numeric" }, { text: "Days", format: "numeric" },
+            { text: "Gross incorrect", format: "numeric" }, { text: "Gross correct", format: "numeric" },
+            { text: "Gross excess", format: "numeric" }, { text: "Gross total", format: "numeric" }
+          ],
+          rows: [
+            [
+              { text: "10 July 2015" }, { text: "13 July 2015" },
+              { text: "0", format: "numeric" }, { text: "4", format: "numeric" },
+              { text: "£0.00", format: "numeric" }, { text: "£86.40", format: "numeric" },
+              { text: "£86.40 credit", format: "numeric" }, { text: "£86.40 credit", format: "numeric" }
+            ],
+            [
+              { text: "14 July 2015" }, { text: "11 April 2016" },
+              { text: "39", format: "numeric" }, { text: "0", format: "numeric" },
+              { text: "£0.00", format: "numeric" }, { text: "£151.20", format: "numeric" },
+              { text: "£151.20 credit", format: "numeric" }, { text: "£5,896.80 credit", format: "numeric" }
+            ]
+          ]
+        }) }}
+
+        {{ govukSummaryList({
+          classes: "govuk-body-s",
+          rows: [
+            { key: { text: "Total over or underpayment" }, value: { text: "£5,983.20 credit" } },
+            { key: { text: "Cause" }, value: { text: data.cause if data.cause else "Not recorded" } }
+          ]
+        }) }}
+
+      </div>
+
+      <div class="opcalc-pdf-actions">
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Print",
+            href: "#",
+            attributes: { onclick: "window.print(); return false;" }
+          }) }}
+
+          {{ govukButton({
+            text: "Close",
+            href: "/viewqb16",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+{% endblock %}

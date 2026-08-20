@@ -1,0 +1,158 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Print diminishing capital calculation – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/opcalctype"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  {# The preview is styled to look like the printed page, so caseworkers can #}
+  {# check it before sending it to the printer. The border and shadow are    #}
+  {# only there to make it read as a sheet of paper - print styles hide      #}
+  {# everything except the document itself.                                   #}
+  <style>
+    .opcalc-pdf {
+      background-color: #ffffff;
+      border: 1px solid #b1b4b6;
+      box-shadow: 0 2px 6px rgba(11, 12, 12, 0.16);
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+    .opcalc-pdf__masthead {
+      border-bottom: 2px solid #0b0c0c;
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+    }
+    @media print {
+      .dwp-header,
+      .dwp-footer,
+      .govuk-back-link,
+      .govuk-button-group,
+      .opcalc-pdf-actions {
+        display: none;
+      }
+      .opcalc-pdf {
+        border: 0;
+        box-shadow: none;
+        padding: 0;
+      }
+    }
+  </style>
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+
+      <h1 class="govuk-heading-l">Print diminishing capital calculation</h1>
+
+      <p class="govuk-body">Check the PDF below, then print it.</p>
+
+      <div class="opcalc-pdf">
+
+        <div class="opcalc-pdf__masthead">
+          <h2 class="govuk-heading-m govuk-!-margin-bottom-1">DIMINISHING CAPITAL CALCULATION</h2>
+          <p class="govuk-body-s govuk-!-margin-bottom-0">OpCalc &middot; Department for Work and Pensions</p>
+        </div>
+
+        {{ govukSummaryList({
+          classes: "govuk-summary-list--no-border govuk-body-s",
+          rows: [
+            { key: { text: "NINO" }, value: { text: data.nino if data.nino else "AB 12 34 56 C" } },
+            { key: { text: "Name" }, value: { text: "Mr Max Martin" } },
+            { key: { text: "Printed on" }, value: { text: "6 August 2026" } }
+          ]
+        }) }}
+
+        <h3 class="govuk-heading-s">Diminishing capital calculation</h3>
+
+        {{ govukTable({
+          classes: "govuk-table--small-text-until-tablet",
+          caption: "Capital and payment amounts by period",
+          captionClasses: "govuk-visually-hidden",
+          head: [
+            { text: "From" }, { text: "To" },
+            { text: "Capital held", format: "numeric" }, { text: "Reduced by DCC", format: "numeric" },
+            { text: "Notional capital", format: "numeric" }, { text: "Paid weekly", format: "numeric" },
+            { text: "Payable weekly", format: "numeric" }, { text: "Overpaid weekly", format: "numeric" }
+          ],
+          rows: [
+            [
+              { text: "10 July 2015" }, { text: "11 April 2016" },
+              { text: "£16,000.00", format: "numeric" }, { text: "£1,240.00", format: "numeric" },
+              { text: "£14,760.00", format: "numeric" }, { text: "£73.10", format: "numeric" },
+              { text: "£49.30", format: "numeric" }, { text: "£23.80", format: "numeric" }
+            ],
+            [
+              { text: "12 April 2016" }, { text: "10 April 2017" },
+              { text: "£14,760.00", format: "numeric" }, { text: "£1,190.00", format: "numeric" },
+              { text: "£13,570.00", format: "numeric" }, { text: "£73.10", format: "numeric" },
+              { text: "£51.20", format: "numeric" }, { text: "£21.90", format: "numeric" }
+            ]
+          ]
+        }) }}
+
+        {{ govukSummaryList({
+          classes: "govuk-body-s",
+          rows: [
+            { key: { text: "Total overpaid" }, value: { text: "£2,376.20" } }
+          ]
+        }) }}
+
+      </div>
+
+      <div class="opcalc-pdf-actions">
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Print",
+            href: "#",
+            attributes: { onclick: "window.print(); return false;" }
+          }) }}
+
+          {{ govukButton({
+            text: "Close",
+            href: "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+{% endblock %}

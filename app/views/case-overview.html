@@ -1,0 +1,207 @@
+{% extends "layouts/main.html" %}
+ 
+{% block pageTitle %}
+  Start page – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/case-overview-confirmation.html"
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+ 
+{% block content %}
+ 
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+ 
+      <h1 class="govuk-heading-l">
+        Case Overview
+      </h1>
+
+    <h2 class="govuk-heading-m">
+        Reference
+      </h2>
+ 
+      <p>
+        J Smith from 01/04/2023 to 04/11/2025
+      </p>
+
+      <ul class="govuk-task-list">
+      
+  <li class="govuk-task-list__item govuk-task-list__item--with-link">
+    <div class="govuk-task-list__name-and-hint">
+      <a class="govuk-link govuk-task-list__link" href="/customer-details/check-your-answers" aria-describedby="company-details-1-status">
+        Customer Details
+      </a>
+    </div>
+    <div class="govuk-task-list__status" id="company-details-1-status">
+      <strong class="govuk-tag govuk-tag--green">
+        Completed
+      </strong>
+    </div>
+  </li>
+  <li class="govuk-task-list__item govuk-task-list__item--with-link">
+    <div class="govuk-task-list__name-and-hint">
+      <a class="govuk-link govuk-task-list__link" href="/A14/newform" aria-describedby="company-details-2-status">
+        A14 Forms
+      </a>
+    </div>
+    <div class="govuk-task-list__status" id="company-details-2-status">
+      <strong class="govuk-tag govuk-tag--blue">
+        Incomplete
+      </strong>
+    </div>
+  </li>
+  <li class="govuk-task-list__item govuk-task-list__item--with-link">
+    <div class="govuk-task-list__name-and-hint">
+      <a class="govuk-link govuk-task-list__link" href="/ba3/ba3entries" aria-describedby="company-details-3-hint company-details-3-status">
+        BA3 Entry Details
+      </a>
+      <!-- <div id="company-details-3-hint" class="govuk-task-list__hint">
+        Include 5 years of the company’s relevant financial information
+      </div> -->
+    </div>
+    <div class="govuk-task-list__status" id="company-details-3-status">
+      <strong class="govuk-tag govuk-tag--blue">
+        Incomplete
+      </strong>
+    </div>
+  </li>
+  <li class="govuk-task-list__item govuk-task-list__item--with-link">
+    <div class="govuk-task-list__name-and-hint">
+      <a class="govuk-link govuk-task-list__link" href="#" aria-describedby="company-details-4-status">
+        QB16 Entry Details
+      </a>
+    </div>
+    <div class="govuk-task-list__status" id="company-details-4-status">
+      <strong class="govuk-tag govuk-tag--blue">
+        Incomplete
+      </strong>
+    </div>
+  </li>
+  <li class="govuk-task-list__item govuk-task-list__item--with-link">
+    <div class="govuk-task-list__name-and-hint">
+    
+        Family Credit Calculations
+      
+    </div>
+    <div class="govuk-task-list__status" id="company-details-5-status">
+      <strong class="govuk-tag govuk-tag--grey">
+        Inactive
+      </strong>
+    </div>
+  </li>
+  <li class="govuk-task-list__item govuk-task-list__item--with-link">
+    <div class="govuk-task-list__name-and-hint">
+      <a class="govuk-link govuk-task-list__link" href="#" aria-describedby="company-details-5-status">
+        Housing Cost Loans
+      </a>
+    </div>
+    <div class="govuk-task-list__status" id="company-details-5-status">
+      <strong class="govuk-tag govuk-tag--blue">
+        Incomplete
+      </strong>
+    </div>
+  </li>
+  <li class="govuk-task-list__item govuk-task-list__item--with-link">
+    <div class="govuk-task-list__name-and-hint">
+      <a class="govuk-link govuk-task-list__link" href="#" aria-describedby="company-details-5-status">
+        Diminishing Capital Calculation
+      </a>
+    </div>
+    <div class="govuk-task-list__status" id="company-details-5-status">
+      <strong class="govuk-tag govuk-tag--blue">
+        Incomplete
+      </strong>
+    </div>
+  </li>
+  <li class="govuk-task-list__item govuk-task-list__item--with-link">
+    <div class="govuk-task-list__name-and-hint">
+     
+        Average Hours Calculation
+  
+    </div>
+    <div class="govuk-task-list__status" id="company-details-5-status">
+      <strong class="govuk-tag govuk-tag--grey">
+        Inactive
+      </strong>
+    </div>
+  </li>
+  <li class="govuk-task-list__item govuk-task-list__item--with-link">
+    <div class="govuk-task-list__name-and-hint">
+      <a class="govuk-link govuk-task-list__link" href="#" aria-describedby="company-details-5-status">
+        Average Earnings Calculation
+      </a>
+    </div>
+    <div class="govuk-task-list__status" id="company-details-5-status">
+      <strong class="govuk-tag govuk-tag--blue">
+        Incomplete
+      </strong>
+    </div>
+  </li>
+  <li class="govuk-task-list__item govuk-task-list__item--with-link">
+    <div class="govuk-task-list__name-and-hint">
+     
+        QB33 Entry Details
+  
+    </div>
+    <div class="govuk-task-list__status" id="company-details-5-status">
+      <strong class="govuk-tag govuk-tag--grey">
+        Inactive
+      </strong>
+    </div>
+  </li>
+</ul>
+ 
+<div class="govuk-button-group">
+  <button type="submit" class="govuk-button" data-module="govuk-button">
+    Close case
+  </button>
+  <button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+    Save as draft
+  </button>
+  <button type="submit" class="govuk-button govuk-button--warning" data-module="govuk-button">
+    Delete case
+  </button>
+</div> 
+
+<p class="govuk-body">
+  <a href="#" class="govuk-link govuk-link--no-visited-state">Print forms</a>
+</p>
+ 
+    </div>
+  </div>
+ 
+{% endblock %}

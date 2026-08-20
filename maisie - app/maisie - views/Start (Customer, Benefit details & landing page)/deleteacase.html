@@ -1,0 +1,114 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Delete a case – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/landingpage"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Delete a case
+      </h1>
+
+      {% if data.savedCases and data.savedCases.length %}
+
+        <form action="/case-delete-select" method="post">
+
+          {% set caseItems = [] %}
+
+          {% for case in data.savedCases %}
+            {% set _ = caseItems.push({
+              value: loop.index0,
+              text: case.nino,
+              hint: { text: case.surname + ", " + (case.benefit if case.benefit else "benefit type not set") + ", last saved " + case.savedAt }
+            }) %}
+          {% endfor %}
+
+          {{ govukRadios({
+            idPrefix: "case-to-delete",
+            name: "caseToDelete",
+            fieldset: {
+              legend: {
+                text: "Which case do you want to delete?",
+                classes: "govuk-fieldset__legend--m"
+              }
+            },
+            hint: {
+              text: "You will be asked to confirm before anything is deleted."
+            },
+            items: caseItems
+          }) }}
+
+          <div class="govuk-button-group">
+            {{ govukButton({
+              text: "Continue",
+              type: "submit"
+            }) }}
+
+            {{ govukButton({
+              text: "Cancel",
+              href: "/landingpage",
+              classes: "govuk-button--secondary"
+            }) }}
+          </div>
+
+        </form>
+
+      {% else %}
+
+        {{ govukInsetText({
+          text: "There are no saved cases to delete."
+        }) }}
+
+        {{ govukButton({
+          text: "Back to OpCalc",
+          href: "/landingpage",
+          classes: "govuk-button--secondary"
+        }) }}
+
+      {% endif %}
+
+    </div>
+  </div>
+
+{% endblock %}

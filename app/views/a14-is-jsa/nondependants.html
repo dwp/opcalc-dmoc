@@ -1,0 +1,146 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Non-dependants – A14 form – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {# data.returnTo comes from the link that opened this page, so Back goes    #}
+  {# to the tab it came from.                                                 #}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/opcalctype"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">A14 housing costs</span>
+
+      <h1 class="govuk-heading-l">
+        Non-dependants
+      </h1>
+
+
+      <form action="/return-to-tab" method="post">
+
+        <p class="govuk-body">Record each non-dependant living with the customer. Their circumstances set the deduction taken from the housing costs.</p>
+
+        {{ govukTable({
+          caption: "Non-dependants recorded",
+          captionClasses: "govuk-visually-hidden",
+          head: [
+            { text: "Gross income" }, { text: "Circumstances" }, { text: "Deduction" }
+          ],
+          rows: [
+            [
+              { text: "£" + data.nonDependantGrossIncome },
+              { text: data.nonDependantCircumstances },
+              { text: "£0.00" }
+            ]
+          ] if data.nonDependantCircumstances else [
+            [{ html: '<span class="govuk-hint">No non-dependants recorded</span>' }, { text: "" }, { text: "" }]
+          ]
+        }) }}
+
+        <h2 class="govuk-heading-m">Add a non-dependant</h2>
+
+        {{ govukInput({
+          id: "non-dependant-gross-income",
+          name: "nonDependantGrossIncome",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Gross weekly income"
+          },
+          value: data.nonDependantGrossIncome
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "non-dependant-circumstances",
+          name: "nonDependantCircumstances",
+          fieldset: {
+            legend: {
+              text: "Circumstances"
+            }
+          },
+          hint: {
+            text: "This decides which deduction rate applies"
+          },
+          items: [
+            { value: "In remunerative work", text: "In remunerative work", checked: data.nonDependantCircumstances == "In remunerative work" },
+            { value: "Not in remunerative work", text: "Not in remunerative work", checked: data.nonDependantCircumstances == "Not in remunerative work" },
+            { value: "Aged under 18", text: "Aged under 18", checked: data.nonDependantCircumstances == "Aged under 18" },
+            { value: "On a qualifying benefit", text: "On a qualifying benefit", checked: data.nonDependantCircumstances == "On a qualifying benefit" },
+            { value: "No deduction applies", text: "No deduction applies", checked: data.nonDependantCircumstances == "No deduction applies" }
+          ]
+        }) }}
+
+        {{ govukSummaryList({
+          rows: [
+            {
+              key: { text: "Total non-dependant deductions" },
+              value: { text: "£" + (data.a14NonDependantDeductions if data.a14NonDependantDeductions else "0.00") }
+            }
+          ]
+        }) }}
+
+        <p class="govuk-body govuk-hint">The deduction is worked out from the income and circumstances once this is saved.</p>
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help with non-dependant deductions</a>
+      </p>
+
+    </div>
+  </div>
+
+{% endblock %}
+

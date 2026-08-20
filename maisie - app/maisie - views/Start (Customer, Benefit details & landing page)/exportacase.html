@@ -1,0 +1,111 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Export a case – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/landingpage"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Export a case
+      </h1>
+
+      <form action="/case-overview" method="post">
+
+        {{ govukRadios({
+          idPrefix: "nino",
+          name: "nino",
+          fieldset: {
+            legend: {
+              text: "Select the NINO of the case to export",
+              isPageHeading: false,
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          hint: {
+            text: "Press OK to continue"
+          },
+          items: [
+            {
+              value: "AB123456C",
+              text: "AB 12 34 56 C"
+            }
+          ]
+        }) }}
+
+        {{ govukCheckboxes({
+          idPrefix: "export-to-other-office",
+          name: "exportToOtherOffice",
+          items: [
+            {
+              value: "exportToOtherOffice",
+              text: "Export to other office",
+              id: "export-to-other-office"
+            }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Export case",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/landingpage",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help exporting a case</a>
+      </p>
+
+    </div>
+  </div>
+
+{% endblock %}
+

@@ -1,0 +1,223 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Asset – DCC (ESA) – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/dccesa#assets"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  {# Editing an existing asset when ?asset=N is in the URL, otherwise adding  #}
+  {# a new one. The index travels through the form so the route knows which.  #}
+  {% set editing = data.asset is defined and data.asset != "" %}
+  {% set asset = data.esaAssets[data.asset] if editing else none %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Diminishing capital calculation</span>
+
+      <h1 class="govuk-heading-l">
+        {{ "Edit asset" if editing else "New asset" }}
+      </h1>
+
+      <form action="/dccesa-asset-save" method="post">
+
+        <input type="hidden" name="assetIndex" value="{{ data.asset if editing else '' }}">
+
+        {{ govukSelect({
+          id: "esa-asset-type",
+          name: "esaAssetType",
+          label: {
+            text: "Asset type"
+          },
+          items: [
+            { value: "", text: "Select an asset type", selected: not asset },
+            { value: "Cash", text: "Cash", selected: asset.type == "Cash" },
+            { value: "Bank account", text: "Bank account", selected: asset.type == "Bank account" },
+            { value: "Building society account", text: "Building society account", selected: asset.type == "Building society account" },
+            { value: "Premium bonds", text: "Premium bonds", selected: asset.type == "Premium bonds" },
+            { value: "Shares", text: "Shares", selected: asset.type == "Shares" },
+            { value: "Property", text: "Property", selected: asset.type == "Property" },
+            { value: "Other", text: "Other", selected: asset.type == "Other" }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "esa-asset-name",
+          name: "esaAssetName",
+          label: {
+            text: "Name (optional)"
+          },
+          hint: {
+            text: "For example, Bank Account (savings)"
+          },
+          value: asset.name
+        }) }}
+
+        <h2 class="govuk-heading-m">Customer's share of asset</h2>
+
+        <p class="govuk-body govuk-hint">For example, enter 1 and 2 if the customer owns half of this asset.</p>
+
+        {{ govukInput({
+          id: "esa-share-held",
+          name: "esaShareHeld",
+          classes: "govuk-input--width-2",
+          label: {
+            text: "Share held by the customer"
+          },
+          value: asset.shareHeld if asset else "1"
+        }) }}
+
+        {{ govukInput({
+          id: "esa-share-total",
+          name: "esaShareTotal",
+          classes: "govuk-input--width-2",
+          label: {
+            text: "Total shares"
+          },
+          value: asset.shareTotal if asset else "1"
+        }) }}
+
+        {% set accumulatingHtml %}
+
+          <h2 class="govuk-heading-s">Accumulating asset details</h2>
+
+          {{ govukDateInput({
+            id: "esa-accumulating-start",
+            namePrefix: "esaAccumulatingStart",
+            fieldset: {
+              legend: {
+                text: "Start date"
+              }
+            },
+            items: [
+              { name: "day", classes: "govuk-input--width-2", value: data["esaAccumulatingStart-day"] },
+              { name: "month", classes: "govuk-input--width-2", value: data["esaAccumulatingStart-month"] },
+              { name: "year", classes: "govuk-input--width-4", value: data["esaAccumulatingStart-year"] }
+            ]
+          }) }}
+
+          {{ govukDateInput({
+            id: "esa-accumulating-end",
+            namePrefix: "esaAccumulatingEnd",
+            fieldset: {
+              legend: {
+                text: "End date"
+              }
+            },
+            items: [
+              { name: "day", classes: "govuk-input--width-2", value: data["esaAccumulatingEnd-day"] },
+              { name: "month", classes: "govuk-input--width-2", value: data["esaAccumulatingEnd-month"] },
+              { name: "year", classes: "govuk-input--width-4", value: data["esaAccumulatingEnd-year"] }
+            ]
+          }) }}
+
+          {{ govukInput({
+            id: "esa-initial-value",
+            name: "esaInitialValue",
+            classes: "govuk-input--width-5",
+            prefix: { text: "£" },
+            label: {
+              text: "Initial value"
+            },
+            value: data.esaInitialValue if data.esaInitialValue else "0.00"
+          }) }}
+
+          {{ govukInput({
+            id: "esa-final-value",
+            name: "esaFinalValue",
+            classes: "govuk-input--width-5",
+            prefix: { text: "£" },
+            label: {
+              text: "Final value"
+            },
+            value: data.esaFinalValue
+          }) }}
+
+        {% endset %}
+
+        {{ govukRadios({
+          idPrefix: "esa-accumulating-asset",
+          name: "esaAccumulatingAsset",
+          fieldset: {
+            legend: {
+              text: "Is this an accumulating asset?"
+            }
+          },
+          hint: {
+            text: "Choose Yes if the value builds up over a period, rather than being recorded as separate values on set dates."
+          },
+          items: [
+            {
+              value: "yes",
+              text: "Yes",
+              checked: asset.accumulating == "yes",
+              conditional: {
+                html: accumulatingHtml
+              }
+            },
+            {
+              value: "no",
+              text: "No",
+              checked: asset.accumulating != "yes",
+              hint: { text: "You can add dated values to this asset once it is saved" }
+            }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/dccesa#assets",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

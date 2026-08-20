@@ -1,0 +1,139 @@
+{% extends "layouts/main.html" %}
+ 
+{% block pageTitle %}
+  Content page template – {{ serviceName }} – GOV.UK Prototype Kit
+{% endblock %}
+ 
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "javascript:window.history.back()"
+  }) }}
+{% endblock %}
+ 
+{% block content %}
+ 
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+ 
+      <h1 class="govuk-heading-l">
+        Print setup
+      </h1>
+ 
+      <h2 class="govuk-heading-m">
+        Printer
+      </h2>
+ 
+      <div class="govuk-form-group">
+  <label class="govuk-label" for="sort">
+    Name
+  </label>
+  <select class="govuk-select" id="sort" name="sort">
+    <option value="published">Recently published</option>
+    <option value="updated" selected>Recently updated</option>
+    <option value="views">Most views</option>
+    <option value="comments">Most comments</option>
+  </select>
+</div>
+
+<dl class="govuk-summary-list">
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">
+      Status
+    </dt>
+    <dd class="govuk-summary-list__value">
+      Ready
+    </dd>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">
+      Type
+    </dt>
+    <dd class="govuk-summary-list__value">
+     Microsoft Print to PDF
+    </dd>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">
+      Where
+    </dt>
+    <dd class="govuk-summary-list__value">
+      PORTPROMPT
+    </dd>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">
+      Comment
+    </dt>
+    <dd class="govuk-summary-list__value">
+     
+    </dd>
+  </div>
+</dl>
+
+
+<h3 class="govuk-heading-m">
+   Paper
+</h3>
+
+<div class="govuk-form-group">
+  <label class="govuk-label" for="sort">
+    Size
+  </label>
+  <select class="govuk-select" id="sort" name="sort">
+    <option value="published">A3</option>
+    <option value="updated" selected>A4</option>
+    <option value="views">A5</option>
+    <option value="comments">B4 (JIS)</option>
+  </select>
+</div>
+
+<div class="govuk-form-group">
+  <label class="govuk-label" for="sort">
+    Source
+  </label>
+  <select class="govuk-select" id="sort" name="sort">
+    <option value="published">Recently published</option>
+    <option value="updated" selected>Recently updated</option>
+    <option value="views">Most views</option>
+    <option value="comments">Most comments</option>
+  </select>
+</div>
+
+<h4 class="govuk-heading-m">
+   Orientation
+</h4>
+
+<div class="govuk-form-group">
+  <fieldset class="govuk-fieldset" aria-describedby="changedName-hint">
+   
+    <div class="govuk-radios govuk-radios--inline" data-module="govuk-radios">
+      <div class="govuk-radios__item">
+        <input class="govuk-radios__input" id="changedName" name="changedName" type="radio" value="yes">
+        <label class="govuk-label govuk-radios__label" for="changedName">
+          Portrait
+        </label>
+      </div>
+      <div class="govuk-radios__item">
+        <input class="govuk-radios__input" id="changedName-2" name="changedName" type="radio" value="no">
+        <label class="govuk-label govuk-radios__label" for="changedName-2">
+          Landscape
+        </label>
+      </div>
+    </div>
+  </fieldset>
+</div>
+   
+
+{% from "govuk/components/button/macro.njk" import govukButton %}
+ 
+{{ govukButton({
+        text: "Continue",
+        href: "/export-case"
+      }) }}
+
+ 
+    </div>
+  </div>
+ 
+{% endblock %}

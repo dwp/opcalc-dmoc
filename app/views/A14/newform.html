@@ -1,0 +1,111 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Create new A14 Forms – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/opcalctype"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Create new A14 Forms
+      </h1>
+
+      <form action="/newform" method="post">
+
+        {{ govukDateInput({
+          id: "a14-start-date",
+          namePrefix: "a14StartDate",
+          fieldset: {
+            legend: {
+              text: "Start date"
+            }
+          },
+          hint: {
+            text: "This defaults to the start of the discrepancy period. It can be later than that date, but not earlier - if it needs to be earlier, cancel and amend the Discrepancy Period From date on the Benefit details tab instead."
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["a14StartDate-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["a14StartDate-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["a14StartDate-year"] }
+          ]
+        }) }}
+
+        {{ govukCheckboxes({
+          idPrefix: "copy-latest-data",
+          name: "copyLatestData",
+          items: [
+            {
+              value: "copyLatestData",
+              text: "Copy latest data",
+              id: "copy-latest-data",
+              hint: {
+                text: "Selected by default - copies all entries from the previous A14 so you do not need to re-enter them"
+              },
+              checked: true
+            }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Continue",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help creating an A14 form</a>
+      </p>
+
+    </div>
+  </div>
+
+{% endblock %}

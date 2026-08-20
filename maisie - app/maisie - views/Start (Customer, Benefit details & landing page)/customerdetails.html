@@ -1,0 +1,346 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Customer details – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/selectbenefit"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Customer details
+      </h1>
+
+      <form action="/benefitdetails" method="post">
+
+        {% set personalDetailsHtml %}
+
+          {{ govukInput({
+            id: "nino",
+            name: "nino",
+            classes: "govuk-input--width-10",
+            label: {
+              text: "National Insurance number"
+            },
+            hint: {
+              text: "For example, QQ 123456 C"
+            },
+            value: data.nino
+          }) }}
+
+          {{ govukDateInput({
+            id: "dob",
+            namePrefix: "dob",
+            fieldset: {
+              legend: {
+                text: "Date of birth"
+              }
+            },
+            hint: {
+              text: "For example, 27 3 1985"
+            }
+          }) }}
+
+          {{ govukInput({
+            id: "surname",
+            name: "surname",
+            label: {
+              text: "Surname"
+            },
+            value: data.surname
+          }) }}
+
+          {{ govukInput({
+            id: "forenames",
+            name: "forenames",
+            label: {
+              text: "Forenames"
+            },
+            value: data.forenames
+          }) }}
+
+          {{ govukSelect({
+            id: "title",
+            name: "title",
+            label: {
+              text: "Title"
+            },
+            items: [
+              { value: "", text: "Choose title" },
+              { value: "Mr", text: "Mr" },
+              { value: "Mrs", text: "Mrs" },
+              { value: "Miss", text: "Miss" },
+              { value: "Ms", text: "Ms" },
+              { value: "Mx", text: "Mx" },
+              { value: "Dr", text: "Dr" },
+              { value: "Other", text: "Other" }
+            ]
+          }) }}
+
+          {{ govukSelect({
+            id: "sex",
+            name: "sex",
+            label: {
+              text: "Sex"
+            },
+            items: [
+              { value: "", text: "Choose" },
+              { value: "Female", text: "Female" },
+              { value: "Male", text: "Male" }
+            ]
+          }) }}
+
+          {{ govukInput({
+            id: "address-line-1",
+            name: "addressLine1",
+            label: {
+              text: "Address line 1"
+            },
+            value: data.addressLine1
+          }) }}
+
+          {{ govukInput({
+            id: "address-line-2",
+            name: "addressLine2",
+            label: {
+              text: "Address line 2 (optional)"
+            },
+            value: data.addressLine2
+          }) }}
+
+          {{ govukInput({
+            id: "address-line-3",
+            name: "addressLine3",
+            label: {
+              text: "Address line 3 (optional)"
+            },
+            value: data.addressLine3
+          }) }}
+
+          {{ govukInput({
+            id: "postcode",
+            name: "postcode",
+            classes: "govuk-input--width-10",
+            label: {
+              text: "Postcode"
+            },
+            value: data.postcode
+          }) }}
+
+          {{ govukInput({
+            id: "telephone",
+            name: "telephone",
+            type: "tel",
+            classes: "govuk-input--width-20",
+            label: {
+              text: "Telephone number"
+            },
+            value: data.telephone
+          }) }}
+
+          {{ govukCheckboxes({
+            idPrefix: "third-party",
+            name: "thirdParty",
+            items: [
+              {
+                value: "thirdParty",
+                text: "This case involves a third party",
+                id: "third-party"
+              }
+            ]
+          }) }}
+
+        {% endset %}
+
+        {% set appointeeDetailsHtml %}
+
+          {{ govukCheckboxes({
+            idPrefix: "corporate-body",
+            name: "corporateBody",
+            items: [
+              {
+                value: "corporateBody",
+                text: "This case involves a corporate body",
+                id: "corporate-body",
+                conditional: {
+                  html: govukInput({
+                    id: "corporate-body-name",
+                    name: "corporateBodyName",
+                    label: {
+                      text: "Corporate body name"
+                    }
+                  })
+                }
+              }
+            ]
+          }) }}
+
+          {{ govukCheckboxes({
+            idPrefix: "same-address",
+            name: "sameAddress",
+            items: [
+              {
+                value: "sameAddress",
+                text: "The appointee has the same address as the customer",
+                id: "same-address"
+              }
+            ]
+          }) }}
+
+          {{ govukInput({
+            id: "appointee-surname",
+            name: "appointeeSurname",
+            label: {
+              text: "Surname"
+            }
+          }) }}
+
+          {{ govukInput({
+            id: "appointee-forenames",
+            name: "appointeeForenames",
+            label: {
+              text: "Forenames"
+            }
+          }) }}
+
+          {{ govukSelect({
+            id: "appointee-title",
+            name: "appointeeTitle",
+            label: {
+              text: "Title"
+            },
+            items: [
+              { value: "", text: "Choose title" },
+              { value: "Mr", text: "Mr" },
+              { value: "Mrs", text: "Mrs" },
+              { value: "Miss", text: "Miss" },
+              { value: "Ms", text: "Ms" },
+              { value: "Mx", text: "Mx" },
+              { value: "Dr", text: "Dr" },
+              { value: "Other", text: "Other" }
+            ]
+          }) }}
+
+          {{ govukInput({
+            id: "appointee-address-line-1",
+            name: "appointeeAddressLine1",
+            label: {
+              text: "Address line 1"
+            }
+          }) }}
+
+          {{ govukInput({
+            id: "appointee-address-line-2",
+            name: "appointeeAddressLine2",
+            label: {
+              text: "Address line 2 (optional)"
+            }
+          }) }}
+
+          {{ govukInput({
+            id: "appointee-address-line-3",
+            name: "appointeeAddressLine3",
+            label: {
+              text: "Address line 3 (optional)"
+            }
+          }) }}
+
+          {{ govukInput({
+            id: "appointee-postcode",
+            name: "appointeePostcode",
+            classes: "govuk-input--width-10",
+            label: {
+              text: "Postcode"
+            }
+          }) }}
+
+          {{ govukInput({
+            id: "appointee-telephone",
+            name: "appointeeTelephone",
+            type: "tel",
+            classes: "govuk-input--width-20",
+            label: {
+              text: "Telephone number"
+            }
+          }) }}
+
+        {% endset %}
+
+        {{ govukTabs({
+          items: [
+            {
+              label: "Personal details",
+              id: "personal-details",
+              panel: {
+                html: personalDetailsHtml
+              }
+            },
+            {
+              label: "Appointee/other details",
+              id: "appointee-other-details",
+              panel: {
+                html: appointeeDetailsHtml
+              }
+            }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Continue",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/landingpage",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}
+

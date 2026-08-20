@@ -1,0 +1,264 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Print PDFs – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "javascript:window.history.back()"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Print PDFs for this case
+      </h1>
+
+      <p>
+        Only PDFs with data recorded against this case can be printed.
+      </p>
+
+      <form action="/landingpagewithqb16entrydetailsfilledin" method="post" novalidate>
+
+        {{ govukCheckboxes({
+          idPrefix: "forms-to-print",
+          name: "formsToPrint",
+          fieldset: {
+            legend: {
+              text: "Which PDFs do you want to print?",
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          items: [
+            {
+              value: "a14",
+              text: "A14",
+              checked: true
+            },
+            {
+              value: "qb16Calculation",
+              text: "QB16 calculation",
+              checked: true
+            },
+            {
+              value: "qb16Schedules",
+              text: "QB16 schedules",
+              checked: true
+            },
+            {
+              value: "dcc",
+              text: "Diminishing capital calculation",
+              checked: true
+            },
+            {
+              value: "scheduleOfAssets",
+              text: "Schedule of assets",
+              checked: true
+            },
+            {
+              value: "dccTrace",
+              text: "DCC trace"
+            },
+            {
+              divider: "Not available for this case"
+            },
+            {
+              value: "ba3",
+              text: "BA3",
+              disabled: true
+            },
+            {
+              value: "familyCredit",
+              text: "Family credit",
+              disabled: true
+            },
+            {
+              value: "housingCosts",
+              text: "Housing costs",
+              disabled: true
+            },
+            {
+              value: "housingTrace",
+              text: "Housing trace",
+              disabled: true
+            },
+            {
+              value: "qb33",
+              text: "QB33",
+              disabled: true
+            },
+            {
+              value: "averageHours",
+              text: "Average hours calculation",
+              disabled: true
+            },
+            {
+              value: "scheduleOfHours",
+              text: "Schedule of hours",
+              disabled: true
+            },
+            {
+              value: "averageHoursTrace",
+              text: "Average hours trace",
+              disabled: true
+            },
+            {
+              value: "averageEarnings",
+              text: "Average earnings calculation",
+              disabled: true
+            },
+            {
+              value: "scheduleOfEarnings",
+              text: "Schedule of earnings",
+              disabled: true
+            },
+            {
+              value: "averageEarningsTrace",
+              text: "Average earnings trace",
+              disabled: true
+            }
+          ]
+        }) }}
+
+        {{ govukCheckboxes({
+          idPrefix: "a14s-to-print",
+          name: "a14sToPrint",
+          fieldset: {
+            legend: {
+              text: "Which A14 PDFs do you want to include?",
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          hint: {
+            text: "All A14s are included by default. Untick any you do not need."
+          },
+          items: [
+            {
+              value: "a14-2015-07-11",
+              text: "11 July 2015, user created",
+              hint: {
+                text: "Covers 10 July 2015 to 11 April 2016"
+              },
+              checked: true
+            },
+            {
+              value: "a14-2016-04-12",
+              text: "12 April 2016, uprating",
+              hint: {
+                text: "Covers 12 April 2016 to 10 April 2017"
+              },
+              checked: true
+            },
+            {
+              value: "a14-2017-04-11",
+              text: "11 April 2017, uprating",
+              hint: {
+                text: "Covers 11 April 2017 to 9 April 2018"
+              },
+              checked: true
+            },
+            {
+              value: "a14-2018-04-10",
+              text: "10 April 2018, uprating",
+              hint: {
+                text: "Covers 10 April 2018 to 8 April 2019"
+              },
+              checked: true
+            },
+            {
+              value: "a14-2019-04-09",
+              text: "9 April 2019, uprating",
+              hint: {
+                text: "Covers 9 April 2019 to 6 April 2020"
+              },
+              checked: true
+            },
+            {
+              value: "a14-2020-04-07",
+              text: "7 April 2020, uprating",
+              hint: {
+                text: "Covers 7 April 2020 to 6 July 2020"
+              },
+              checked: true
+            },
+            {
+              value: "a14-2020-07-07",
+              text: "7 July 2020, savings credit",
+              hint: {
+                text: "Covers 7 July 2020 to 12 April 2021"
+              },
+              checked: true
+            },
+            {
+              value: "a14-2021-04-13",
+              text: "13 April 2021, uprating",
+              hint: {
+                text: "Covers 13 April 2021 to 11 April 2022"
+              },
+              checked: true
+            },
+            {
+              value: "a14-not-in-use",
+              text: "Not in use",
+              hint: {
+                text: "Created 10 July 2015"
+              }
+            }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Print selected PDFs",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/landingpagewithqb16entrydetailsfilledin",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

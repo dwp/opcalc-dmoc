@@ -1,0 +1,127 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Sign in – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "javascript:window.history.back()"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Sign in
+      </h1>
+
+      <p>
+        Sign in with your OpCalc User ID and password.
+      </p>
+
+      <form action="/landingpage" method="post" novalidate>
+
+        {{ govukInput({
+          label: {
+            text: "User ID"
+          },
+          hint: {
+            text: "Enter your User ID"
+          },
+          id: "user-id",
+          name: "userId",
+          autocomplete: "username"
+        }) }}
+
+        {{ govukPasswordInput({
+          label: {
+            text: "Password"
+          },
+          id: "password",
+          name: "password"
+        }) }}
+
+        {{ govukCheckboxes({
+          idPrefix: "change-password",
+          name: "changePassword",
+          items: [
+            {
+              value: "changePassword",
+              text: "Change password when you sign in",
+              id: "change-password",
+              conditional: {
+                html: govukPasswordInput({
+                  id: "new-password",
+                  name: "newPassword",
+                  label: {
+                    text: "New password"
+                  },
+                  hint: {
+                    text: "Must be between 6 and 8 characters long. Must not have more than two identical characters side by side, be your name or staff number, or be easily identifiable as belonging to you."
+                  }
+                })
+              }
+            }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Sign in",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help signing in</a>
+      </p>
+
+    </div>
+  </div>
+
+{% endblock %}
+
+

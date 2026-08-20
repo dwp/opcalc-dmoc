@@ -1,0 +1,225 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Benefit details – A14 form (ESA) – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/a14esa#income"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">A14 ESA income</span>
+
+      <h1 class="govuk-heading-l">
+        Benefit details
+      </h1>
+
+      <p class="govuk-body">Record a benefit the customer or their partner received.</p>
+
+      <form action="/return-to-tab" method="post">
+
+        <input type="hidden" name="returnTo" value="/a14esa#income">
+
+        {{ govukSelect({
+          id: "esa-benefit-type",
+          name: "esaBenefitType",
+          label: {
+            text: "Type"
+          },
+          hint: {
+            text: "The type determines which benefits are available to choose below."
+          },
+          items: [
+            { value: "", text: "Select a type", selected: not data.esaBenefitType },
+            { value: "contributory", text: "Contributory", selected: data.esaBenefitType == "contributory" },
+            { value: "income-related", text: "Income related", selected: data.esaBenefitType == "income-related" },
+            { value: "non-contributory", text: "Non-contributory", selected: data.esaBenefitType == "non-contributory" },
+            { value: "other", text: "Other", selected: data.esaBenefitType == "other" }
+          ]
+        }) }}
+
+        {{ govukSelect({
+          id: "esa-benefit",
+          name: "esaBenefit",
+          label: {
+            text: "Benefit"
+          },
+          items: [
+            { value: "", text: "Select a benefit", selected: not data.esaBenefit },
+            { value: "aa", text: "Attendance Allowance", selected: data.esaBenefit == "aa" },
+            { value: "ba", text: "Bereavement Allowance", selected: data.esaBenefit == "ba" },
+            { value: "chb", text: "Child Benefit", selected: data.esaBenefit == "chb" },
+            { value: "dla-care", text: "DLA Care Component", selected: data.esaBenefit == "dla-care" },
+            { value: "dla-mob", text: "DLA Mobility Component", selected: data.esaBenefit == "dla-mob" },
+            { value: "ib", text: "Incapacity Benefit", selected: data.esaBenefit == "ib" },
+            { value: "is", text: "Income Support", selected: data.esaBenefit == "is" },
+            { value: "jsa", text: "Jobseeker's Allowance", selected: data.esaBenefit == "jsa" },
+            { value: "ma", text: "Maternity Allowance", selected: data.esaBenefit == "ma" },
+            { value: "pc", text: "Pension Credit", selected: data.esaBenefit == "pc" },
+            { value: "sda", text: "Severe Disablement Allowance", selected: data.esaBenefit == "sda" },
+            { value: "sp", text: "State Pension", selected: data.esaBenefit == "sp" },
+            { value: "wpa", text: "Widowed Parent's Allowance", selected: data.esaBenefit == "wpa" }
+          ]
+        }) }}
+
+        {{ govukSelect({
+          id: "esa-benefit-payment-period",
+          name: "esaBenefitPaymentPeriod",
+          label: {
+            text: "Payment period"
+          },
+          items: [
+            { value: "Weekly", text: "Weekly", selected: data.esaBenefitPaymentPeriod == "Weekly" or not data.esaBenefitPaymentPeriod },
+            { value: "Fortnightly", text: "Fortnightly", selected: data.esaBenefitPaymentPeriod == "Fortnightly" },
+            { value: "4 weekly", text: "4 weekly", selected: data.esaBenefitPaymentPeriod == "4 weekly" },
+            { value: "Monthly", text: "Monthly", selected: data.esaBenefitPaymentPeriod == "Monthly" },
+            { value: "Quarterly", text: "Quarterly", selected: data.esaBenefitPaymentPeriod == "Quarterly" },
+            { value: "Annually", text: "Annually", selected: data.esaBenefitPaymentPeriod == "Annually" }
+          ]
+        }) }}
+
+        {{ govukCheckboxes({
+          idPrefix: "esa-auto-uprating",
+          name: "esaAutoUprating",
+          fieldset: {
+            legend: {
+              text: "Auto uprating"
+            }
+          },
+          items: [
+            {
+              value: "auto",
+              text: "Uprate this benefit automatically",
+              id: "esa-auto-uprating",
+              checked: data.esaAutoUprating,
+              conditional: {
+                html: govukDateInput({
+                  id: "esa-uprating-payday",
+                  namePrefix: "esaUpratingPayday",
+                  fieldset: {
+                    legend: {
+                      text: "Payday"
+                    }
+                  },
+                  hint: {
+                    text: "For example, 27 10 2008"
+                  },
+                  items: [
+                    { name: "day", classes: "govuk-input--width-2", value: data["esaUpratingPayday-day"] },
+                    { name: "month", classes: "govuk-input--width-2", value: data["esaUpratingPayday-month"] },
+                    { name: "year", classes: "govuk-input--width-4", value: data["esaUpratingPayday-year"] }
+                  ]
+                })
+              }
+            }
+          ]
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "esa-benefit-paid-to",
+          name: "esaBenefitPaidTo",
+          classes: "govuk-radios--inline",
+          fieldset: {
+            legend: {
+              text: "Paid to"
+            }
+          },
+          hint: {
+            text: "Partner is only available on a couple case."
+          },
+          items: [
+            { value: "customer", text: "Customer", checked: data.esaBenefitPaidTo == "customer" or not data.esaBenefitPaidTo },
+            { value: "partner", text: "Partner", checked: data.esaBenefitPaidTo == "partner" }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "esa-benefit-amount",
+          name: "esaBenefitAmount",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Amount"
+          },
+          value: data.esaBenefitAmount
+        }) }}
+
+        {{ govukInput({
+          id: "esa-benefit-disregard",
+          name: "esaBenefitDisregard",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Disregard"
+          },
+          hint: {
+            text: "Leave blank if no disregard applies"
+          },
+          value: data.esaBenefitDisregard
+        }) }}
+
+        {{ govukSummaryList({
+          rows: [
+            { key: { text: "Net weekly" }, value: { text: "£0.00" } }
+          ]
+        }) }}
+
+        <p class="govuk-body govuk-hint">Net weekly is worked out from the amount, payment period and disregard once this benefit is saved.</p>
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save benefit",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/a14esa#income",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

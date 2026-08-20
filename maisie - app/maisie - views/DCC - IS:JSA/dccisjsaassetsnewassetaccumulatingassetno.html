@@ -1,0 +1,262 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  New asset – DCC (IS or JSA) – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/opcalctype"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Diminishing capital calculation</span>
+
+      <h1 class="govuk-heading-l">
+        Asset
+      </h1>
+
+      {# Fields shown when the asset is NOT accumulating - a list of dated   #}
+      {# values you add one at a time.                                       #}
+      {% set notAccumulatingHtml %}
+
+        <h2 class="govuk-heading-s">Values</h2>
+
+        {{ govukTable({
+          head: [
+            { text: "Date" }, { text: "Value" }
+          ],
+          rows: [
+            [{ html: '<span class="govuk-hint">No values recorded</span>' }, { text: "" }]
+          ]
+        }) }}
+
+        <h3 class="govuk-heading-s">Add a value</h3>
+
+        {{ govukDateInput({
+          id: "isjsa-asset-value-date",
+          namePrefix: "isjsaAssetValueDate",
+          fieldset: {
+            legend: {
+              text: "Date"
+            }
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["isjsaAssetValueDate-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["isjsaAssetValueDate-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["isjsaAssetValueDate-year"] }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "isjsa-asset-value",
+          name: "isjsaAssetValue",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Value"
+          },
+          value: data.isjsaAssetValue
+        }) }}
+
+      {% endset %}
+
+      {# Fields shown when the asset IS accumulating - a start and end date  #}
+      {# with an initial and final value.                                    #}
+      {% set accumulatingHtml %}
+
+        <h2 class="govuk-heading-s">Accumulating asset details</h2>
+
+        {{ govukDateInput({
+          id: "isjsa-accumulating-start",
+          namePrefix: "isjsaAccumulatingStart",
+          fieldset: {
+            legend: {
+              text: "Start date"
+            }
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["isjsaAccumulatingStart-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["isjsaAccumulatingStart-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["isjsaAccumulatingStart-year"] }
+          ]
+        }) }}
+
+        {{ govukDateInput({
+          id: "isjsa-accumulating-end",
+          namePrefix: "isjsaAccumulatingEnd",
+          fieldset: {
+            legend: {
+              text: "End date"
+            }
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["isjsaAccumulatingEnd-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["isjsaAccumulatingEnd-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["isjsaAccumulatingEnd-year"] }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "isjsa-initial-value",
+          name: "isjsaInitialValue",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Initial value"
+          },
+          value: data.isjsaInitialValue if data.isjsaInitialValue else "0.00"
+        }) }}
+
+        {{ govukInput({
+          id: "isjsa-final-value",
+          name: "isjsaFinalValue",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Final value"
+          },
+          value: data.isjsaFinalValue
+        }) }}
+
+      {% endset %}
+
+      <form action="/return-to-tab" method="post">
+
+        {{ govukSelect({
+          id: "isjsa-asset-type",
+          name: "isjsaAssetType",
+          label: {
+            text: "Asset type"
+          },
+          items: [
+            { value: "", text: "Select an asset type", selected: not data.isjsaAssetType },
+            { value: "cash", text: "Cash", selected: data.isjsaAssetType == "cash" },
+            { value: "bank-account", text: "Bank account", selected: data.isjsaAssetType == "bank-account" },
+            { value: "building-society", text: "Building society account", selected: data.isjsaAssetType == "building-society" },
+            { value: "premium-bonds", text: "Premium bonds", selected: data.isjsaAssetType == "premium-bonds" },
+            { value: "shares", text: "Shares", selected: data.isjsaAssetType == "shares" },
+            { value: "property", text: "Property", selected: data.isjsaAssetType == "property" },
+            { value: "other", text: "Other", selected: data.isjsaAssetType == "other" }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "isjsa-asset-name",
+          name: "isjsaAssetName",
+          label: {
+            text: "Name (optional)"
+          },
+          value: data.isjsaAssetName
+        }) }}
+
+        <h2 class="govuk-heading-m">Customer's share of asset</h2>
+
+        <p class="govuk-body govuk-hint">For example, enter 1 and 2 if the customer owns half of this asset.</p>
+
+        {{ govukInput({
+          id: "isjsa-share-held",
+          name: "isjsaShareHeld",
+          classes: "govuk-input--width-2",
+          label: {
+            text: "Share held by the customer"
+          },
+          value: data.isjsaShareHeld if data.isjsaShareHeld else "1"
+        }) }}
+
+        {{ govukInput({
+          id: "isjsa-share-total",
+          name: "isjsaShareTotal",
+          classes: "govuk-input--width-2",
+          label: {
+            text: "Total shares"
+          },
+          value: data.isjsaShareTotal if data.isjsaShareTotal else "1"
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "isjsa-accumulating-asset",
+          name: "isjsaAccumulatingAsset",
+          fieldset: {
+            legend: {
+              text: "Is this an accumulating asset?"
+            }
+          },
+          hint: {
+            text: "Choose Yes if the value builds up over a period, rather than being recorded as separate values on set dates."
+          },
+          items: [
+            {
+              value: "no",
+              text: "No",
+              checked: data.isjsaAccumulatingAsset == "no" or not data.isjsaAccumulatingAsset,
+              conditional: {
+                html: notAccumulatingHtml
+              }
+            },
+            {
+              value: "yes",
+              text: "Yes",
+              checked: data.isjsaAccumulatingAsset == "yes",
+              conditional: {
+                html: accumulatingHtml
+              }
+            }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

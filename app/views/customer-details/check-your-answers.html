@@ -1,0 +1,128 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Start page – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "javascript:window.history.back()"
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+
+      <h1 class="govuk-heading-xl">
+        Check your answers
+      </h1>
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: {
+              text: "Personal details"
+            },
+            value: {
+              text: "Answer 1"
+            },
+            actions: {
+              items: [
+                {
+                  href: "#",
+                  text: "Change",
+                  visuallyHiddenText: "Question 1"
+                }
+              ]
+            }
+          }
+          ,
+          {
+            key: {
+              text: "Appointee or other details"
+            },
+            value: {
+              text: "Answer 2"
+            },
+            actions: {
+              items: [
+                {
+                  href: "#",
+                  text: "Change",
+                  visuallyHiddenText: "Question 2"
+                }
+              ]
+            }
+          }
+          ,
+          {
+            key: {
+              text: "Benefits details"
+            },
+            value: {
+              text: "Answer 3"
+            },
+            actions: {
+              items: [
+                {
+                  href: "#",
+                  text: "Change",
+                  visuallyHiddenText: "Question 3"
+                }
+              ]
+            }
+          }
+        ]
+      }) }}
+
+      <!-- <h2 class="govuk-heading-m">
+        Now confirm your answers
+      </h2> -->
+
+      <!-- <p>
+        You are confirming that, to the best of your knowledge, the details you are providing are correct.
+      </p> -->
+
+      <form action="/case-overview-confirmation" method="post" novalidate>
+
+        {{ govukButton({
+          text: "Confirm and create case"
+        }) }}
+
+      </form>
+
+    </div>
+  </div>
+{% endblock %}

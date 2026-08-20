@@ -1,0 +1,146 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Exclusion details – QB16 – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/opcalctype"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">QB16 exclusions</span>
+
+      <h1 class="govuk-heading-l">
+        Exclusion details
+      </h1>
+
+      <p class="govuk-body">Record a period that should be excluded from this calculation.</p>
+
+      <form action="/return-to-tab" method="post">
+
+        {{ govukDateInput({
+          id: "exclusion-from",
+          namePrefix: "exclusionFrom",
+          fieldset: {
+            legend: {
+              text: "From"
+            }
+          },
+          hint: {
+            text: "For example, 10 7 2015"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["exclusionFrom-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["exclusionFrom-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["exclusionFrom-year"] }
+          ]
+        }) }}
+
+        {{ govukDateInput({
+          id: "exclusion-to",
+          namePrefix: "exclusionTo",
+          fieldset: {
+            legend: {
+              text: "To"
+            }
+          },
+          hint: {
+            text: "For example, 16 7 2026"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["exclusionTo-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["exclusionTo-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["exclusionTo-year"] }
+          ]
+        }) }}
+
+        <h2 class="govuk-heading-m">Reason for the exclusion</h2>
+
+        <p class="govuk-body govuk-hint">Choose a reason, or enter an exclusion code if you already know it.</p>
+
+        {{ govukSelect({
+          id: "exclusion-reason",
+          name: "exclusionReason",
+          label: {
+            text: "Exclusion reason"
+          },
+          items: [
+            { value: "", text: "Choose a reason", selected: not data.exclusionReason },
+            { value: "Customer in hospital", text: "Customer in hospital", selected: data.exclusionReason == "Customer in hospital" },
+            { value: "Customer abroad", text: "Customer abroad", selected: data.exclusionReason == "Customer abroad" },
+            { value: "Customer in custody", text: "Customer in custody", selected: data.exclusionReason == "Customer in custody" },
+            { value: "Benefit suspended", text: "Benefit suspended", selected: data.exclusionReason == "Benefit suspended" },
+            { value: "No entitlement in this period", text: "No entitlement in this period", selected: data.exclusionReason == "No entitlement in this period" }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "exclusion-code",
+          name: "exclusionCode",
+          classes: "govuk-input--width-3",
+          label: {
+            text: "Exclusion code"
+          },
+          hint: {
+            text: "Leave blank to use the reason above."
+          },
+          value: data.exclusionCode
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

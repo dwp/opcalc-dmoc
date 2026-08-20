@@ -1,0 +1,134 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Insert standard text – QB16 – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/opcalctype"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <form action="/return-to-tab" method="post">
+
+        {{ govukRadios({
+          idPrefix: "standard-text",
+          name: "standardText",
+          fieldset: {
+            legend: {
+              text: "Which standard cause do you want to insert?",
+              isPageHeading: true,
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          hint: {
+            text: "The text you choose is added to the Cause box. You can edit it afterwards."
+          },
+          items: [
+            {
+              value: "Partner's earnings over limit",
+              text: "Partner's earnings over limit"
+            },
+            {
+              value: "Spouse awarded benefit",
+              text: "Spouse awarded benefit"
+            },
+            {
+              value: "'Maintained By' cessation",
+              text: "'Maintained By' cessation"
+            },
+            {
+              value: "Spouse left household",
+              text: "Spouse left household"
+            },
+            {
+              value: "Dependants' earnings extinguish ADI",
+              text: "Dependants' earnings extinguish ADI"
+            },
+            {
+              value: "Overlapping benefit extinguishes CDI",
+              text: "Overlapping benefit extinguishes CDI"
+            },
+            {
+              value: "Customer in hospital",
+              text: "Customer in hospital"
+            },
+            {
+              value: "Child or children left household",
+              text: "Child or children left household"
+            },
+            {
+              value: "Child or children in hospital",
+              text: "Child or children in hospital"
+            },
+            {
+              value: "CHB treated as cessation",
+              text: "CHB treated as cessation"
+            },
+            {
+              value: "CHB terminated",
+              text: "CHB terminated"
+            },
+            {
+              value: "Marriage of child",
+              text: "Marriage of child"
+            }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Print A14 PDF – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/a14forms"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  {# The preview is styled to look like the printed page, so caseworkers can #}
+  {# check it before sending it to the printer. The border and shadow are    #}
+  {# only there to make it read as a sheet of paper - print styles hide      #}
+  {# everything except the document itself.                                   #}
+  <style>
+    .opcalc-pdf {
+      background-color: #ffffff;
+      border: 1px solid #b1b4b6;
+      box-shadow: 0 2px 6px rgba(11, 12, 12, 0.16);
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+    .opcalc-pdf__masthead {
+      border-bottom: 2px solid #0b0c0c;
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+    }
+    @media print {
+      .dwp-header,
+      .dwp-footer,
+      .govuk-back-link,
+      .govuk-button-group,
+      .opcalc-pdf-actions {
+        display: none;
+      }
+      .opcalc-pdf {
+        border: 0;
+        box-shadow: none;
+        padding: 0;
+      }
+    }
+  </style>
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+
+      <h1 class="govuk-heading-l">Print A14 PDF</h1>
+
+      <p class="govuk-body">Check the PDF below, then print it.</p>
+
+      <div class="opcalc-pdf">
+
+        <div class="opcalc-pdf__masthead">
+          <h2 class="govuk-heading-m govuk-!-margin-bottom-1">A14 ASSESSMENT REPORT</h2>
+          <p class="govuk-body-s govuk-!-margin-bottom-0">OpCalc &middot; Department for Work and Pensions</p>
+        </div>
+
+        {{ govukSummaryList({
+          classes: "govuk-summary-list--no-border govuk-body-s",
+          rows: [
+            { key: { text: "NINO" }, value: { text: data.nino if data.nino else "AB 12 34 56 C" } },
+            { key: { text: "Name" }, value: { text: "Mr Max Martin" } },
+            { key: { text: "Printed on" }, value: { text: "6 August 2026" } }
+          ]
+        }) }}
+
+        <h3 class="govuk-heading-s">A14 assessment report</h3>
+
+        {{ govukSummaryList({
+          classes: "govuk-body-s",
+          rows: [
+            { key: { text: "Customer's personal allowance" }, value: { text: "£60.50" } },
+            { key: { text: "Severe disability premium" }, value: { text: "£0.00" } },
+            { key: { text: "Enhanced disability premium" }, value: { text: "£0.00" } },
+            { key: { text: "Carer premium" }, value: { text: "£0.00" } },
+            { key: { text: "Pensioner premium" }, value: { text: "£63.55" } },
+            { key: { text: "Support component" }, value: { text: "£0.00" } },
+            { key: { text: "Applicable amount" }, value: { text: "£124.05" } },
+            { key: { text: "Less weekly income" }, value: { text: "£0.00" } },
+            { key: { text: "Weekly total" }, value: { text: "£124.05" } }
+          ]
+        }) }}
+
+      </div>
+
+      <div class="opcalc-pdf-actions">
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Print",
+            href: "#",
+            attributes: { onclick: "window.print(); return false;" }
+          }) }}
+
+          {{ govukButton({
+            text: "Close",
+            href: "/a14forms",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+{% endblock %}

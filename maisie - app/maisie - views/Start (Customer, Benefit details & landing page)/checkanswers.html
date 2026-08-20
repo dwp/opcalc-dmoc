@@ -1,0 +1,237 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Check your answers – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/benefitdetails"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Check your answers
+      </h1>
+
+      <h2 class="govuk-heading-m">
+        Benefit
+      </h2>
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: { text: "Benefit" },
+            value: { text: data.benefit },
+            actions: {
+              items: [
+                { href: "/selectbenefit", text: "Change", visuallyHiddenText: "benefit" }
+              ]
+            }
+          }
+        ]
+      }) }}
+
+      <h2 class="govuk-heading-m">
+        Personal details
+      </h2>
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: { text: "National Insurance number" },
+            value: { text: data.nino },
+            actions: {
+              items: [
+                { href: "/customerdetails", text: "Change", visuallyHiddenText: "National Insurance number" }
+              ]
+            }
+          },
+          {
+            key: { text: "Date of birth" },
+            value: { text: data["dob-day"] + " / " + data["dob-month"] + " / " + data["dob-year"] },
+            actions: {
+              items: [
+                { href: "/customerdetails", text: "Change", visuallyHiddenText: "date of birth" }
+              ]
+            }
+          },
+          {
+            key: { text: "Name" },
+            value: { text: data.title + " " + data.forenames + " " + data.surname },
+            actions: {
+              items: [
+                { href: "/customerdetails", text: "Change", visuallyHiddenText: "name" }
+              ]
+            }
+          },
+          {
+            key: { text: "Sex" },
+            value: { text: data.sex },
+            actions: {
+              items: [
+                { href: "/customerdetails", text: "Change", visuallyHiddenText: "sex" }
+              ]
+            }
+          },
+          {
+            key: { text: "Address" },
+            value: { html: data.addressLine1 + "<br>" + data.addressLine2 + "<br>" + data.addressLine3 + "<br>" + data.postcode },
+            actions: {
+              items: [
+                { href: "/customerdetails", text: "Change", visuallyHiddenText: "address" }
+              ]
+            }
+          },
+          {
+            key: { text: "Telephone number" },
+            value: { text: data.telephone },
+            actions: {
+              items: [
+                { href: "/customerdetails", text: "Change", visuallyHiddenText: "telephone number" }
+              ]
+            }
+          }
+        ]
+      }) }}
+
+      <h2 class="govuk-heading-m">
+        Appointee/other details
+      </h2>
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: { text: "Corporate body" },
+            value: { text: "Yes" if data.corporateBody else "No" },
+            actions: {
+              items: [
+                { href: "/customerdetails#appointee-other-details", text: "Change", visuallyHiddenText: "corporate body" }
+              ]
+            }
+          },
+          {
+            key: { text: "Appointee name" },
+            value: { text: data.appointeeTitle + " " + data.appointeeForenames + " " + data.appointeeSurname },
+            actions: {
+              items: [
+                { href: "/customerdetails#appointee-other-details", text: "Change", visuallyHiddenText: "appointee name" }
+              ]
+            }
+          },
+          {
+            key: { text: "Same address as customer" },
+            value: { text: "Yes" if data.sameAddress else "No" },
+            actions: {
+              items: [
+                { href: "/customerdetails#appointee-other-details", text: "Change", visuallyHiddenText: "same address as customer" }
+              ]
+            }
+          }
+        ]
+      }) }}
+
+      <h2 class="govuk-heading-m">
+        Benefit details
+      </h2>
+
+      {# Built as a dynamic row list so fields that only apply to certain     #}
+      {# benefits (per Chapter 3 of the OpCalc user guide) only show up on    #}
+      {# check answers when they're actually relevant to the chosen benefit.  #}
+      {% set benefitDetailRows = [] %}
+
+      {% set _ = benefitDetailRows.push({
+        key: { text: "Discrepancy period" },
+        value: { text: data["discrepancyFrom-day"] + "/" + data["discrepancyFrom-month"] + "/" + data["discrepancyFrom-year"] + " to " + data["discrepancyTo-day"] + "/" + data["discrepancyTo-month"] + "/" + data["discrepancyTo-year"] },
+        actions: { items: [{ href: "/benefitdetails", text: "Change", visuallyHiddenText: "discrepancy period" }] }
+      }) %}
+
+      {% set _ = benefitDetailRows.push({
+        key: { text: "Initial benefit week" },
+        value: { text: data.initialBenefitWeek + " (" + data.benefitWeekType + ")" },
+        actions: { items: [{ href: "/benefitdetails", text: "Change", visuallyHiddenText: "initial benefit week" }] }
+      }) %}
+
+      {% set _ = benefitDetailRows.push({
+        key: { text: "Entitlement start date" },
+        value: { text: data["entitlementStartDate-day"] + "/" + data["entitlementStartDate-month"] + "/" + data["entitlementStartDate-year"] if data["entitlementStartDate-day"] else "Not entered" },
+        actions: { items: [{ href: "/benefitdetails", text: "Change", visuallyHiddenText: "entitlement start date" }] }
+      }) %}
+
+      {% if data.benefit == "IS" or data.benefit == "JSA" %}
+        {% set _ = benefitDetailRows.push({
+          key: { text: "Claim prior to 6 April 2004" },
+          value: { text: data.claimPriorTo2004 },
+          actions: { items: [{ href: "/benefitdetails", text: "Change", visuallyHiddenText: "claim prior to 6 April 2004" }] }
+        }) %}
+      {% endif %}
+
+      {% if data.benefit == "ESA" %}
+        {% set _ = benefitDetailRows.push({
+          key: { text: "ESA Main Phase start date" },
+          value: { text: data["esaMainPhaseStartDate-day"] + "/" + data["esaMainPhaseStartDate-month"] + "/" + data["esaMainPhaseStartDate-year"] },
+          actions: { items: [{ href: "/benefitdetails", text: "Change", visuallyHiddenText: "ESA Main Phase start date" }] }
+        }) %}
+      {% endif %}
+
+      {% if data.benefit == "IS-PC" %}
+        {% set _ = benefitDetailRows.push({
+          key: { text: "Pension Credit start date" },
+          value: { text: data["pensionCreditStartDate-day"] + "/" + data["pensionCreditStartDate-month"] + "/" + data["pensionCreditStartDate-year"] },
+          actions: { items: [{ href: "/benefitdetails", text: "Change", visuallyHiddenText: "Pension Credit start date" }] }
+        }) %}
+      {% endif %}
+
+      {{ govukSummaryList({
+        rows: benefitDetailRows
+      }) }}
+
+      <form action="/confirmation" method="post">
+        {{ govukButton({
+          text: "Confirm and create case",
+          type: "submit"
+        }) }}
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}
+
+

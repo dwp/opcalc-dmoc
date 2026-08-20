@@ -1,0 +1,108 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Start page – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-xl">
+        OpCalc
+      </h1>
+
+      <p>Use OpCalc to work out a customer's benefit entitlement based on their income, savings and household circumstances.</p>
+ 
+      <p>Use this service to:</p>
+ 
+      <ul class="govuk-list govuk-list--bullet">
+        <li>calculate benefit overpayments, underpayments and arrears accurately across a wide range of benefit products</li>
+        <li>determine the correct benefit entitlement based on customer circumstances</li>
+        <li>generate supporting forms and calculation outputs to help evidence decisions and manage benefit discrepancies</li>
+      </ul>
+ 
+      <!-- <p>Registering takes around 5 minutes.</p> -->
+ 
+      {{ govukButton({
+        text: "Start now",
+        href: "/landing-page",
+        isStartButton: true
+      }) }}
+ 
+      <h2 class="govuk-heading-m">
+        Before you start
+      </h2>
+ 
+      <p>
+        Have the customer's information ready, such as their National Insurance Number, and any other relevant details</a>.
+      </p>
+ 
+      <!-- <p>
+        The online service is also <a href="#">available in Welsh (ar gael yn Gymraeg)</a>.
+      </p> -->
+ 
+    </div>
+ 
+    <div class="govuk-grid-column-one-third">
+ 
+      <aside class="govuk-prototype-kit-common-templates-related-items" role="complementary">
+        <h2 class="govuk-heading-m" id="subsection-title">
+          Related content
+        </h2>
+        <nav role="navigation" aria-labelledby="subsection-title">
+          <ul class="govuk-list govuk-!-font-size-16">
+            <li>
+              <a href="https://intranet.dwp.gov.uk/manual/overpayments-department-work-and-pensions/general-overview-opcalc">
+                About OpCalc
+              </a>
+            </li>
+            <li>
+              <a href="#">
+                Help
+              </a>
+            </li>
+            <li>
+              <a href="#" class="govuk-!-font-weight-bold">
+                More <span class="govuk-visually-hidden">in Subsection</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+ 
+    </div>
+  </div>
+ 
+{% endblock %}

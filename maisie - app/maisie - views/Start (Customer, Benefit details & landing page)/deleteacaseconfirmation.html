@@ -1,0 +1,80 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Confirm you want to delete this case – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/deleteacase"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Do you wish to delete the selected item?
+      </h1>
+
+      {{ govukWarningText({
+        text: "This will permanently delete case AB 12 34 56 D. This cannot be undone.",
+        iconFallbackText: "Warning"
+      }) }}
+
+      <form action="/landingpage" method="post">
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Yes, delete case",
+            type: "submit",
+            classes: "govuk-button--warning"
+          }) }}
+
+          {{ govukButton({
+            text: "No, cancel",
+            href: "/deleteacase",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}
+

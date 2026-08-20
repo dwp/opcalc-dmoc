@@ -1,0 +1,157 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Start page – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "javascript:window.history.back()"
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Appointee or Other Details
+      </h1>
+
+      <form class="form" action="/customer-details/select-benefit" method="post">
+
+<div class="govuk-form-group">
+  <fieldset class="govuk-fieldset" aria-describedby="corporate-hint">
+  
+    <div class="govuk-checkboxes" data-module="govuk-checkboxes">
+      <div class="govuk-checkboxes__item">
+        <input class="govuk-checkboxes__input" id="corporate" name="corporate" type="checkbox" value="corporate-body">
+        <label class="govuk-label govuk-checkboxes__label" for="corporate">
+          Corporate body
+        </label>
+      </div>
+    </div>
+  </fieldset>
+</div>
+
+        <div class="govuk-form-group">
+  <label class="govuk-label" for="full-name">
+    Surname
+  </label>
+  <input class="govuk-input" id="full-name" name="fullName" type="text" spellcheck="false" autocomplete="name">
+</div>
+
+<div class="govuk-form-group">
+  <label class="govuk-label" for="full-name">
+    Forenames
+  </label>
+  <input class="govuk-input" id="full-name" name="fullName" type="text" spellcheck="false" autocomplete="name">
+</div>
+
+<div class="govuk-form-group">
+  <label class="govuk-label" for="sort">
+    Title
+  </label>
+  <select class="govuk-select" id="sort" name="sort">
+    <option value="published">Ms</option>
+    <option value="updated" selected>Mr</option>
+    <option value="views">Miss</option>
+    <option value="comments">Mrs</option>
+  </select>
+</div>
+
+<fieldset class="govuk-fieldset">
+  <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
+    <h1 class="govuk-fieldset__heading">
+      Address
+    </h1>
+  </legend>
+  
+<div class="govuk-form-group">
+  <fieldset class="govuk-fieldset" aria-describedby="corporate-hint">
+  
+    <div class="govuk-checkboxes" data-module="govuk-checkboxes">
+      <div class="govuk-checkboxes__item">
+        <input class="govuk-checkboxes__input" id="same-address" name="same-address" type="checkbox" value="same-address">
+        <label class="govuk-label govuk-checkboxes__label" for="same-address">
+          Appointee has same address as customer
+        </label>
+      </div>
+    </div>
+  </fieldset>
+</div>
+
+  <div class="govuk-form-group">
+    <label class="govuk-label" for="address-line-1">
+      Address line 1
+    </label>
+    <input class="govuk-input" id="address-line-1" name="addressLine1" type="text" autocomplete="address-line1">
+  </div>
+  <div class="govuk-form-group">
+    <label class="govuk-label" for="address-line-2">
+      Address line 2 (optional)
+    </label>
+    <input class="govuk-input" id="address-line-2" name="addressLine2" type="text" autocomplete="address-line2">
+  </div>
+  <div class="govuk-form-group">
+    <label class="govuk-label" for="address-town">
+      Town or city
+    </label>
+    <input class="govuk-input govuk-!-width-two-thirds" id="address-town" name="addressTown" type="text" autocomplete="address-level2">
+  </div>
+  <div class="govuk-form-group">
+    <label class="govuk-label" for="address-postcode">
+      Postcode
+    </label>
+    <input class="govuk-input govuk-input--width-10" id="address-postcode" name="addressPostcode" type="text" autocomplete="postal-code">
+  </div>
+  <div class="govuk-form-group">
+    <label class="govuk-label" for="address-postcode">
+      Telephone
+    </label>
+    <input class="govuk-input govuk-input--width-10" id="telephone" name="telephone" type="text" autocomplete="telephone">
+  </div>
+</fieldset>
+
+        {{ govukButton({
+          text: "Continue"
+        }) }}
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

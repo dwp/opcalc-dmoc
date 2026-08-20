@@ -1,0 +1,172 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Assets – Diminishing capital calculation – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBreadcrumbs({
+    items: [
+      {
+        text: "OpCalc",
+        href: "/landingpage"
+      },
+      {
+        text: "Case overview",
+        href: "/opcalctype"
+      },
+      {
+        text: "Diminishing capital calculation"
+      }
+    ]
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      {{ dwpQuickReference({
+        primaryReference: {
+          text: "Case reference",
+          value: data.nino if data.nino else "AB 12 34 56 C"
+        },
+        secondaryReference: {
+          text: "DCC period",
+          value: "8 October 1996 to 17 July 2026"
+        },
+        status: {
+          text: "Status",
+          value: "In progress",
+          classes: "govuk-tag--light-blue"
+        }
+      }) }}
+
+      <span class="govuk-caption-l">Diminishing capital calculation &mdash; step 1 of 6</span>
+
+      <h1 class="govuk-heading-l">
+        Assets
+      </h1>
+
+      <p>
+        Record the capital the customer held during this period.
+      </p>
+
+      {{ govukTable({
+        caption: "Assets recorded for this calculation",
+        captionClasses: "govuk-visually-hidden",
+        head: [
+          {
+            text: "Name"
+          },
+          {
+            text: "Date"
+          },
+          {
+            text: "Value",
+            format: "numeric"
+          },
+          {
+            text: "Capital sum",
+            format: "numeric"
+          },
+          {
+            text: "Actions"
+          }
+        ],
+        rows: [
+          [
+            {
+              text: data.assetName
+            },
+            {
+              text: "08/10/1996"
+            },
+            {
+              text: "£16,000.00",
+              format: "numeric"
+            },
+            {
+              text: "£16,000.00",
+              format: "numeric"
+            },
+            {
+              html: '<a class="govuk-link" href="#">Edit<span class="govuk-visually-hidden"> asset</span></a> | <a class="govuk-link" href="#">Add a value<span class="govuk-visually-hidden"> to this asset</span></a>'
+            }
+          ]
+        ] if data.assetName else [
+          [
+            {
+              html: '<span class="govuk-hint">No assets added yet</span>',
+              colspan: 5
+            }
+          ]
+        ]
+      }) }}
+
+      <ul class="govuk-list">
+        <li><a class="govuk-link" href="#">Add a new asset</a></li>
+        <li><a class="govuk-link" href="#">View the capital threshold</a></li>
+      </ul>
+
+      {{ govukCheckboxes({
+        idPrefix: "show-values",
+        name: "showValues",
+        classes: "govuk-checkboxes--small",
+        items: [
+          {
+            value: "showValues",
+            text: "Show values for each asset",
+            checked: true
+          }
+        ]
+      }) }}
+
+      <div class="govuk-button-group">
+        {{ govukButton({
+          text: "Save and continue",
+          href: "/dccisjsapaid"
+        }) }}
+
+        {{ govukButton({
+          text: "Cancel",
+          href: "/opcalctype",
+          classes: "govuk-button--secondary"
+        }) }}
+      </div>
+
+    </div>
+  </div>
+
+{% endblock %}

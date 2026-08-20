@@ -1,0 +1,62 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+Content page template – {{ serviceName }} – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block containerStart %}
+{{ govukBackLink({
+text: "Back",
+href: "/start"
+}) }}
+{% endblock %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+<div class=s"govuk-grid-column-two-thirds">
+
+<h1 class="govuk-heading-l">
+Sign in to OpCalc
+</h1>
+
+<p class="govuk-body">This is the ID you use to sign in to DWP systems</p>
+
+{% from "govuk/components/input/macro.njk" import govukInput %}
+
+{{ govukInput({
+label: {
+text: "User ID",
+classes: "govuk-label--m",
+isPageHeading: true
+},
+id: "User ID",
+name: "User ID"
+}) }}
+
+{{ govukInput({
+label: {
+text: "Password",
+classes: "govuk-label--m",
+isPageHeading: true
+},
+id: "Password",
+name: "Password"
+}) }}
+
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{{ govukButton({
+text: "Sign In",
+href: "/landing-page",
+isStartButton: true
+}) }}
+
+<p class="govuk-body">
+<a class="govuk-link" href="#">I've forgotten my password</a>
+</p>
+<p class="govuk-body">
+<a class="govuk-link" href="#">Change your password</a>
+</p>
+
+{% endblock %}

@@ -1,0 +1,147 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Are you sure you want to delete this case? – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/opcalctype"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      {% set picked = data.savedCases[data.caseToDelete] if (data.caseToDelete and data.savedCases) else none %}
+
+      <span class="govuk-caption-l">{{ picked.nino if picked else (data.nino if data.nino else "AB 12 34 56 C") }}</span>
+
+      <h1 class="govuk-heading-l">
+        Are you sure you want to delete this case?
+      </h1>
+
+      {{ govukWarningText({
+        text: "Deleting this case removes every form and calculation recorded against it. This cannot be undone.",
+        iconFallbackText: "Warning"
+      }) }}
+
+      <h2 class="govuk-heading-m">What will be deleted</h2>
+
+      {% set a14Done = true if data.a14Complete else false %}
+      {% set qb16Done = true if data.qb16Complete else false %}
+      {% set dccDone = true if data.dccComplete else false %}
+
+      {% set deleteRows = [] %}
+
+      {% if picked %}
+
+        {% set _ = deleteRows.push({
+          key: { text: "Case reference" },
+          value: { text: picked.nino }
+        }) %}
+
+        {% set _ = deleteRows.push({
+          key: { text: "Customer" },
+          value: { text: picked.surname }
+        }) %}
+
+        {% set _ = deleteRows.push({
+          key: { text: "Benefit type" },
+          value: { text: picked.benefit if picked.benefit else "Not set" }
+        }) %}
+
+        {% set _ = deleteRows.push({
+          key: { text: "Last saved" },
+          value: { text: picked.savedAt }
+        }) %}
+
+      {% else %}
+
+      {% set _ = deleteRows.push({
+        key: { text: "Customer details" },
+        value: { text: (data.surname if data.surname else "Mr Max Martin") }
+      }) %}
+
+      {% if a14Done %}
+        {% set _ = deleteRows.push({
+          key: { text: "A14 forms" },
+          value: { text: "13 forms" }
+        }) %}
+      {% endif %}
+
+      {% if qb16Done %}
+        {% set _ = deleteRows.push({
+          key: { text: "QB16 entry details" },
+          value: { text: "QB16: 10/07/2015 to 16/07/2026" }
+        }) %}
+      {% endif %}
+
+      {% if dccDone %}
+        {% set _ = deleteRows.push({
+          key: { text: "Diminishing capital calculation" },
+          value: { text: "Calculation complete" }
+        }) %}
+      {% endif %}
+
+      {% endif %}
+
+      {{ govukSummaryList({
+        rows: deleteRows
+      }) }}
+
+      <form action="/case-delete" method="post">
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Yes, delete this case",
+            classes: "govuk-button--warning",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

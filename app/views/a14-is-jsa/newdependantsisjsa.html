@@ -1,0 +1,153 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Dependant details – A14 form (IS or JSA) – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {# data.returnTo comes from the link that opened this page, so Back goes    #}
+  {# to the tab it came from.                                                 #}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/opcalctype"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">A14 dependants</span>
+
+      <h1 class="govuk-heading-l">
+        Dependant details
+      </h1>
+
+      {# Everything below sits inside this form, including the buttons. A     #}
+      {# submit button outside the form focuses but does nothing.             #}
+      <form action="/return-to-tab" method="post">
+
+        {{ govukDateInput({
+          id: "dependant-date-of-birth",
+          namePrefix: "dependantDateOfBirth",
+          fieldset: {
+            legend: {
+              text: "Date of birth"
+            }
+          },
+          hint: {
+            text: "For example, 27 3 2015"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["dependantDateOfBirth-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["dependantDateOfBirth-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["dependantDateOfBirth-year"] }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "dependant-age",
+          name: "dependantAge",
+          classes: "govuk-input--width-2",
+          label: {
+            text: "Age"
+          },
+          hint: {
+            text: "Only needed if date of birth is not known"
+          },
+          inputmode: "numeric",
+          value: data.dependantAge
+        }) }}
+
+        {{ govukSummaryList({
+          rows: [
+            {
+              key: { text: "Amount" },
+              value: { text: "£" + (data.dependantAmount if data.dependantAmount else "0.00") }
+            }
+          ]
+        }) }}
+
+        <p class="govuk-body govuk-hint">The amount is worked out from the dependant's age once this is saved.</p>
+
+        {{ govukCheckboxes({
+          idPrefix: "disabled-childs-premium",
+          name: "disabledChildsPremium",
+          fieldset: {
+            legend: {
+              text: "Disabled child's premium"
+            }
+          },
+          items: [
+            { value: "AA", text: "AA" },
+            { value: "Mob A", text: "Mob A" },
+            { value: "DLA", text: "DLA" },
+            { value: "EDCP", text: "EDCP" },
+            { value: "Blind", text: "Blind" }
+          ]
+        }) }}
+
+        {{ govukSummaryList({
+          rows: [
+            {
+              key: { text: "Premium" },
+              value: { text: "£" + (data.dependantPremium if data.dependantPremium else "0.00") }
+            }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help with dependant details</a>
+      </p>
+
+    </div>
+  </div>
+
+{% endblock %}
+

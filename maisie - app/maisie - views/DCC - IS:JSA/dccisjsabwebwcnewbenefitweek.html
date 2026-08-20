@@ -1,0 +1,139 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Change of benefit payment day – DCC (IS or JSA) – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/opcalctype"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Diminishing capital calculation</span>
+
+      <h1 class="govuk-heading-l">
+        Change of benefit payment day
+      </h1>
+
+      <form action="/return-to-tab" method="post">
+
+        {{ govukDateInput({
+          id: "isjsa-bw-date-of-change",
+          namePrefix: "isjsaBwDateOfChange",
+          fieldset: {
+            legend: {
+              text: "Date of change"
+            }
+          },
+          hint: {
+            text: "For example, 8 10 1996"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["isjsaBwDateOfChange-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["isjsaBwDateOfChange-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["isjsaBwDateOfChange-year"] }
+          ]
+        }) }}
+
+        {{ govukSelect({
+          id: "isjsa-bw-pay-day",
+          name: "isjsaBwPayDay",
+          label: {
+            text: "Benefit pay day"
+          },
+          items: [
+            { value: "monday", text: "Monday", selected: data.isjsaBwPayDay == "monday" or not data.isjsaBwPayDay },
+            { value: "tuesday", text: "Tuesday", selected: data.isjsaBwPayDay == "tuesday" },
+            { value: "wednesday", text: "Wednesday", selected: data.isjsaBwPayDay == "wednesday" },
+            { value: "thursday", text: "Thursday", selected: data.isjsaBwPayDay == "thursday" },
+            { value: "friday", text: "Friday", selected: data.isjsaBwPayDay == "friday" },
+            { value: "saturday", text: "Saturday", selected: data.isjsaBwPayDay == "saturday" },
+            { value: "sunday", text: "Sunday", selected: data.isjsaBwPayDay == "sunday" }
+          ]
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "isjsa-bw-type",
+          name: "isjsaBwType",
+          classes: "govuk-radios--inline",
+          fieldset: {
+            legend: {
+              text: "Benefit week type"
+            }
+          },
+          items: [
+            { value: "bwe", text: "BWE", checked: data.isjsaBwType == "bwe" or not data.isjsaBwType },
+            { value: "bwc", text: "BWC", checked: data.isjsaBwType == "bwc" }
+          ]
+        }) }}
+
+        <h2 class="govuk-heading-m">Benefit week information</h2>
+
+        {{ govukSummaryList({
+          rows: [
+            { key: { text: "Pay day and BWE or BWC" }, value: { text: "Unchanged, no part weeks" } },
+            { key: { text: "First week" }, value: { text: "08/10/1996 to 14/10/1996" } },
+            { key: { text: "Last week" }, value: { text: "07/07/2026 to 13/07/2026" } }
+          ]
+        }) }}
+
+        {{ govukInsetText({
+          text: "The current details are the same as the previous entry."
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

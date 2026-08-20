@@ -1,0 +1,97 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Diminishing capital calculation – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/dccpcispccaseoverview"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+
+      <h1 class="govuk-heading-l">
+        Diminishing capital calculation
+      </h1>
+
+      {{ govukSummaryList({
+        classes: "govuk-summary-list--no-border",
+        rows: [
+          { key: { text: "NINO" }, value: { text: data.nino if data.nino else "AB 12 34 56 C" } },
+          { key: { text: "Name" }, value: { text: "Mr Max Martin" } },
+          { key: { text: "Period" }, value: { text: "10/07/2015 to 16/07/2026" } }
+        ]
+      }) }}
+
+      {{ govukTable({
+        caption: "Capital and payment amounts by period",
+        captionClasses: "govuk-visually-hidden",
+        head: [
+          { text: "From" },
+          { text: "To" },
+          { text: "Capital held" },
+          { text: "Reduced by DCC" },
+          { text: "Notional capital" },
+          { text: "Amount paid (weekly)" },
+          { text: "Amount payable (weekly)" },
+          { text: "Amount overpaid (weekly)" }
+        ],
+        rows: [
+          [
+            { html: '<span class="govuk-hint">No calculation output recorded</span>' },
+            { text: "" }, { text: "" }, { text: "" }, { text: "" }, { text: "" }, { text: "" }, { text: "" }
+          ]
+        ]
+      }) }}
+
+      {{ govukWarningText({
+        text: "The original report was blurred in the screenshot, so the columns above are taken from the IS/JSA version. Confirm the real PC/ISPC column set before this goes into testing.",
+        iconFallbackText: "Warning"
+      }) }}
+
+      <ul class="govuk-list">
+        <li><a class="govuk-link" href="/dccPDF">Print PDF</a></li>
+        <li><a class="govuk-link" href="/dccpcispc">Edit this calculation</a></li>
+        <li><a class="govuk-link" href="/dccpcispccaseoverview">Close this form</a></li>
+      </ul>
+
+    </div>
+  </div>
+
+{% endblock %}

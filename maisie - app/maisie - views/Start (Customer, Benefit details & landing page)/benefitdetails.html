@@ -1,0 +1,466 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Benefit details – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/customerdetails"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  {# Which extra forms/screens apply to each benefit. Updated to match          #}
+  {# Chapter 2 (General Overview) paragraphs 27, 30, 32-34, 38, 43, 46 and 48   #}
+  {# of the OpCalc user guide, which set out exactly which benefits each       #}
+  {# application (A14, BA3, QB16, FAMC, Housing, DCC, Average Hours,           #}
+  {# Average Earnings, QB33) applies to. QB16 is mandatory for every benefit   #}
+  {# listed in Chapter 2 paragraph 6.                                         #}
+  {% set formsMap = {
+    "AA": ["qb16"],
+    "BA": ["qb16"],
+    "DLA-Care-Mob": ["qb16"],
+    "DLA-Mob": ["qb16"],
+    "DLA-Care": ["qb16"],
+    "ESA": ["qb16", "a14", "housing", "dcc", "avgHours", "avgEarnings", "qb33"],
+    "IB": ["qb16"],
+    "IS": ["qb16", "a14", "ba3", "famc", "housing", "dcc", "avgHours", "avgEarnings"],
+    "IS-JSA": ["qb16", "a14", "ba3", "famc", "housing", "dcc"],
+    "IS-PC": ["qb16", "a14", "ba3", "housing", "dcc"],
+    "IVB": ["qb16"],
+    "IVB-IB": ["qb16"],
+    "JSA": ["qb16", "a14", "ba3", "famc", "housing", "dcc", "avgHours", "avgEarnings", "qb33"],
+    "MA": ["qb16"],
+    "PIB": ["qb16"],
+    "PC": ["qb16", "a14", "ba3", "housing", "dcc", "avgEarnings"],
+    "RP": ["qb16"],
+    "SDA": ["qb16"],
+    "SB": ["qb16"],
+    "WMA": ["qb16"],
+    "WPA": ["qb16"],
+    "WP": ["qb16"]
+  } %}
+
+  {% set benefitLabels = {
+    "AA": "Attendance Allowance",
+    "BA": "Bereavement Allowance",
+    "DLA-Care-Mob": "DLA Care & Mobility",
+    "DLA-Mob": "DLA Mobility Component",
+    "DLA-Care": "DLA Care Component",
+    "ESA": "Employment and Support Allowance",
+    "IB": "Incapacity Benefit",
+    "IS": "Income Support",
+    "IS-JSA": "Income Support / Jobseekers Allowance",
+    "IS-PC": "Income Support / Pension Credit",
+    "IVB": "Invalidity Benefit",
+    "IVB-IB": "Invalidity / Incapacity Benefit",
+    "JSA": "Jobseekers Allowance",
+    "MA": "Maternity Allowance",
+    "PIB": "Passported Incapacity Benefit",
+    "PC": "Pension Credit",
+    "RP": "Retirement Pension",
+    "SDA": "Severe Disablement Allowance",
+    "SB": "Sickness Benefit",
+    "WMA": "Widowed Mother's Allowance",
+    "WPA": "Widowed Parent's Allowance",
+    "WP": "Widow's Pension"
+  } %}
+
+  {% set activeForms = formsMap[data.benefit] if formsMap[data.benefit] else ["qb16"] %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Benefit details
+      </h1>
+
+      {% if data.benefit %}
+        <p class="govuk-body">
+          Showing the forms and fields needed for <strong>{{ benefitLabels[data.benefit] }}</strong>.
+        </p>
+      {% endif %}
+
+      <form action="/checkanswers" method="post">
+
+        {{ govukSelect({
+          id: "benefit",
+          name: "benefit",
+          label: {
+            text: "Benefit"
+          },
+          items: [
+            { value: "", text: "Choose a benefit" },
+            { value: "AA", text: "Attendance Allowance", selected: data.benefit == "AA" },
+            { value: "BA", text: "Bereavement Allowance", selected: data.benefit == "BA" },
+            { value: "DLA-Care-Mob", text: "DLA Care & Mobility", selected: data.benefit == "DLA-Care-Mob" },
+            { value: "DLA-Mob", text: "DLA Mobility Component", selected: data.benefit == "DLA-Mob" },
+            { value: "DLA-Care", text: "DLA Care Component", selected: data.benefit == "DLA-Care" },
+            { value: "ESA", text: "Employment and Support Allowance", selected: data.benefit == "ESA" },
+            { value: "IB", text: "Incapacity Benefit", selected: data.benefit == "IB" },
+            { value: "IS", text: "Income Support", selected: data.benefit == "IS" },
+            { value: "IS-JSA", text: "Income Support / Jobseekers Allowance", selected: data.benefit == "IS-JSA" },
+            { value: "IS-PC", text: "Income Support / Pension Credit", selected: data.benefit == "IS-PC" },
+            { value: "IVB", text: "Invalidity Benefit", selected: data.benefit == "IVB" },
+            { value: "IVB-IB", text: "Invalidity / Incapacity Benefit", selected: data.benefit == "IVB-IB" },
+            { value: "JSA", text: "Jobseekers Allowance", selected: data.benefit == "JSA" },
+            { value: "MA", text: "Maternity Allowance", selected: data.benefit == "MA" },
+            { value: "PIB", text: "Passported Incapacity Benefit", selected: data.benefit == "PIB" },
+            { value: "PC", text: "Pension Credit", selected: data.benefit == "PC" },
+            { value: "RP", text: "Retirement Pension", selected: data.benefit == "RP" },
+            { value: "SDA", text: "Severe Disablement Allowance", selected: data.benefit == "SDA" },
+            { value: "SB", text: "Sickness Benefit", selected: data.benefit == "SB" },
+            { value: "WMA", text: "Widowed Mother's Allowance", selected: data.benefit == "WMA" },
+            { value: "WPA", text: "Widowed Parent's Allowance", selected: data.benefit == "WPA" },
+            { value: "WP", text: "Widow's Pension", selected: data.benefit == "WP" }
+          ]
+        }) }}
+
+        <button type="submit" formaction="/benefitdetails" formnovalidate class="govuk-button govuk-button--secondary" data-module="govuk-button">
+          Update benefit
+        </button>
+
+        <h2 class="govuk-heading-m">
+          Discrepancy period
+        </h2>
+
+        {{ govukDateInput({
+          id: "discrepancy-from",
+          namePrefix: "discrepancyFrom",
+          fieldset: {
+            legend: {
+              text: "From"
+            }
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["discrepancyFrom-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["discrepancyFrom-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["discrepancyFrom-year"] }
+          ]
+        }) }}
+
+        {{ govukDateInput({
+          id: "discrepancy-to",
+          namePrefix: "discrepancyTo",
+          fieldset: {
+            legend: {
+              text: "To"
+            }
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["discrepancyTo-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["discrepancyTo-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["discrepancyTo-year"] }
+          ]
+        }) }}
+
+        {{ govukSelect({
+          id: "initial-benefit-week",
+          name: "initialBenefitWeek",
+          label: {
+            text: "Initial benefit week"
+          },
+          items: [
+            { value: "Monday", text: "Monday", selected: data.initialBenefitWeek == "Monday" },
+            { value: "Tuesday", text: "Tuesday", selected: data.initialBenefitWeek == "Tuesday" },
+            { value: "Wednesday", text: "Wednesday", selected: data.initialBenefitWeek == "Wednesday" },
+            { value: "Thursday", text: "Thursday", selected: data.initialBenefitWeek == "Thursday" },
+            { value: "Friday", text: "Friday", selected: data.initialBenefitWeek == "Friday" },
+            { value: "Saturday", text: "Saturday", selected: data.initialBenefitWeek == "Saturday" },
+            { value: "Sunday", text: "Sunday", selected: data.initialBenefitWeek == "Sunday" }
+          ]
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "benefit-week-type",
+          name: "benefitWeekType",
+          classes: "govuk-radios--inline",
+          fieldset: {
+            legend: {
+              text: "Benefit week type"
+            }
+          },
+          items: [
+            { value: "BWE", text: "BWE (Benefit Week Ending)", checked: data.benefitWeekType == "BWE" },
+            { value: "BWC", text: "BWC (Benefit Week Commencing)", checked: data.benefitWeekType == "BWC" }
+          ]
+        }) }}
+
+        {{ govukDateInput({
+          id: "entitlement-start-date",
+          namePrefix: "entitlementStartDate",
+          fieldset: {
+            legend: {
+              text: "Entitlement start date"
+            }
+          },
+          hint: {
+            text: "Only needed if entitlement started part way through a benefit week. Leave blank if entitlement began on a complete benefit week."
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["entitlementStartDate-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["entitlementStartDate-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["entitlementStartDate-year"] }
+          ]
+        }) }}
+
+        {% if data.benefit == "IS" or data.benefit == "JSA" %}
+          {{ govukRadios({
+            idPrefix: "claim-prior-2004",
+            name: "claimPriorTo2004",
+            classes: "govuk-radios--inline",
+            fieldset: {
+              legend: {
+                text: "Is the date of claim prior to 6 April 2004?"
+              }
+            },
+            hint: {
+              text: "This only applies where the Discrepancy period from date is on or after 6 April 2004. Leave as Yes if the claim started before 6 April 2004. Selecting No will prevent the inclusion of dependants and their associated premiums and benefits."
+            },
+            items: [
+              { value: "yes", text: "Yes", checked: data.claimPriorTo2004 == "yes" or not data.claimPriorTo2004 },
+              { value: "no", text: "No", checked: data.claimPriorTo2004 == "no" }
+            ]
+          }) }}
+        {% endif %}
+
+        {% if data.benefit == "ESA" %}
+          {{ govukDateInput({
+            id: "esa-main-phase-start-date",
+            namePrefix: "esaMainPhaseStartDate",
+            fieldset: {
+              legend: {
+                text: "ESA Main Phase start date"
+              }
+            },
+            hint: {
+              text: "Enter the date the main phase commenced"
+            },
+            items: [
+              { name: "day", classes: "govuk-input--width-2", value: data["esaMainPhaseStartDate-day"] },
+              { name: "month", classes: "govuk-input--width-2", value: data["esaMainPhaseStartDate-month"] },
+              { name: "year", classes: "govuk-input--width-4", value: data["esaMainPhaseStartDate-year"] }
+            ]
+          }) }}
+        {% endif %}
+
+        {% if data.benefit == "IS-PC" %}
+          {{ govukDateInput({
+            id: "pension-credit-start-date",
+            namePrefix: "pensionCreditStartDate",
+            fieldset: {
+              legend: {
+                text: "Pension Credit start date"
+              }
+            },
+            hint: {
+              text: "This only applies where the Discrepancy period to date is on or after 6 April 2010 and the customer turned 60 on or after 6 April 2010. Enter the date Pension Credit commences."
+            },
+            items: [
+              { name: "day", classes: "govuk-input--width-2", value: data["pensionCreditStartDate-day"] },
+              { name: "month", classes: "govuk-input--width-2", value: data["pensionCreditStartDate-month"] },
+              { name: "year", classes: "govuk-input--width-4", value: data["pensionCreditStartDate-year"] }
+            ]
+          }) }}
+        {% endif %}
+
+        <h2 class="govuk-heading-m">
+          QB16 entry
+          {{ govukTag({ text: "Mandatory" }) }}
+        </h2>
+
+        {{ govukInput({
+          id: "qb16-weekly-amount",
+          name: "qb16WeeklyAmount",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Weekly amount"
+          },
+          value: data.qb16WeeklyAmount
+        }) }}
+
+        {% if "a14" in activeForms %}
+          <h2 class="govuk-heading-m">
+            A14 form
+          </h2>
+
+          {{ govukCheckboxes({
+            idPrefix: "generate-a14",
+            name: "generateA14",
+            items: [
+              {
+                value: "generateA14",
+                text: "Generate an A14 form for this case",
+                id: "generate-a14",
+                checked: data.generateA14
+              }
+            ]
+          }) }}
+        {% endif %}
+
+        {% if "ba3" in activeForms %}
+          <h2 class="govuk-heading-m">
+            BA3 entry
+          </h2>
+
+          {{ govukInput({
+            id: "ba3-reference",
+            name: "ba3Reference",
+            label: {
+              text: "BA3 reference number"
+            },
+            value: data.ba3Reference
+          }) }}
+        {% endif %}
+
+        {% if "famc" in activeForms %}
+          <h2 class="govuk-heading-m">
+            Family Credit (FAMC) entry
+          </h2>
+
+          {{ govukInput({
+            id: "famc-reference",
+            name: "famcReference",
+            label: {
+              text: "Family Credit reference number"
+            },
+            value: data.famcReference
+          }) }}
+        {% endif %}
+
+        {% if "housing" in activeForms %}
+          <h2 class="govuk-heading-m">
+            Housing costs
+          </h2>
+
+          {{ govukInput({
+            id: "housing-costs",
+            name: "housingCosts",
+            classes: "govuk-input--width-5",
+            prefix: { text: "£" },
+            label: {
+              text: "Weekly housing costs"
+            },
+            value: data.housingCosts
+          }) }}
+        {% endif %}
+
+        {% if "dcc" in activeForms %}
+          <h2 class="govuk-heading-m">
+            Diminishing Capital Calculation (DCC)
+          </h2>
+
+          {{ govukCheckboxes({
+            idPrefix: "include-dcc",
+            name: "includeDcc",
+            items: [
+              {
+                value: "includeDcc",
+                text: "Include a diminishing capital calculation for this case",
+                id: "include-dcc",
+                checked: data.includeDcc
+              }
+            ]
+          }) }}
+        {% endif %}
+
+        {% if "avgHours" in activeForms %}
+          <h2 class="govuk-heading-m">
+            Average hours
+          </h2>
+
+          {{ govukInput({
+            id: "average-hours",
+            name: "averageHours",
+            classes: "govuk-input--width-3",
+            label: {
+              text: "Average hours worked per week"
+            },
+            value: data.averageHours
+          }) }}
+        {% endif %}
+
+        {% if "avgEarnings" in activeForms %}
+          <h2 class="govuk-heading-m">
+            Average earnings
+          </h2>
+
+          {{ govukInput({
+            id: "average-earnings",
+            name: "averageEarnings",
+            classes: "govuk-input--width-5",
+            prefix: { text: "£" },
+            label: {
+              text: "Average weekly earnings"
+            },
+            value: data.averageEarnings
+          }) }}
+        {% endif %}
+
+        {% if "qb33" in activeForms %}
+          <h2 class="govuk-heading-m">
+            QB33 entry
+            {{ govukTag({ text: "Auto", classes: "govuk-tag--grey" }) }}
+          </h2>
+
+          <p class="govuk-body">
+            A QB33 entry assigns overpayments of the taxable elements of JSA and ESA to the correct tax years. It is generated automatically from the QB16 entry and does not need to be entered manually.
+          </p>
+        {% endif %}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Continue",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/landingpage",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}
+
+
+

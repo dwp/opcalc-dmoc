@@ -1,0 +1,550 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  DCC (IS or JSA) – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/opcalctype"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+
+      <h1 class="govuk-heading-l">
+        Diminishing capital calculation (Income Support or Jobseeker's Allowance)
+      </h1>
+
+      <p class="govuk-body">DCC: 08/10/1996 to 17/07/2026</p>
+
+      <form action="/dccisjsa-action" method="post">
+
+        {% set assetsHtml %}
+
+          <h2 class="govuk-heading-m">Assets</h2>
+
+          <p class="govuk-body govuk-hint">Record the capital the customer held during this period.</p>
+
+          {{ govukTable({
+            head: [
+              { text: "Name" }, { text: "Date" }, { text: "Value" }, { text: "C.S." }
+            ],
+            rows: [
+              [
+                { text: data.isjsaAssetType | capitalize },
+                { text: data["isjsaAssetValueDate-day"] + "/" + data["isjsaAssetValueDate-month"] + "/" + data["isjsaAssetValueDate-year"] },
+                { text: "£" + data.isjsaAssetValue },
+                { text: data.isjsaShareHeld + "/" + data.isjsaShareTotal }
+              ]
+            ] if data.isjsaAssetType else [
+              [{ html: '<span class="govuk-hint">No assets recorded</span>' }, { text: "" }, { text: "" }, { text: "" }]
+            ]
+          }) }}
+
+          <p class="govuk-body"><a class="govuk-link" href="/dccisjsaassetsnewassetaccumulatingassetno?returnTo=/dccisjsa%23assets">New asset</a></p>
+
+          {{ govukCheckboxes({
+            idPrefix: "isjsa-show-values",
+            name: "isjsaShowValues",
+            classes: "govuk-checkboxes--small",
+            items: [
+              {
+                value: "showValues",
+                text: "Show values",
+                id: "isjsa-show-values",
+                checked: data.isjsaShowValues,
+                conditional: {
+                  html: '<p class="govuk-body"><a class="govuk-link" href="/dccisjsaassetstickshowvalues?returnTo=/dccisjsa%23assets">New value</a></p>'
+                }
+              }
+            ]
+          }) }}
+
+        {% endset %}
+
+        {% set paidHtml %}
+
+          <h2 class="govuk-heading-m">IS/JSA rate details</h2>
+
+          <p class="govuk-body govuk-hint">At least one rate must be recorded here before the calculation can be run.</p>
+
+          {{ govukTable({
+            head: [
+              { text: "Date" }, { text: "Amount" }, { text: "PA" }
+            ],
+            rows: [
+              [
+                { text: data["isjsaRateDate-day"] + "/" + data["isjsaRateDate-month"] + "/" + data["isjsaRateDate-year"] },
+                { text: "£" + data.isjsaRateAmount },
+                { text: "£" + data.isjsaRatePersonalAllowance if data.isjsaRatePersonalAllowance else "" }
+              ]
+            ] if data.isjsaRateAmount else [
+              [{ html: '<span class="govuk-hint">No rates recorded</span>' }, { text: "" }, { text: "" }]
+            ]
+          }) }}
+
+          <h3 class="govuk-heading-s">Add a rate</h3>
+
+          <div class="js-add-group">
+
+            {{ govukDateInput({
+              id: "isjsa-rate-date",
+              namePrefix: "isjsaRateDate",
+              fieldset: {
+                legend: {
+                  text: "Date"
+                }
+              },
+              hint: {
+                text: "For example, 8 10 1996"
+              },
+              items: [
+                { name: "day", classes: "govuk-input--width-2", attributes: { "data-required": "true" } },
+                { name: "month", classes: "govuk-input--width-2", attributes: { "data-required": "true" } },
+                { name: "year", classes: "govuk-input--width-4", attributes: { "data-required": "true" } }
+              ]
+            }) }}
+
+            {{ govukInput({
+              id: "isjsa-rate-amount",
+              name: "isjsaRateAmount",
+              classes: "govuk-input--width-5",
+              prefix: { text: "£" },
+              label: { text: "Amount" },
+              attributes: { "data-required": "true" }
+            }) }}
+
+            {{ govukCheckboxes({
+              idPrefix: "isjsa-rate-taxable",
+              name: "isjsaRateTaxable",
+              items: [
+                {
+                  value: "taxable",
+                  text: "Taxable",
+                  id: "isjsa-rate-taxable",
+                  conditional: {
+                    html: govukInput({
+                      id: "isjsa-rate-personal-allowance",
+                      name: "isjsaRatePersonalAllowance",
+                      classes: "govuk-input--width-5",
+                      prefix: { text: "£" },
+                      label: { text: "Personal allowance" }
+                    })
+                  }
+                }
+              ]
+            }) }}
+
+            {{ govukButton({
+              text: "Add rate",
+              classes: "govuk-button--secondary js-add-button",
+              name: "action",
+              value: "add-rate",
+              type: "submit"
+            }) }}
+
+          </div>
+
+        {% endset %}
+
+        {% set incomeHtml %}
+
+          <h2 class="govuk-heading-m">Income details</h2>
+
+          <p class="govuk-body govuk-hint">Record any other income the customer received during this period.</p>
+
+          {{ govukTable({
+            head: [
+              { text: "Date" }, { text: "Amount" }, { text: "PP" }, { text: "Disregard" }, { text: "Description" }
+            ],
+            rows: [
+              [
+                { text: data["isjsaIncomeDate-day"] + "/" + data["isjsaIncomeDate-month"] + "/" + data["isjsaIncomeDate-year"] },
+                { text: "£" + data.isjsaIncomeAmount },
+                { text: data.isjsaIncomePaymentPeriod },
+                { text: "£" + data.isjsaIncomeDisregard if data.isjsaIncomeDisregard else "" },
+                { text: data.isjsaIncomeDescription }
+              ]
+            ] if data.isjsaIncomeAmount else [
+              [{ html: '<span class="govuk-hint">No income recorded</span>' }, { text: "" }, { text: "" }, { text: "" }, { text: "" }]
+            ]
+          }) }}
+
+          <h3 class="govuk-heading-s">Add income</h3>
+
+          <div class="js-add-group">
+
+            {{ govukDateInput({
+              id: "isjsa-income-date",
+              namePrefix: "isjsaIncomeDate",
+              fieldset: {
+                legend: {
+                  text: "Date"
+                }
+              },
+              hint: {
+                text: "For example, 8 10 1996"
+              },
+              items: [
+                { name: "day", classes: "govuk-input--width-2", attributes: { "data-required": "true" } },
+                { name: "month", classes: "govuk-input--width-2", attributes: { "data-required": "true" } },
+                { name: "year", classes: "govuk-input--width-4", attributes: { "data-required": "true" } }
+              ]
+            }) }}
+
+            {{ govukInput({
+              id: "isjsa-income-amount",
+              name: "isjsaIncomeAmount",
+              classes: "govuk-input--width-5",
+              prefix: { text: "£" },
+              label: { text: "Amount" },
+              attributes: { "data-required": "true" }
+            }) }}
+
+            {{ govukSelect({
+              id: "isjsa-income-payment-period",
+              name: "isjsaIncomePaymentPeriod",
+              label: { text: "Payment period" },
+              attributes: { "data-required": "true" },
+              items: [
+                { value: "", text: "Select a payment period" },
+                { value: "Weekly", text: "Weekly" },
+                { value: "Fortnightly", text: "Fortnightly" },
+                { value: "4 weekly", text: "4 weekly" },
+                { value: "Monthly", text: "Monthly" },
+                { value: "Quarterly", text: "Quarterly" },
+                { value: "Annually", text: "Annually" }
+              ]
+            }) }}
+
+            {{ govukInput({
+              id: "isjsa-income-disregard",
+              name: "isjsaIncomeDisregard",
+              classes: "govuk-input--width-5",
+              prefix: { text: "£" },
+              label: { text: "Weekly disregard" },
+              hint: { text: "Leave blank if no disregard applies" }
+            }) }}
+
+            {{ govukInput({
+              id: "isjsa-income-description",
+              name: "isjsaIncomeDescription",
+              label: { text: "Description" }
+            }) }}
+
+            {{ govukButton({
+              text: "Add income",
+              classes: "govuk-button--secondary js-add-button",
+              name: "action",
+              value: "add-income",
+              type: "submit"
+            }) }}
+
+          </div>
+
+        {% endset %}
+
+        {% set tariffIncomeHtml %}
+
+          <h2 class="govuk-heading-m">Tariff income allowed</h2>
+
+          <p class="govuk-body govuk-hint">Record the tariff income allowed for the capital held during this period.</p>
+
+          {{ govukTable({
+            head: [
+              { text: "Date" }, { text: "Amount" }
+            ],
+            rows: [
+              [
+                { text: data["isjsaTariffDate-day"] + "/" + data["isjsaTariffDate-month"] + "/" + data["isjsaTariffDate-year"] },
+                { text: "£" + data.isjsaTariffAmount }
+              ]
+            ] if data.isjsaTariffAmount else [
+              [{ html: '<span class="govuk-hint">No tariff income recorded</span>' }, { text: "" }]
+            ]
+          }) }}
+
+          <h3 class="govuk-heading-s">Add tariff income</h3>
+
+          <div class="js-add-group">
+
+            {{ govukDateInput({
+              id: "isjsa-tariff-date",
+              namePrefix: "isjsaTariffDate",
+              fieldset: {
+                legend: {
+                  text: "Date"
+                }
+              },
+              hint: {
+                text: "For example, 8 10 1996"
+              },
+              items: [
+                { name: "day", classes: "govuk-input--width-2", attributes: { "data-required": "true" } },
+                { name: "month", classes: "govuk-input--width-2", attributes: { "data-required": "true" } },
+                { name: "year", classes: "govuk-input--width-4", attributes: { "data-required": "true" } }
+              ]
+            }) }}
+
+            {{ govukInput({
+              id: "isjsa-tariff-amount",
+              name: "isjsaTariffAmount",
+              classes: "govuk-input--width-5",
+              prefix: { text: "£" },
+              label: { text: "Amount" },
+              attributes: { "data-required": "true" }
+            }) }}
+
+            {{ govukButton({
+              text: "Add tariff income",
+              classes: "govuk-button--secondary js-add-button",
+              name: "action",
+              value: "add-tariff",
+              type: "submit"
+            }) }}
+
+          </div>
+
+        {% endset %}
+
+        {% set resCarePensHtml %}
+
+          <h2 class="govuk-heading-m">Residential care and pensioner periods</h2>
+
+          <p class="govuk-body govuk-hint">Record any period where the customer was in residential care, or qualified for the higher capital limit as a pensioner.</p>
+
+          {{ govukTable({
+            head: [
+              { text: "From" }, { text: "To" }, { text: "Pensioner" }
+            ],
+            rows: [
+              [
+                { text: data["isjsaResCareFrom-day"] + "/" + data["isjsaResCareFrom-month"] + "/" + data["isjsaResCareFrom-year"] },
+                { text: data["isjsaResCareTo-day"] + "/" + data["isjsaResCareTo-month"] + "/" + data["isjsaResCareTo-year"] },
+                { text: "Yes" if data.isjsaResCareType and "pensionerHigherCapital" in data.isjsaResCareType else "No" }
+              ]
+            ] if data["isjsaResCareFrom-year"] else [
+              [{ html: '<span class="govuk-hint">No periods recorded</span>' }, { text: "" }, { text: "" }]
+            ]
+          }) }}
+
+          <h3 class="govuk-heading-s">Add a period</h3>
+
+          <div class="js-add-group">
+
+            {{ govukDateInput({
+              id: "isjsa-res-care-from",
+              namePrefix: "isjsaResCareFrom",
+              fieldset: {
+                legend: {
+                  text: "From"
+                }
+              },
+              hint: {
+                text: "For example, 8 10 1996"
+              },
+              items: [
+                { name: "day", classes: "govuk-input--width-2", attributes: { "data-required": "true" } },
+                { name: "month", classes: "govuk-input--width-2", attributes: { "data-required": "true" } },
+                { name: "year", classes: "govuk-input--width-4", attributes: { "data-required": "true" } }
+              ]
+            }) }}
+
+            {{ govukDateInput({
+              id: "isjsa-res-care-to",
+              namePrefix: "isjsaResCareTo",
+              fieldset: {
+                legend: {
+                  text: "To"
+                }
+              },
+              hint: {
+                text: "For example, 17 7 2026"
+              },
+              items: [
+                { name: "day", classes: "govuk-input--width-2" },
+                { name: "month", classes: "govuk-input--width-2" },
+                { name: "year", classes: "govuk-input--width-4" }
+              ]
+            }) }}
+
+            {{ govukCheckboxes({
+              idPrefix: "isjsa-res-care-type",
+              name: "isjsaResCareType",
+              fieldset: {
+                legend: {
+                  text: "What applies during this period?"
+                }
+              },
+              items: [
+                { value: "residentialCare", text: "Residential care", id: "isjsa-res-care-type" },
+                { value: "pensionerHigherCapital", text: "Pensioner higher capital", id: "isjsa-res-care-type-2" }
+              ]
+            }) }}
+
+            {{ govukButton({
+              text: "Add period",
+              classes: "govuk-button--secondary js-add-button",
+              name: "action",
+              value: "add-rescare",
+              type: "submit"
+            }) }}
+
+          </div>
+
+        {% endset %}
+
+        {% set bweBwcHtml %}
+
+          <h2 class="govuk-heading-m">Benefit weeks</h2>
+
+          <p class="govuk-body">Initial Benefit Week: Monday Week Ending</p>
+
+          {{ govukTable({
+            head: [
+              { text: "Start date" }, { text: "Pay day" }, { text: "Ben week" }, { text: "Part week(s)" }, { text: "Actions" }
+            ],
+            rows: [
+              [
+                { text: data["isjsaBwDateOfChange-day"] + "/" + data["isjsaBwDateOfChange-month"] + "/" + data["isjsaBwDateOfChange-year"] },
+                { text: data.isjsaBwPayDay | capitalize },
+                { text: data.isjsaBwType | upper },
+                { text: "None" },
+                { html: '<a class="govuk-link" href="/dccisjsabwebwcnewbenefitweek?returnTo=/dccisjsa%23bwe-bwc">Edit<span class="govuk-visually-hidden"> this benefit week</span></a>' }
+              ]
+            ] if data.isjsaBwPayDay else [
+              [{ html: '<span class="govuk-hint">No benefit weeks recorded</span>' }, { text: "" }, { text: "" }, { text: "" }, { text: "" }]
+            ]
+          }) }}
+
+          <p class="govuk-body"><a class="govuk-link" href="/dccisjsabwebwcnewbenefitweek?returnTo=/dccisjsa%23bwe-bwc">New benefit week</a></p>
+
+          <h2 class="govuk-heading-m">Exclusions</h2>
+
+          {{ govukTable({
+            head: [
+              { text: "Start date" }, { text: "End date" }, { text: "Code" }, { text: "Reason" }, { text: "Actions" }
+            ],
+            rows: [
+              [
+                { text: data["isjsaExclusionFrom-day"] + "/" + data["isjsaExclusionFrom-month"] + "/" + data["isjsaExclusionFrom-year"] },
+                { text: data["isjsaExclusionTo-day"] + "/" + data["isjsaExclusionTo-month"] + "/" + data["isjsaExclusionTo-year"] },
+                { text: data.isjsaExclusionCode if data.isjsaExclusionCode else "0" },
+                { text: data.isjsaExclusionReason },
+                { html: '<a class="govuk-link" href="/dccisjsabwebwcnewexclusion?returnTo=/dccisjsa%23bwe-bwc">Edit<span class="govuk-visually-hidden"> this exclusion</span></a>' }
+              ]
+            ] if data.isjsaExclusionReason else [
+              [{ html: '<span class="govuk-hint">No exclusions recorded</span>' }, { text: "" }, { text: "" }, { text: "" }, { text: "" }]
+            ]
+          }) }}
+
+          <p class="govuk-body"><a class="govuk-link" href="/dccisjsabwebwcnewexclusion?returnTo=/dccisjsa%23bwe-bwc">New exclusion</a></p>
+
+        {% endset %}
+
+        {{ govukTabs({
+          items: [
+            { label: "Assets", id: "assets", panel: { html: assetsHtml } },
+            { label: "IS/JSA Paid", id: "isjsa-paid", panel: { html: paidHtml } },
+            { label: "Income", id: "income", panel: { html: incomeHtml } },
+            { label: "Tariff Income", id: "tariff-income", panel: { html: tariffIncomeHtml } },
+            { label: "Res.Care/Pens", id: "res-care-pens", panel: { html: resCarePensHtml } },
+            { label: "BWE/BWC", id: "bwe-bwc", panel: { html: bweBwcHtml } }
+          ]
+        }) }}
+
+        <input type="hidden" name="dccComplete" value="yes">
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Run the calculation",
+            name: "action",
+            value: "run",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help with the diminishing capital calculation</a>
+      </p>
+
+    </div>
+  </div>
+
+  {# Keeps each Add button switched off until the fields it needs have been  #}
+  {# filled in, matching the disabled buttons in the old system. Buttons     #}
+  {# start enabled in the markup, so if this script does not run they still  #}
+  {# work rather than being permanently stuck.                               #}
+  <script>
+    document.querySelectorAll('.js-add-group').forEach(function (group) {
+      var button = group.querySelector('.js-add-button')
+      var fields = group.querySelectorAll('[data-required="true"]')
+
+      if (!button || fields.length === 0) {
+        return
+      }
+
+      function checkFields () {
+        var ready = true
+        fields.forEach(function (field) {
+          if (!field.value.trim()) {
+            ready = false
+          }
+        })
+        button.disabled = !ready
+        button.setAttribute('aria-disabled', ready ? 'false' : 'true')
+      }
+
+      fields.forEach(function (field) {
+        field.addEventListener('input', checkFields)
+        field.addEventListener('change', checkFields)
+      })
+
+      checkFields()
+    })
+  </script>
+
+{% endblock %}

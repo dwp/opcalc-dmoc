@@ -1,0 +1,198 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  New accumulating asset – DCC (PC or IS/PC) – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/dccpcispc"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Diminishing capital calculation</span>
+
+      <h1 class="govuk-heading-l">
+        Asset
+      </h1>
+
+      <form action="/dccpcispc-asset-accumulating" method="post">
+
+        {{ govukSelect({
+          id: "pcispc-asset-type",
+          name: "pcispcAssetType",
+          label: {
+            text: "Asset type"
+          },
+          items: [
+            { value: "", text: "Select an asset type", selected: not data.pcispcAssetType },
+            { value: "cash", text: "Cash", selected: data.pcispcAssetType == "cash" },
+            { value: "bank-account", text: "Bank account", selected: data.pcispcAssetType == "bank-account" },
+            { value: "building-society", text: "Building society account", selected: data.pcispcAssetType == "building-society" },
+            { value: "premium-bonds", text: "Premium bonds", selected: data.pcispcAssetType == "premium-bonds" },
+            { value: "shares", text: "Shares", selected: data.pcispcAssetType == "shares" },
+            { value: "property", text: "Property", selected: data.pcispcAssetType == "property" },
+            { value: "other", text: "Other", selected: data.pcispcAssetType == "other" }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "pcispc-asset-name",
+          name: "pcispcAssetName",
+          label: {
+            text: "Name (optional)"
+          },
+          value: data.pcispcAssetName
+        }) }}
+
+        <h2 class="govuk-heading-m">Customer's share of asset</h2>
+
+        <p class="govuk-body govuk-hint">For example, enter 1 and 2 if the customer owns half of this asset.</p>
+
+        {{ govukInput({
+          id: "pcispc-share-held",
+          name: "pcispcShareHeld",
+          classes: "govuk-input--width-2",
+          label: {
+            text: "Share held by the customer"
+          },
+          value: data.pcispcShareHeld if data.pcispcShareHeld else "1"
+        }) }}
+
+        {{ govukInput({
+          id: "pcispc-share-total",
+          name: "pcispcShareTotal",
+          classes: "govuk-input--width-2",
+          label: {
+            text: "Total shares"
+          },
+          value: data.pcispcShareTotal if data.pcispcShareTotal else "1"
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "pcispc-accumulating-asset",
+          name: "pcispcAccumulatingAsset",
+          classes: "govuk-radios--inline",
+          fieldset: {
+            legend: {
+              text: "Is this an accumulating asset?"
+            }
+          },
+          hint: {
+            text: "Choose Yes if the value builds up over a period, rather than being recorded as separate values on set dates."
+          },
+          items: [
+            { value: "no", text: "No", checked: data.pcispcAccumulatingAsset == "no" },
+            { value: "yes", text: "Yes", checked: data.pcispcAccumulatingAsset == "yes" or not data.pcispcAccumulatingAsset }
+          ]
+        }) }}
+
+        <h2 class="govuk-heading-m">Accumulating asset details</h2>
+
+        {{ govukDateInput({
+          id: "pcispc-accumulating-start",
+          namePrefix: "pcispcAccumulatingStart",
+          fieldset: {
+            legend: {
+              text: "Start date"
+            }
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["pcispcAccumulatingStart-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["pcispcAccumulatingStart-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["pcispcAccumulatingStart-year"] }
+          ]
+        }) }}
+
+        {{ govukDateInput({
+          id: "pcispc-accumulating-end",
+          namePrefix: "pcispcAccumulatingEnd",
+          fieldset: {
+            legend: {
+              text: "End date"
+            }
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["pcispcAccumulatingEnd-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["pcispcAccumulatingEnd-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["pcispcAccumulatingEnd-year"] }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "pcispc-initial-value",
+          name: "pcispcInitialValue",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Initial value"
+          },
+          value: data.pcispcInitialValue if data.pcispcInitialValue else "0.00"
+        }) }}
+
+        {{ govukInput({
+          id: "pcispc-final-value",
+          name: "pcispcFinalValue",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Final value"
+          },
+          value: data.pcispcFinalValue
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save asset",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/dccpcispc",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

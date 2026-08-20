@@ -1,0 +1,102 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  A value for this date already exists – DCC (ESA) – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/dccesaassetsshowvalues?asset=" + data.assetIndex + "&returnTo=/dccesa%23assets"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      {% set existingDate = data["esaNewValueDate-day"] + "/" + data["esaNewValueDate-month"] + "/" + data["esaNewValueDate-year"] %}
+
+      {{ govukWarningText({
+        text: "A value for " + existingDate + " has already been recorded against this asset.",
+        iconFallbackText: "Warning"
+      }) }}
+
+      <form action="/dccesa-value-replace" method="post">
+
+        <input type="hidden" name="assetIndex" value="{{ data.assetIndex }}">
+
+        {{ govukRadios({
+          idPrefix: "esa-replace-value",
+          name: "esaReplaceValue",
+          fieldset: {
+            legend: {
+              text: "Do you want to replace it?",
+              isPageHeading: true,
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          items: [
+            {
+              value: "yes",
+              text: "Yes, replace the existing value",
+              hint: { text: "The value already recorded for " + existingDate + " will be overwritten." }
+            },
+            {
+              value: "no",
+              text: "No, let me change the date",
+              hint: { text: "You will go back to the asset value so you can enter a different date." }
+            }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Continue",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/dccesa#assets",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

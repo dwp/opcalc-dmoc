@@ -1,0 +1,157 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Case print selection – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/a14forms"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Case print selection
+      </h1>
+
+      <p class="govuk-body">Only PDFs with data recorded against this case can be printed.</p>
+
+      {# Which A14s arrive ticked depends on the button pressed on /a14forms. #}
+      {# "Print all PDFs" ticks every A14. "Print selected PDF" ticks only   #}
+      {# the one chosen, so the person can still change their mind here.      #}
+      {% set printAll = data.printScope == "all" %}
+
+      {% set a14s = [
+        { ref: "A14PC: 10/07/2015", to: "11/04/2016", generated: "10/07/2015", reason: "User" },
+        { ref: "A14PC: 12/04/2016", to: "10/04/2017", generated: "12/04/2016", reason: "Uprating" },
+        { ref: "A14PC: 11/04/2017", to: "09/04/2018", generated: "11/04/2017", reason: "Uprating" },
+        { ref: "A14PC: 10/04/2018", to: "08/04/2019", generated: "10/04/2018", reason: "Uprating" },
+        { ref: "A14PC: 09/04/2019", to: "06/04/2020", generated: "09/04/2019", reason: "Uprating" },
+        { ref: "A14PC: 07/04/2020", to: "12/04/2021", generated: "07/04/2020", reason: "Uprating" },
+        { ref: "A14PC: 10/07/2020", to: "12/04/2021", generated: "10/07/2020", reason: "Savings credit start" },
+        { ref: "A14PC: 13/04/2021", to: "11/04/2022", generated: "13/04/2021", reason: "Uprating" },
+        { ref: "A14PC: 12/04/2022", to: "10/04/2023", generated: "12/04/2022", reason: "Uprating" },
+        { ref: "A14PC: 11/04/2023", to: "08/04/2024", generated: "11/04/2023", reason: "Uprating" },
+        { ref: "A14PC: 09/04/2024", to: "07/04/2025", generated: "09/04/2024", reason: "Uprating" },
+        { ref: "A14PC: 08/04/2025", to: "06/04/2026", generated: "08/04/2025", reason: "Uprating" },
+        { ref: "A14PC: 07/04/2026", to: "16/07/2026", generated: "07/04/2026", reason: "Uprating" }
+      ] %}
+
+      {% set a14Items = [] %}
+
+      {% for a14 in a14s %}
+        {% set _ = a14Items.push({
+          value: a14.ref,
+          text: a14.ref,
+          hint: { text: "To " + a14.to + ", generated " + a14.generated + ", " + a14.reason },
+          checked: true if printAll else (data.selectedA14 == a14.ref)
+        }) %}
+      {% endfor %}
+
+      <form action="/opcalctype" method="post">
+
+        {{ govukCheckboxes({
+          idPrefix: "forms-to-print",
+          name: "formsToPrint",
+          fieldset: {
+            legend: {
+              text: "Which PDFs do you want to print?",
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          items: [
+            { value: "a14", text: "A14", checked: true },
+            { value: "qb16Calculation", text: "QB16 calculation", checked: true },
+            { value: "qb16Schedules", text: "QB16 schedules", checked: true },
+            { value: "dcc", text: "Diminishing capital calculation", checked: true },
+            { value: "scheduleOfAssets", text: "Schedule of assets", checked: true },
+            {
+              value: "dccTrace",
+              text: "DCC trace",
+              hint: { text: "A step by step record of how the calculation was worked out." }
+            },
+            { divider: "Not available for this case" },
+            { value: "ba3", text: "BA3", disabled: true },
+            { value: "familyCredit", text: "Family credit", disabled: true },
+            { value: "housingCosts", text: "Housing costs", disabled: true },
+            { value: "housingTrace", text: "Housing trace", disabled: true },
+            { value: "qb33", text: "QB33", disabled: true },
+            { value: "averageHours", text: "Average hours calculation", disabled: true },
+            { value: "scheduleOfHours", text: "Schedule of hours", disabled: true },
+            { value: "averageHoursTrace", text: "Average hours trace", disabled: true },
+            { value: "averageEarnings", text: "Average earnings calculation", disabled: true },
+            { value: "scheduleOfEarnings", text: "Schedule of earnings", disabled: true },
+            { value: "averageEarningsTrace", text: "Average earnings trace", disabled: true }
+          ]
+        }) }}
+
+        {{ govukCheckboxes({
+          idPrefix: "a14s-to-print",
+          name: "a14sToPrint",
+          fieldset: {
+            legend: {
+              text: "Which A14 PDFs do you want to include?",
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          hint: {
+            text: "All PDFs" if printAll else "Only the form you selected. Tick any others you want to include."
+          },
+          items: a14Items
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Print",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/a14forms",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

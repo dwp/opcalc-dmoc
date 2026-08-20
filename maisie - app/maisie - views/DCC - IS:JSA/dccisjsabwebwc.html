@@ -1,0 +1,182 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Benefit weeks and exclusions – Diminishing capital calculation – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/dccisjsarescarepens"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Diminishing capital calculation &mdash; step 6 of 6</span>
+
+      <h1 class="govuk-heading-l">
+        Benefit weeks and exclusions
+      </h1>
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: {
+              text: "Initial benefit week"
+            },
+            value: {
+              text: "Monday, week ending"
+            }
+          }
+        ]
+      }) }}
+
+      <h2 class="govuk-heading-m">
+        Benefit weeks
+      </h2>
+
+      {{ govukTable({
+        caption: "Benefit weeks",
+        captionClasses: "govuk-visually-hidden",
+        head: [
+          {
+            text: "Start date"
+          },
+          {
+            text: "Pay day"
+          },
+          {
+            text: "Benefit week"
+          },
+          {
+            text: "Part weeks"
+          },
+          {
+            text: "Actions"
+          }
+        ],
+        rows: [
+          [
+            {
+              html: '<span class="govuk-hint">No benefit weeks added yet</span>',
+              colspan: 5
+            }
+          ]
+        ]
+      }) }}
+
+      <ul class="govuk-list">
+        <li><a class="govuk-link" href="#">Add a benefit week</a></li>
+      </ul>
+
+      <h2 class="govuk-heading-m">
+        Exclusions
+      </h2>
+
+      {{ govukTable({
+        caption: "Exclusions",
+        captionClasses: "govuk-visually-hidden",
+        head: [
+          {
+            text: "Start date"
+          },
+          {
+            text: "End date"
+          },
+          {
+            text: "Code"
+          },
+          {
+            text: "Reason"
+          },
+          {
+            text: "Actions"
+          }
+        ],
+        rows: [
+          [
+            {
+              html: '<span class="govuk-hint">No exclusions added yet</span>',
+              colspan: 5
+            }
+          ]
+        ]
+      }) }}
+
+      <ul class="govuk-list">
+        <li><a class="govuk-link" href="#">Add an exclusion</a></li>
+      </ul>
+
+      <form action="/dccisjsanewentry" method="post" novalidate>
+
+        {% if data.paidAmount %}
+
+          <div class="govuk-button-group">
+            {{ govukButton({
+              text: "Run the calculation",
+              type: "submit"
+            }) }}
+
+            {{ govukButton({
+              text: "Cancel",
+              href: "/opcalctype",
+              classes: "govuk-button--secondary"
+            }) }}
+          </div>
+
+        {% else %}
+
+          {{ govukInsetText({
+            html: 'Add at least one rate on the <a class="govuk-link" href="/dccisjsapaid">Income Support or Jobseeker\'s Allowance paid</a> step before you can run the calculation.'
+          }) }}
+
+          <div class="govuk-button-group">
+            {{ govukButton({
+              text: "Cancel",
+              href: "/opcalctype",
+              classes: "govuk-button--secondary"
+            }) }}
+          </div>
+
+        {% endif %}
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

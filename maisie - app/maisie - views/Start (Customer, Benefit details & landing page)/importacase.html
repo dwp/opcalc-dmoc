@@ -1,0 +1,100 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Import a case – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/landingpage"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Import a case
+      </h1>
+
+      <p>
+        Select the NINO and location of the case to import.
+      </p>
+
+      {{ govukTabs({
+        items: [
+          {
+            label: "Internal cases",
+            id: "internal-cases",
+            panel: {
+              html: '<p class="govuk-body">No cases found.</p><p class="govuk-body"><a class="govuk-link" href="/importacase">Refresh list</a></p>'
+            }
+          },
+          {
+            label: "External cases",
+            id: "external-cases",
+            panel: {
+              html: '<p class="govuk-body">No cases found.</p><p class="govuk-body"><a class="govuk-link" href="/importacase">Refresh list</a></p>'
+            }
+          }
+        ]
+      }) }}
+
+      <form action="/case-overview" method="post">
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Import case",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/landingpage",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help importing a case</a>
+      </p>
+
+    </div>
+  </div>
+
+{% endblock %}

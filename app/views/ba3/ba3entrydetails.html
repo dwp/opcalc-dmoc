@@ -1,0 +1,240 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Entry details – BA3 – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/opcalctype"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <!-- <span class="govuk-caption-l">BA3</span> -->
+
+      <h1 class="govuk-heading-l">
+        BA3 Entry details
+      </h1>
+
+      <!-- <p class="govuk-body">Enter the amounts paid and due for this period.</p> -->
+
+      <form action="/return-to-tab" method="post">
+
+         {{ govukCheckboxes({
+          idPrefix: "calculation-options",
+          name: "calculationOptions",
+          fieldset: {
+            legend: {
+              text: "Include in this calculation",
+              classes: "govuk-fieldset__legend--s"
+            }
+          },
+          items: [
+            { value: "useA14", text: "Use A14(s)" }
+          ]
+        }) }}
+
+         {{ govukDateInput({
+          id: "from-date",
+          namePrefix: "ba3From",
+          fieldset: {
+            legend: {
+              text: "From",
+              classes: "govuk-fieldset__legend--s"
+            }
+          },
+          hint: {
+            text: "For example, 11 4 1988"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["ba3From-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["ba3From-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["ba3From-year"] }
+          ]
+        }) }}
+
+        {{ govukDateInput({
+          id: "to-date",
+          namePrefix: "ba3To",
+          fieldset: {
+            legend: {
+              text: "To",
+              classes: "govuk-fieldset__legend--s"
+            }
+          },
+          hint: {
+            text: "For example, 17 7 2026"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["ba3To-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["ba3To-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["ba3To-year"] }
+          ]
+        }) }}
+
+     <p class="govuk-body"><b>Total:</b> Weeks 0 Days 0</p>
+
+        <h2 class="govuk-heading-m">Income</h2>
+
+        {{ govukInput({
+          label: {
+            text: "Declared"
+          },
+          prefix: {
+            text: "£"
+          },
+          id: "gross-incorrect",
+          name: "grossIncorrect",
+          classes: "govuk-input--width-10",
+          inputmode: "decimal",
+          spellcheck: false,
+          value: data.grossIncorrect
+        }) }}
+
+        {{ govukInput({
+          label: {
+            text: "Actual"
+          },
+          prefix: {
+            text: "£"
+          },
+          id: "gross-correct",
+          name: "grossCorrect",
+          classes: "govuk-input--width-10",
+          inputmode: "decimal",
+          spellcheck: false,
+          value: data.grossCorrect
+        }) }}
+
+        <div class="govuk-form-group">
+  <label class="govuk-label" for="more-detail">
+    Dates worked and hours for each day
+  </label>
+  <textarea class="govuk-textarea" id="more-detail" name="moreDetail" rows="5"></textarea>
+</div>
+
+ <h2 class="govuk-heading-m">Paid</h2>
+
+        {{ govukInput({
+          label: {
+            text: "Amount on B2/C2"
+          },
+          prefix: {
+            text: "£"
+          },
+          id: "gross-incorrect",
+          name: "grossIncorrect",
+          classes: "govuk-input--width-10",
+          inputmode: "decimal",
+          spellcheck: false,
+          value: data.grossIncorrect
+        }) }}
+
+        {{ govukInput({
+          label: {
+            text: "Amount on D2"
+          },
+          prefix: {
+            text: "£"
+          },
+          id: "gross-correct",
+          name: "grossCorrect",
+          classes: "govuk-input--width-10",
+          inputmode: "decimal",
+          spellcheck: false,
+          value: data.grossCorrect
+        }) }}
+
+     <p class="govuk-body"><b>Balance payable:</b> £0.00</p>
+
+      
+        <h2 class="govuk-heading-m">Overpayment calculation</h2>
+
+        {{ govukInsetText({
+          text: "These figures are worked out automatically once you save this entry."
+        }) }}
+
+        {{ govukSummaryList({
+          rows: [
+            { key: { text: "Amount due" }, value: { text: "£0.00" } },
+            { key: { text: "Amount on D2" }, value: { text: "£0.00" } },
+            { key: { text: "Balance due" }, value: { text: "£0.00" } }
+          ]
+        }) }}
+
+        <h2 class="govuk-heading-m">A14(s)</h2>
+
+         {% set entryHead = [
+            { text: "Date" }, { text: "Amount" }, { text: "From" }, { text: "To" }, { text: "Uprating" }
+          ] %}
+
+          {{ govukTable({
+            head: entryHead,
+            rows: [
+              [
+                { text: "No entries recorded" },
+                { text: "" },
+                { text: "" },
+                { text: "" },
+                { text: "" }
+              ]
+            ] if data.grossCorrect else [
+              [{ html: '<span class="govuk-hint">No entries recorded</span>' }, { text: "" }, { text: "" }, { text: "" }, { text: "" }]
+            ]
+          }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

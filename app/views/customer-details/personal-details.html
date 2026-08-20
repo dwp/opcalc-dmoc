@@ -1,0 +1,204 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Start page – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "javascript:window.history.back()"
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Personal Details
+      </h1>
+
+      <form class="form" action="/customer-details/appointee-other-details" method="post">
+
+        <div class="govuk-form-group">
+  <label class="govuk-label" for="national-insurance-number">
+    National Insurance number
+  </label>
+  <!-- <div id="national-insurance-number-hint" class="govuk-hint">
+    It’s on your National Insurance card, benefit letter, payslip or P60 – for example, ‘QQ 12 34 56 C’
+  </div> -->
+  <input class="govuk-input govuk-input--width-10 govuk-input--extra-letter-spacing" id="national-insurance-number" name="nationalInsuranceNumber" type="text" spellcheck="false" aria-describedby="national-insurance-number-hint">
+</div>
+
+<div class="govuk-form-group">
+  <fieldset class="govuk-fieldset" role="group" aria-describedby="date-of-birth-hint">
+    <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
+      <h1 class="govuk-fieldset__heading">
+        Date of birth
+      </h1>
+    </legend>
+    <!-- <div id="passport-issued-hint" class="govuk-hint">
+      For example, 27 3 2024
+    </div> -->
+    <div class="govuk-date-input" id="date-of-birth">
+      <div class="govuk-date-input__item">
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-date-input__label" for="date-of-birth-day">
+            Day
+          </label>
+          <input class="govuk-input govuk-date-input__input govuk-input--width-2" id="date-of-birth-day" name="date-of-birth-day" type="text" inputmode="numeric">
+        </div>
+      </div>
+      <div class="govuk-date-input__item">
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-date-input__label" for="date-of-birth-month">
+            Month
+          </label>
+          <input class="govuk-input govuk-date-input__input govuk-input--width-2" id="date-of-birth-month" name="date-of-birth-month" type="text" inputmode="numeric">
+        </div>
+      </div>
+      <div class="govuk-date-input__item">
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-date-input__label" for="date-of-birth-year">
+            Year
+          </label>
+          <input class="govuk-input govuk-date-input__input govuk-input--width-4" id="date-of-birth-year" name="date-of-birth-year" type="text" inputmode="numeric">
+        </div>
+      </div>
+    </div>
+  </fieldset>
+</div>
+
+<div class="govuk-form-group">
+  <label class="govuk-label" for="full-name">
+    Surname
+  </label>
+  <input class="govuk-input" id="full-name" name="fullName" type="text" spellcheck="false" autocomplete="name">
+</div>
+
+<div class="govuk-form-group">
+  <label class="govuk-label" for="full-name">
+    Forenames
+  </label>
+  <input class="govuk-input" id="full-name" name="fullName" type="text" spellcheck="false" autocomplete="name">
+</div>
+
+<div class="govuk-form-group">
+  <label class="govuk-label" for="sort">
+    Title
+  </label>
+  <select class="govuk-select" id="sort" name="sort">
+    <option value="published" selected>Mr</option>
+    <option value="updated">Ms</option>
+    <option value="views">Mrs</option>
+    <option value="comments">Miss</option>
+  </select>
+</div>
+
+<div class="govuk-form-group">
+  <label class="govuk-label" for="sort">
+    Sex
+  </label>
+  <select class="govuk-select" id="sort" name="sort">
+    <option value="published">Female</option>
+    <option value="updated" selected>Male</option>
+  </select>
+</div>
+
+<fieldset class="govuk-fieldset">
+  <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
+    <h1 class="govuk-fieldset__heading">
+      Address
+    </h1>
+  </legend>
+  <div class="govuk-form-group">
+    <label class="govuk-label" for="address-line-1">
+      Address line 1
+    </label>
+    <input class="govuk-input" id="address-line-1" name="addressLine1" type="text" autocomplete="address-line1">
+  </div>
+  <div class="govuk-form-group">
+    <label class="govuk-label" for="address-line-2">
+      Address line 2 (optional)
+    </label>
+    <input class="govuk-input" id="address-line-2" name="addressLine2" type="text" autocomplete="address-line2">
+  </div>
+  <div class="govuk-form-group">
+    <label class="govuk-label" for="address-town">
+      Town or city
+    </label>
+    <input class="govuk-input govuk-!-width-two-thirds" id="address-town" name="addressTown" type="text" autocomplete="address-level2">
+  </div>
+  <div class="govuk-form-group">
+    <label class="govuk-label" for="address-postcode">
+      Postcode
+    </label>
+    <input class="govuk-input govuk-input--width-10" id="address-postcode" name="addressPostcode" type="text" autocomplete="postal-code">
+  </div>
+  <div class="govuk-form-group">
+    <label class="govuk-label" for="address-postcode">
+      Telephone
+    </label>
+    <input class="govuk-input govuk-input--width-10" id="telephone" name="telephone" type="text" autocomplete="telephone">
+  </div>
+  
+</fieldset>
+
+<div class="govuk-form-group">
+  <fieldset class="govuk-fieldset" aria-describedby="contact-hint">
+    <div class="govuk-checkboxes" data-module="govuk-checkboxes">
+      <div class="govuk-checkboxes__item">
+        <input class="govuk-checkboxes__input" id="contact" name="contact" type="checkbox" value="email" data-aria-controls="conditional-contact">
+        <label class="govuk-label govuk-checkboxes__label" for="contact">
+          Third Party
+        </label>
+      </div>
+     
+    </div>
+  </fieldset>
+</div>
+
+
+
+        {{ govukButton({
+          text: "Continue"
+        }) }}
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

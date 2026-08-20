@@ -1,0 +1,174 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Other income details – A14 form (IS or JSA) – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {# data.returnTo comes from the link that opened this page, so Back goes    #}
+  {# to the tab it came from.                                                 #}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/opcalctype"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">A14 income</span>
+
+      <h1 class="govuk-heading-l">
+        Other income details
+      </h1>
+
+
+      <form action="/return-to-tab" method="post">
+
+        <p class="govuk-body">Record income the customer or their partner received that is not a benefit.</p>
+
+        {{ govukSelect({
+          id: "other-income-type",
+          name: "otherIncomeType",
+          label: {
+            text: "Type"
+          },
+          items: [
+            { value: "", text: "Choose a type", selected: not data.otherIncomeType },
+            { value: "Earnings", text: "Earnings", selected: data.otherIncomeType == "Earnings" },
+            { value: "Self-employed earnings", text: "Self-employed earnings", selected: data.otherIncomeType == "Self-employed earnings" },
+            { value: "Occupational pension", text: "Occupational pension", selected: data.otherIncomeType == "Occupational pension" },
+            { value: "Personal pension", text: "Personal pension", selected: data.otherIncomeType == "Personal pension" },
+            { value: "Maintenance", text: "Maintenance", selected: data.otherIncomeType == "Maintenance" },
+            { value: "Sub-tenant or boarder", text: "Sub-tenant or boarder", selected: data.otherIncomeType == "Sub-tenant or boarder" },
+            { value: "Other", text: "Other", selected: data.otherIncomeType == "Other" }
+          ]
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "otherIncome-paid-to",
+          name: "otherIncomePaidTo",
+          classes: "govuk-radios--inline",
+          fieldset: {
+            legend: {
+              text: "Paid to"
+            }
+          },
+          hint: {
+            text: "Partner is only available on a couple case"
+          },
+          items: [
+            { value: "customer", text: "Customer", checked: data.otherIncomePaidTo == "customer" or not data.otherIncomePaidTo },
+            { value: "partner", text: "Partner", checked: data.otherIncomePaidTo == "partner" }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "other-income-amount",
+          name: "otherIncomeAmount",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Amount"
+          },
+          value: data.otherIncomeAmount
+        }) }}
+
+        {{ govukSelect({
+          id: "otherIncome-qualifying-period",
+          name: "otherIncomeQualifyingPeriod",
+          label: {
+            text: "Qualifying period"
+          },
+          items: [
+            { value: "Weekly", text: "Weekly", selected: data.otherIncomeQualifyingPeriod == "Weekly" or not data.otherIncomeQualifyingPeriod },
+            { value: "Fortnightly", text: "Fortnightly", selected: data.otherIncomeQualifyingPeriod == "Fortnightly" },
+            { value: "4 weekly", text: "4 weekly", selected: data.otherIncomeQualifyingPeriod == "4 weekly" },
+            { value: "Monthly", text: "Monthly", selected: data.otherIncomeQualifyingPeriod == "Monthly" },
+            { value: "Quarterly", text: "Quarterly", selected: data.otherIncomeQualifyingPeriod == "Quarterly" },
+            { value: "Annually", text: "Annually", selected: data.otherIncomeQualifyingPeriod == "Annually" }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "other-income-disregards",
+          name: "otherIncomeDisregards",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Disregards"
+          },
+          hint: {
+            text: "Leave blank if no disregard applies"
+          },
+          value: data.otherIncomeDisregards
+        }) }}
+
+        {{ govukInput({
+          id: "other-income-text",
+          name: "otherIncomeText",
+          label: {
+            text: "Text"
+          },
+          hint: {
+            text: "Any note to show against this income"
+          },
+          value: data.otherIncomeText
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help with other income details</a>
+      </p>
+
+    </div>
+  </div>
+
+{% endblock %}
+

@@ -1,0 +1,254 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  QB16 entry details – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBreadcrumbs({
+    items: [
+      {
+        text: "OpCalc",
+        href: "/landingpage"
+      },
+      {
+        text: "Case overview",
+        href: "/opcalctype"
+      },
+      {
+        text: "QB16 entry details"
+      }
+    ]
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+
+      <h1 class="govuk-heading-l">
+        QB16 entry details
+      </h1>
+
+      <p class="govuk-body">QB16: 10/07/2015 to 16/07/2026</p>
+
+      <form action="/landingpagewithqb16entrydetailsfilledin" method="post">
+
+        {% set listOfEntriesHtml %}
+
+          <h2 class="govuk-heading-m">List of entries</h2>
+
+          <p class="govuk-body govuk-hint">Add each period where the amount paid was different from the amount due.</p>
+
+          {% set entryHead = [
+            { text: "Start" }, { text: "End" }, { text: "Period" }, { text: "Form" }, { text: "Incorrect" }, { text: "Correct" }, { text: "Excess" }
+          ] %}
+
+          {% if data.grossCorrect %}
+            {% set _ = entryHead.push({ text: "Actions" }) %}
+          {% endif %}
+
+          {{ govukTable({
+            head: entryHead,
+            rows: [
+              [
+                { text: data["qb16From-day"] + "/" + data["qb16From-month"] + "/" + data["qb16From-year"] },
+                { text: data["qb16To-day"] + "/" + data["qb16To-month"] + "/" + data["qb16To-year"] },
+                { text: "1996 wks 5 dys" },
+                { text: "QB16" },
+                { text: "£" + data.grossIncorrect },
+                { text: "£" + data.grossCorrect },
+                { text: "£0.00" },
+                { html: '<a class="govuk-link" href="/qb16entrydetails?returnTo=/qb16listofentries%23list-of-entries">Edit<span class="govuk-visually-hidden"> this entry</span></a> | <a class="govuk-link" href="/qb16deleteentry">Delete<span class="govuk-visually-hidden"> this entry</span></a>' }
+              ]
+            ] if data.grossCorrect else [
+              [{ html: '<span class="govuk-hint">No entries recorded</span>' }, { text: "" }, { text: "" }, { text: "" }, { text: "" }, { text: "" }, { text: "" }]
+            ]
+          }) }}
+
+          <p class="govuk-body"><a class="govuk-link" href="/qb16entrydetails?returnTo=/qb16listofentries%23list-of-entries">New entry</a></p>
+
+          {{ govukTextarea({
+            label: {
+              text: "Cause",
+              classes: "govuk-label--m"
+            },
+            hint: {
+              text: "Describe why the overpayment or underpayment happened."
+            },
+            id: "cause",
+            name: "cause",
+            rows: 3,
+            value: data.cause if data.cause else data.standardText
+          }) }}
+
+          <ul class="govuk-list">
+            <li><a class="govuk-link" href="/qb16listofentriesinsertstandardtext?returnTo=/qb16listofentries%23list-of-entries">Insert standard text</a></li>
+            {% if data.cause or data.standardText %}
+              <li><a class="govuk-link" href="/qb16-clear-cause">Clear the cause</a></li>
+            {% endif %}
+          </ul>
+
+          {{ govukCheckboxes({
+            idPrefix: "exclusion-case",
+            name: "exclusionCase",
+            fieldset: {
+              legend: {
+                text: "Exclusion case",
+                classes: "govuk-fieldset__legend--m"
+              }
+            },
+            items: [
+              {
+                value: "exclusionCase",
+                text: "Overpayment is an exclusion case",
+                id: "exclusion-case",
+                checked: data.exclusionCase,
+                conditional: {
+                  html: govukCheckboxes({
+                    idPrefix: "part-week-payment",
+                    name: "partWeekPayment",
+                    classes: "govuk-checkboxes--small",
+                    fieldset: {
+                      legend: {
+                        text: "When was benefit payable?",
+                        classes: "govuk-fieldset__legend--s"
+                      }
+                    },
+                    items: [
+                      { value: "payableBefore", text: "Benefit was payable before the start of the part week payment" },
+                      { value: "payableAfter", text: "Benefit was payable after the end of the part week payment" }
+                    ]
+                  })
+                }
+              }
+            ]
+          }) }}
+
+        {% endset %}
+
+        {% set bweBwcHtml %}
+
+          <h2 class="govuk-heading-m">Benefit weeks</h2>
+
+          <p class="govuk-body">Initial Benefit Week: Monday Week Ending</p>
+
+          {# The Actions column only exists once there is a row to act on, so #}
+          {# an empty table does not carry a column with nothing in it.       #}
+          {% set benefitWeekHead = [
+            { text: "Start date" }, { text: "Pay day" }, { text: "Ben week" }, { text: "Part week(s)" }
+          ] %}
+
+          {% if data.benefitPayDay %}
+            {% set _ = benefitWeekHead.push({ text: "Actions" }) %}
+          {% endif %}
+
+          {{ govukTable({
+            head: benefitWeekHead,
+            rows: [
+              [
+                { text: data["bwDateOfChange-day"] + "/" + data["bwDateOfChange-month"] + "/" + data["bwDateOfChange-year"] },
+                { text: data.benefitPayDay | capitalize },
+                { text: data.benefitWeekType if data.benefitWeekType else "BWE" },
+                { text: "None" },
+                { html: '<a class="govuk-link" href="/qb16bwebwcnewbenefit?returnTo=/qb16listofentries%23bwe-bwc">Edit<span class="govuk-visually-hidden"> this benefit week</span></a> | <a class="govuk-link" href="/qb16deletebenefitweek">Delete<span class="govuk-visually-hidden"> this benefit week</span></a>' }
+              ]
+            ] if data.benefitPayDay else [
+              [{ html: '<span class="govuk-hint">No benefit weeks recorded</span>' }, { text: "" }, { text: "" }, { text: "" }]
+            ]
+          }) }}
+
+          <p class="govuk-body"><a class="govuk-link" href="/qb16bwebwcnewbenefit?returnTo=/qb16listofentries%23bwe-bwc">New benefit week</a></p>
+
+          <h2 class="govuk-heading-m">Exclusions</h2>
+
+          {% set exclusionHead = [
+            { text: "Start date" }, { text: "End date" }, { text: "Code" }, { text: "Reason" }
+          ] %}
+
+          {% if data.exclusionReason %}
+            {% set _ = exclusionHead.push({ text: "Actions" }) %}
+          {% endif %}
+
+          {{ govukTable({
+            head: exclusionHead,
+            rows: [
+              [
+                { text: data["exclusionFrom-day"] + "/" + data["exclusionFrom-month"] + "/" + data["exclusionFrom-year"] },
+                { text: data["exclusionTo-day"] + "/" + data["exclusionTo-month"] + "/" + data["exclusionTo-year"] },
+                { text: data.exclusionCode if data.exclusionCode else "0" },
+                { text: data.exclusionReason },
+                { html: '<a class="govuk-link" href="/qb16bwebwcnewexclusion?returnTo=/qb16listofentries%23bwe-bwc">Edit<span class="govuk-visually-hidden"> this exclusion</span></a> | <a class="govuk-link" href="/qb16deleteexclusion">Delete<span class="govuk-visually-hidden"> this exclusion</span></a>' }
+              ]
+            ] if data.exclusionReason else [
+              [{ html: '<span class="govuk-hint">No exclusions recorded</span>' }, { text: "" }, { text: "" }, { text: "" }]
+            ]
+          }) }}
+
+          <p class="govuk-body"><a class="govuk-link" href="/qb16bwebwcnewexclusion?returnTo=/qb16listofentries%23bwe-bwc">New exclusion</a></p>
+
+        {% endset %}
+
+        {{ govukTabs({
+          items: [
+            { label: "List of Entries", id: "list-of-entries", panel: { html: listOfEntriesHtml } },
+            { label: "BWE/BWC", id: "bwe-bwc", panel: { html: bweBwcHtml } }
+          ]
+        }) }}
+
+        <input type="hidden" name="qb16Complete" value="yes">
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Run the calculation",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help with QB16 entries</a>
+      </p>
+
+    </div>
+  </div>
+
+{% endblock %}

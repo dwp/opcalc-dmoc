@@ -1,0 +1,106 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Open an existing case – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/landingpage"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Open an existing case
+      </h1>
+
+      {% if data.savedCases and data.savedCases.length %}
+
+        <p class="govuk-body">Choose a case to carry on working on it.</p>
+
+        {% set caseRows = [] %}
+
+        {% for case in data.savedCases %}
+          {% set _ = caseRows.push([
+            { text: case.nino },
+            { text: case.surname },
+            { text: case.benefit if case.benefit else "Not set" },
+            { text: case.savedAt },
+            { html: '<a class="govuk-link" href="/case-open/' + loop.index0 + '">Open<span class="govuk-visually-hidden"> case ' + case.nino + '</span></a>' }
+          ]) %}
+        {% endfor %}
+
+        {{ govukTable({
+          caption: "Saved cases",
+          captionClasses: "govuk-visually-hidden",
+          head: [
+            { text: "Case reference" },
+            { text: "Surname" },
+            { text: "Benefit type" },
+            { text: "Last saved" },
+            { text: "Actions" }
+          ],
+          rows: caseRows
+        }) }}
+
+      {% else %}
+
+        {{ govukInsetText({
+          text: "There are no saved cases. Start a new case and save it, and it will appear here."
+        }) }}
+
+      {% endif %}
+
+      <div class="govuk-button-group">
+        {{ govukButton({
+          text: "Start a new case",
+          href: "/selectbenefit"
+        }) }}
+
+        {{ govukButton({
+          text: "Back to OpCalc",
+          href: "/landingpage",
+          classes: "govuk-button--secondary"
+        }) }}
+      </div>
+
+    </div>
+  </div>
+
+{% endblock %}

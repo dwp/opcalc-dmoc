@@ -1,0 +1,140 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Change of benefit payment day – QB16 – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/opcalctype"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">QB16 benefit weeks</span>
+
+      <h1 class="govuk-heading-l">
+        Change of benefit payment day
+      </h1>
+
+      <form action="/return-to-tab" method="post">
+
+        {{ govukDateInput({
+          id: "bw-date-of-change",
+          namePrefix: "bwDateOfChange",
+          fieldset: {
+            legend: {
+              text: "Date of change"
+            }
+          },
+          hint: {
+            text: "For example, 10 7 2015"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["bwDateOfChange-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["bwDateOfChange-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["bwDateOfChange-year"] }
+          ]
+        }) }}
+
+        {{ govukSelect({
+          id: "benefit-pay-day",
+          name: "benefitPayDay",
+          label: {
+            text: "Benefit pay day"
+          },
+          items: [
+            { value: "monday", text: "Monday", selected: data.benefitPayDay == "monday" or not data.benefitPayDay },
+            { value: "tuesday", text: "Tuesday", selected: data.benefitPayDay == "tuesday" },
+            { value: "wednesday", text: "Wednesday", selected: data.benefitPayDay == "wednesday" },
+            { value: "thursday", text: "Thursday", selected: data.benefitPayDay == "thursday" },
+            { value: "friday", text: "Friday", selected: data.benefitPayDay == "friday" },
+            { value: "saturday", text: "Saturday", selected: data.benefitPayDay == "saturday" },
+            { value: "sunday", text: "Sunday", selected: data.benefitPayDay == "sunday" }
+          ]
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "benefit-week-type",
+          name: "benefitWeekType",
+          classes: "govuk-radios--inline",
+          fieldset: {
+            legend: {
+              text: "Benefit week type"
+            }
+          },
+          items: [
+            { value: "BWE", text: "BWE", checked: data.benefitWeekType == "BWE" or not data.benefitWeekType },
+            { value: "BWC", text: "BWC", checked: data.benefitWeekType == "BWC" }
+          ]
+        }) }}
+
+        <h2 class="govuk-heading-m">Benefit week information</h2>
+
+        {{ govukSummaryList({
+          rows: [
+            { key: { text: "Pay day and BWE or BWC" }, value: { text: "Unchanged, no part weeks" } },
+            { key: { text: "First week" }, value: { text: "14/07/2015 to 20/07/2015" } },
+            { key: { text: "Last week" }, value: { text: "07/07/2026 to 13/07/2026" } }
+          ]
+        }) }}
+
+        {{ govukWarningText({
+          text: "The current details are the same as the previous entry. Saving will not change anything.",
+          iconFallbackText: "Warning"
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

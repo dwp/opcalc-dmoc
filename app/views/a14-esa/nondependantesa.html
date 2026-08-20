@@ -1,0 +1,155 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Non-dependant deductions – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/a14esa"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Non-dependant deductions
+      </h1>
+
+      <form action="/a14esa#housing" method="post">
+
+        {{ govukInput({
+          id: "nde-25-and-over",
+          name: "nde25AndOver",
+          classes: "govuk-input--width-2",
+          label: {
+            text: "Number aged 25 and over on Income Support, JSA (IB) or ESA"
+          },
+          hint: {
+            text: "£7.40 deduction each"
+          },
+          value: data.nde25AndOver if data.nde25AndOver else "0"
+        }) }}
+
+        {{ govukInput({
+          id: "nde-18-24",
+          name: "nde18To24",
+          classes: "govuk-input--width-2",
+          label: {
+            text: "Number aged 18 to 24 on Income Support, JSA (IB) or ESA, or with other exemptions"
+          },
+          hint: {
+            text: "£0.00 deduction each. Press Help for guidance on other exemptions."
+          },
+          value: data.nde18To24 if data.nde18To24 else "0"
+        }) }}
+
+        {{ govukInput({
+          id: "nde-others-not-working",
+          name: "ndeOthersNotWorking",
+          classes: "govuk-input--width-2",
+          label: {
+            text: "Number of other non-dependants aged 18 and over not working"
+          },
+          hint: {
+            text: "£7.40 deduction each"
+          },
+          value: data.ndeOthersNotWorking if data.ndeOthersNotWorking else "0"
+        }) }}
+
+        {{ govukSummaryList({
+          rows: [
+            {
+              key: { text: "18 and over working (from table below)" },
+              value: { text: "£" + (data.ndeWorkingDeduction if data.ndeWorkingDeduction else "0.00") }
+            },
+            {
+              key: { text: "Total non-dependant deductions" },
+              value: { text: "£" + (data.ndeTotalDeduction if data.ndeTotalDeduction else "0.00") }
+            }
+          ]
+        }) }}
+
+        <h2 class="govuk-heading-m">
+          Non-dependants' earnings
+        </h2>
+
+        {{ govukTable({
+          head: [
+            { text: "Name" },
+            { text: "Earnings" },
+            { text: "Deduction" },
+            { text: "Band" }
+          ],
+          rows: [
+            [
+              { html: '<span class="govuk-hint">No non-dependant earnings recorded</span>' },
+              { text: "" },
+              { text: "" },
+              { text: "" }
+            ]
+          ]
+        }) }}
+
+        <p class="govuk-body">
+          <a class="govuk-link" href="/selectnewnondependantearningsesa">New non-dependant earnings</a>
+        </p>
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Continue",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/a14esa",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help with non-dependant deductions</a>
+      </p>
+
+    </div>
+  </div>
+
+{% endblock %}
+

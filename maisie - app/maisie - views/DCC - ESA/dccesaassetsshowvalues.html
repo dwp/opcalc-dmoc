@@ -1,0 +1,139 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Asset value – DCC (ESA) – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/dccesa#assets"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  {% set asset = data.esaAssets[data.asset] %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Diminishing capital calculation</span>
+
+      <h1 class="govuk-heading-l">
+        Asset value
+      </h1>
+
+      {{ govukSummaryList({
+        rows: [
+          { key: { text: "Asset type" }, value: { text: asset.type } },
+          { key: { text: "Name" }, value: { text: asset.name if asset.name else "Not given" } }
+        ]
+      }) }}
+
+      {% if asset.values and asset.values.length %}
+
+        <h2 class="govuk-heading-m">Values recorded</h2>
+
+        {% set valueRows = [] %}
+        {% for value in asset.values %}
+          {% set _ = valueRows.push([
+            { text: value.date },
+            { text: "£" + value.amount }
+          ]) %}
+        {% endfor %}
+
+        {{ govukTable({
+          head: [
+            { text: "Date" }, { text: "Value" }
+          ],
+          rows: valueRows
+        }) }}
+
+      {% endif %}
+
+      <h2 class="govuk-heading-m">Add a value</h2>
+
+      <p class="govuk-body govuk-hint">Record what this asset was worth on a given date. Add a value each time the amount changed.</p>
+
+      <form action="/dccesa-value-save" method="post">
+
+        <input type="hidden" name="assetIndex" value="{{ data.asset }}">
+
+        {{ govukDateInput({
+          id: "esa-new-value-date",
+          namePrefix: "esaNewValueDate",
+          fieldset: {
+            legend: {
+              text: "Date"
+            }
+          },
+          hint: {
+            text: "For example, 27 10 2008"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2" },
+            { name: "month", classes: "govuk-input--width-2" },
+            { name: "year", classes: "govuk-input--width-4" }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "esa-new-value",
+          name: "esaNewValue",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Value"
+          }
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/dccesa#assets",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

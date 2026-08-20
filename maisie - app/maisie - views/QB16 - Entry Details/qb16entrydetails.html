@@ -1,0 +1,271 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Entry details – QB16 – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/opcalctype"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">QB16 entry details</span>
+
+      <h1 class="govuk-heading-l">
+        Entry details
+      </h1>
+
+      <p class="govuk-body">Enter the amounts paid and due for this period.</p>
+
+      <form action="/return-to-tab" method="post">
+
+        <h2 class="govuk-heading-m">Gross amounts</h2>
+
+        {{ govukInput({
+          label: {
+            text: "Gross incorrect"
+          },
+          hint: {
+            text: "The amount that was actually paid."
+          },
+          prefix: {
+            text: "£"
+          },
+          id: "gross-incorrect",
+          name: "grossIncorrect",
+          classes: "govuk-input--width-10",
+          inputmode: "decimal",
+          spellcheck: false,
+          value: data.grossIncorrect
+        }) }}
+
+        {{ govukInput({
+          label: {
+            text: "Gross correct"
+          },
+          hint: {
+            text: "The amount that should have been paid."
+          },
+          prefix: {
+            text: "£"
+          },
+          id: "gross-correct",
+          name: "grossCorrect",
+          classes: "govuk-input--width-10",
+          inputmode: "decimal",
+          spellcheck: false,
+          value: data.grossCorrect
+        }) }}
+
+        <h2 class="govuk-heading-m">Options for this entry</h2>
+
+        {{ govukCheckboxes({
+          idPrefix: "taxable",
+          name: "taxable",
+          items: [
+            {
+              value: "taxable",
+              text: "This benefit is taxable",
+              id: "taxable",
+              checked: data.taxable,
+              conditional: {
+                html: govukInput({
+                  label: {
+                    text: "Personal allowance"
+                  },
+                  prefix: {
+                    text: "£"
+                  },
+                  id: "personal-allowance",
+                  name: "personalAllowance",
+                  classes: "govuk-input--width-10",
+                  inputmode: "decimal",
+                  spellcheck: false,
+                  value: data.personalAllowance
+                }) + govukInput({
+                  label: {
+                    text: "Taxable in gross excess"
+                  },
+                  prefix: {
+                    text: "£"
+                  },
+                  id: "taxable-gross-excess",
+                  name: "taxableGrossExcess",
+                  classes: "govuk-input--width-10",
+                  inputmode: "decimal",
+                  spellcheck: false,
+                  value: data.taxableGrossExcess
+                })
+              }
+            }
+          ]
+        }) }}
+
+        {{ govukCheckboxes({
+          idPrefix: "underpaid",
+          name: "underpaid",
+          items: [
+            {
+              value: "underpaid",
+              text: "This is an underpayment",
+              id: "underpaid",
+              checked: data.underpaid,
+              conditional: {
+                html: govukInput({
+                  label: {
+                    text: "Net incorrect"
+                  },
+                  prefix: {
+                    text: "£"
+                  },
+                  id: "net-incorrect",
+                  name: "netIncorrect",
+                  classes: "govuk-input--width-10",
+                  inputmode: "decimal",
+                  spellcheck: false,
+                  value: data.netIncorrect
+                }) + govukInput({
+                  label: {
+                    text: "Net correct"
+                  },
+                  prefix: {
+                    text: "£"
+                  },
+                  id: "net-correct",
+                  name: "netCorrect",
+                  classes: "govuk-input--width-10",
+                  inputmode: "decimal",
+                  spellcheck: false,
+                  value: data.netCorrect
+                })
+              }
+            }
+          ]
+        }) }}
+
+        {{ govukCheckboxes({
+          idPrefix: "calculation-options",
+          name: "calculationOptions",
+          fieldset: {
+            legend: {
+              text: "Include in this calculation",
+              classes: "govuk-fieldset__legend--s"
+            }
+          },
+          items: [
+            { value: "useA14", text: "Use A14(s)" },
+            { value: "useEarningsOnly", text: "Use earnings only" },
+            { value: "useDcc", text: "Use diminishing capital calculation (DCC)" }
+          ]
+        }) }}
+
+        <h2 class="govuk-heading-m">Discrepancy period</h2>
+
+        {{ govukDateInput({
+          id: "from-date",
+          namePrefix: "qb16From",
+          fieldset: {
+            legend: {
+              text: "From",
+              classes: "govuk-fieldset__legend--s"
+            }
+          },
+          hint: {
+            text: "For example, 11 4 1988"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["qb16From-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["qb16From-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["qb16From-year"] }
+          ]
+        }) }}
+
+        {{ govukDateInput({
+          id: "to-date",
+          namePrefix: "qb16To",
+          fieldset: {
+            legend: {
+              text: "To",
+              classes: "govuk-fieldset__legend--s"
+            }
+          },
+          hint: {
+            text: "For example, 17 7 2026"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["qb16To-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["qb16To-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["qb16To-year"] }
+          ]
+        }) }}
+
+        <h2 class="govuk-heading-m">Overpayment calculation</h2>
+
+        {{ govukInsetText({
+          text: "These figures are worked out automatically once you save this entry."
+        }) }}
+
+        {{ govukSummaryList({
+          rows: [
+            { key: { text: "Incorrect amount paid" }, value: { text: "£0.00 weekly" } },
+            { key: { text: "Less correct amount due" }, value: { text: "£0.00 weekly" } },
+            { key: { text: "Over or underpayment" }, value: { text: "£0.00 weekly" } }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

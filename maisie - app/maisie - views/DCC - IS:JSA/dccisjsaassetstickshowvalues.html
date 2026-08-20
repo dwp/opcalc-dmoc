@@ -1,0 +1,113 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Asset value – DCC (IS or JSA) – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/opcalctype"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Diminishing capital calculation</span>
+
+      <h1 class="govuk-heading-l">
+        Asset value
+      </h1>
+
+      {{ govukSummaryList({
+        rows: [
+          { key: { text: "Asset type" }, value: { text: "Cash" } },
+          { key: { text: "Name" }, value: { text: data.isjsaAssetName if data.isjsaAssetName else "Not given" } }
+        ]
+      }) }}
+
+      <p class="govuk-body govuk-hint">Record what this asset was worth on a given date. Add a value each time the amount changed.</p>
+
+      <form action="/return-to-tab" method="post">
+
+        {{ govukDateInput({
+          id: "isjsa-new-value-date",
+          namePrefix: "isjsaNewValueDate",
+          fieldset: {
+            legend: {
+              text: "Date"
+            }
+          },
+          hint: {
+            text: "For example, 27 10 2008"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["isjsaNewValueDate-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["isjsaNewValueDate-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["isjsaNewValueDate-year"] }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "isjsa-new-value",
+          name: "isjsaNewValue",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Value"
+          },
+          value: data.isjsaNewValue
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

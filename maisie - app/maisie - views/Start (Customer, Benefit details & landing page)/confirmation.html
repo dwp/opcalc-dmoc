@@ -1,0 +1,68 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Case created – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      {{ govukPanel({
+        titleText: "Case created",
+        html: "National Insurance number<br><strong>" + data.nino + "</strong>"
+      }) }}
+
+      <p>
+        A case has been created for this customer using the details you entered.
+      </p>
+
+      <div class="govuk-button-group">
+        {{ govukButton({
+          text: "Continue to case",
+          href: "/opcalctype"
+        }) }}
+
+        {{ govukButton({
+          text: "Return to OpCalc",
+          href: "/landingpage",
+          classes: "govuk-button--secondary"
+        }) }}
+      </div>
+
+    </div>
+  </div>
+
+{% endblock %}
+

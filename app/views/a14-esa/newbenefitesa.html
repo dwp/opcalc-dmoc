@@ -1,0 +1,226 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Benefit details – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/a14esa"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Benefit details
+      </h1>
+
+      <form action="/a14esa#income" method="post">
+
+        {{ govukInput({
+          id: "nbe-type",
+          name: "nbeType",
+          classes: "govuk-input--width-3",
+          label: {
+            text: "Type"
+          },
+          hint: {
+            text: "Enter the JSAPS benefit code number, or choose the benefit title from the Benefit list below instead"
+          },
+          value: data.nbeType
+        }) }}
+
+        {{ govukSelect({
+          id: "nbe-benefit",
+          name: "nbeBenefit",
+          label: {
+            text: "Benefit"
+          },
+          items: [
+            { value: "", text: "Choose a benefit" },
+            { value: "retirement-pension", text: "Retirement Pension" },
+            { value: "incapacity-benefit", text: "Incapacity Benefit" },
+            { value: "contribution-jsa", text: "Jobseeker's Allowance (contribution-based)" },
+            { value: "contribution-esa", text: "Employment and Support Allowance (contribution-based)" },
+            { value: "carers-allowance", text: "Carer's Allowance" },
+            { value: "widowed-parents-allowance", text: "Widowed Parent's Allowance" },
+            { value: "bereavement-allowance", text: "Bereavement Allowance" },
+            { value: "child-benefit", text: "Child Benefit" },
+            { value: "other", text: "Other" }
+          ],
+          value: data.nbeBenefit
+        }) }}
+
+        {{ govukSelect({
+          id: "nbe-payment-period",
+          name: "nbePaymentPeriod",
+          label: {
+            text: "Payment period"
+          },
+          items: [
+            { value: "weekly", text: "Weekly", selected: data.nbePaymentPeriod == "weekly" or not data.nbePaymentPeriod },
+            { value: "fortnightly", text: "Fortnightly", selected: data.nbePaymentPeriod == "fortnightly" },
+            { value: "four-weekly", text: "Four-weekly", selected: data.nbePaymentPeriod == "four-weekly" },
+            { value: "monthly", text: "Monthly", selected: data.nbePaymentPeriod == "monthly" },
+            { value: "annually", text: "Annually", selected: data.nbePaymentPeriod == "annually" }
+          ]
+        }) }}
+
+        {% set nbeAutoUpratingConditionalHtml %}
+
+          {{ govukDateInput({
+            id: "nbe-payday",
+            namePrefix: "nbePayday",
+            fieldset: {
+              legend: {
+                text: "Payday"
+              }
+            },
+            hint: {
+              text: "Enter the last payday before this A14's date"
+            },
+            items: [
+              { name: "day", classes: "govuk-input--width-2", value: data["nbePayday-day"] },
+              { name: "month", classes: "govuk-input--width-2", value: data["nbePayday-month"] },
+              { name: "year", classes: "govuk-input--width-4", value: data["nbePayday-year"] }
+            ]
+          }) }}
+
+        {% endset %}
+
+        {{ govukCheckboxes({
+          idPrefix: "nbe-auto-uprating",
+          name: "nbeAutoUprating",
+          fieldset: {
+            legend: {
+              text: "Auto uprating"
+            }
+          },
+          hint: {
+            text: "Only applies to Retirement Pension. When selected, this benefit is uprated automatically each April, so there is no need to create new A14 forms just to increase it."
+          },
+          items: [
+            {
+              value: "autoUprating",
+              text: "Automatically uprate this benefit",
+              id: "nbe-auto-uprating",
+              checked: data.nbeAutoUprating,
+              conditional: {
+                html: nbeAutoUpratingConditionalHtml
+              }
+            }
+          ]
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "nbe-paid-to",
+          name: "nbePaidTo",
+          classes: "govuk-radios--inline",
+          fieldset: {
+            legend: {
+              text: "Paid to"
+            }
+          },
+          items: [
+            { value: "customer", text: "Customer", checked: data.nbePaidTo == "customer" or not data.nbePaidTo },
+            { value: "partner", text: "Partner", checked: data.nbePaidTo == "partner" }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "nbe-amount",
+          name: "nbeAmount",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Amount"
+          },
+          hint: {
+            text: "Enter an amount"
+          },
+          value: data.nbeAmount
+        }) }}
+
+        {{ govukInput({
+          id: "nbe-disregard",
+          name: "nbeDisregard",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Disregard"
+          },
+          hint: {
+            text: "Always a weekly amount, regardless of the payment period selected above"
+          },
+          value: data.nbeDisregard
+        }) }}
+
+        {{ govukSummaryList({
+          rows: [
+            {
+              key: { text: "Net weekly" },
+              value: { text: "£" + (data.nbeNetWeekly if data.nbeNetWeekly else "0.00") }
+            }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save benefit",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/a14esa",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help with benefit details</a>
+      </p>
+
+    </div>
+  </div>
+
+{% endblock %}
+
+

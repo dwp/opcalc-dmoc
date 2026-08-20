@@ -1,0 +1,204 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Print settings – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/landingpage"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Print settings
+      </h1>
+
+      <form action="/landingpage" method="post">
+
+        <h2 class="govuk-heading-m">
+          Printer
+        </h2>
+
+        {{ govukSelect({
+          id: "printer-name",
+          name: "printerName",
+          label: {
+            text: "Printer name"
+          },
+          items: [
+            {
+              value: "microsoft-print-to-pdf",
+              text: "Microsoft Print to PDF from DWCLPW0N",
+              selected: true
+            }
+          ]
+        }) }}
+
+        <p>
+          <a class="govuk-link" href="#">Printer properties</a>
+        </p>
+
+        {{ govukSummaryList({
+          rows: [
+            {
+              key: {
+                text: "Status"
+              },
+              value: {
+                text: "Ready"
+              }
+            },
+            {
+              key: {
+                text: "Type"
+              },
+              value: {
+                text: "Citrix Universal Printer"
+              }
+            },
+            {
+              key: {
+                text: "Where"
+              },
+              value: {
+                text: "Client:57:Microsoft Print to PDF"
+              }
+            },
+            {
+              key: {
+                text: "Comment"
+              },
+              value: {
+                text: "Auto Created Client Printer DWCLPW0NAKVV"
+              }
+            }
+          ]
+        }) }}
+
+        <h2 class="govuk-heading-m">
+          Paper
+        </h2>
+
+        {{ govukSelect({
+          id: "paper-size",
+          name: "paperSize",
+          label: {
+            text: "Size"
+          },
+          items: [
+            {
+              value: "a4",
+              text: "A4",
+              selected: true
+            },
+            {
+              value: "a3",
+              text: "A3"
+            },
+            {
+              value: "letter",
+              text: "Letter"
+            }
+          ]
+        }) }}
+
+        {{ govukSelect({
+          id: "paper-source",
+          name: "paperSource",
+          label: {
+            text: "Source"
+          },
+          hint: {
+            text: "Available sources depend on the selected printer"
+          },
+          items: [
+            {
+              value: "automatically-select",
+              text: "Automatically select"
+            }
+          ]
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "orientation",
+          name: "orientation",
+          fieldset: {
+            legend: {
+              text: "Orientation",
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          items: [
+            {
+              value: "portrait",
+              text: "Portrait",
+              checked: true
+            },
+            {
+              value: "landscape",
+              text: "Landscape"
+            }
+          ]
+        }) }}
+
+        <p>
+          <a class="govuk-link" href="#">Network printers</a>
+        </p>
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save print settings",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/landingpage",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}
+

@@ -1,0 +1,103 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  About OpCalc – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/landingpage"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        About OpCalc
+      </h1>
+
+      <p>
+        OpCalc – Overpayments Calculator
+      </p>
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: {
+              text: "Version"
+            },
+            value: {
+              text: "22.0.0"
+            }
+          },
+          {
+            key: {
+              text: "Copyright"
+            },
+            value: {
+              text: "© Crown copyright 1994 to 2026"
+            }
+          },
+          {
+            key: {
+              text: "Issued"
+            },
+            value: {
+              text: "6 April 2026"
+            }
+          },
+          {
+            key: {
+              text: "System reference number"
+            },
+            value: {
+              text: "02/0962"
+            }
+          }
+        ]
+      }) }}
+
+      {{ govukButton({
+        text: "Back to OpCalc",
+        href: "/landingpage"
+      }) }}
+
+    </div>
+  </div>
+
+{% endblock %}
+

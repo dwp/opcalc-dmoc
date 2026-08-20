@@ -1,0 +1,145 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  A14 assessment report – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/a14forms"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        A14 assessment report
+      </h1>
+
+      <p class="govuk-body govuk-hint">
+        A14PC: 10/07/2015 &ndash; Not in use
+      </p>
+
+      <p class="govuk-body">
+        View this report as a
+        <a class="govuk-link" href="#view-web">web page</a>
+        or
+        <a class="govuk-link" href="#">download as a PDF</a>.
+      </p>
+
+      <div id="view-web">
+
+        {{ govukSummaryList({
+          rows: [
+            {
+              key: { text: "Customer" },
+              value: { text: (data.title if data.title else "Mr") + " " + (data.forenames[0] + " " if data.forenames else "M ") + (data.surname if data.surname else "Martin") }
+            },
+            {
+              key: { text: "National Insurance number" },
+              value: { text: data.nino if data.nino else "AB 12 34 56 C" }
+            },
+            {
+              key: { text: "Benefit" },
+              value: { text: "Pension Credit" }
+            },
+            {
+              key: { text: "Totals" },
+              value: { text: "Weekly" }
+            }
+          ]
+        }) }}
+
+        {{ govukTable({
+          caption: "A14 assessment report",
+          captionClasses: "govuk-visually-hidden",
+          head: [
+            { text: "Item" },
+            { text: "Detail" },
+            { text: "Amount", format: "numeric" }
+          ],
+          rows: [
+            [
+              { text: "Standard amount" },
+              { text: "Single" },
+              { text: "£151.20", format: "numeric" }
+            ],
+            [
+              { text: "Extra amount for severe disability" },
+              { text: "" },
+              { text: "£0.00", format: "numeric" }
+            ],
+            [
+              { text: "Extra amount for caring responsibilities" },
+              { text: "" },
+              { text: "£0.00", format: "numeric" }
+            ],
+            [
+              { text: "Housing costs" },
+              { text: "" },
+              { text: "£0.00", format: "numeric" }
+            ],
+            [
+              { text: "Clerical components" },
+              { text: "" },
+              { text: "£0.00", format: "numeric" }
+            ],
+            [
+              { html: "<strong>Appropriate amount</strong>" },
+              { text: "" },
+              { html: "<strong>£151.20</strong>", format: "numeric" }
+            ]
+          ]
+        }) }}
+
+        <p class="govuk-body govuk-hint">
+          Figures shown are illustrative and would be calculated automatically in the live system.
+        </p>
+
+      </div>
+
+      {{ govukButton({
+        text: "Back to A14 Forms",
+        href: "/a14forms",
+        classes: "govuk-button--secondary"
+      }) }}
+
+    </div>
+  </div>
+
+{% endblock %}
+

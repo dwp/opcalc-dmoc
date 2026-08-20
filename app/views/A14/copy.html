@@ -1,0 +1,100 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Copy form – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/a14forms"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Copy form
+      </h1>
+
+      <p class="govuk-body">
+        Copy form A14 Forms dated 10/07/2015 to:
+      </p>
+
+      <form action="/a14forms" method="post">
+
+        {{ govukDateInput({
+          id: "copy-start-date",
+          namePrefix: "copyStartDate",
+          fieldset: {
+            legend: {
+              text: "Start date"
+            }
+          },
+          hint: {
+            text: "Form cannot be copied to itself. Choose a different start date."
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["copyStartDate-day"] if data["copyStartDate-day"] else "10" },
+            { name: "month", classes: "govuk-input--width-2", value: data["copyStartDate-month"] if data["copyStartDate-month"] else "07" },
+            { name: "year", classes: "govuk-input--width-4", value: data["copyStartDate-year"] if data["copyStartDate-year"] else "2015" }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Continue",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/a14forms",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help copying a form</a>
+      </p>
+
+    </div>
+  </div>
+
+{% endblock %}
+

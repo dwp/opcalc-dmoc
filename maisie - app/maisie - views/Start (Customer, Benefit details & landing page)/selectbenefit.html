@@ -1,0 +1,112 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Select a benefit – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/landingpage"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Select a benefit
+      </h1>
+
+      <p>
+        Select the benefit this case relates to.
+      </p>
+
+      <form action="/customerdetails" method="post">
+
+        {{ govukSelect({
+          id: "benefit",
+          name: "benefit",
+          label: {
+            text: "Benefit"
+          },
+          items: [
+            { value: "", text: "Choose a benefit" },
+            { value: "AA", text: "Attendance Allowance" },
+            { value: "BA", text: "Bereavement Allowance" },
+            { value: "DLA-Care-Mob", text: "DLA Care & Mobility" },
+            { value: "DLA-Mob", text: "DLA Mobility Component" },
+            { value: "DLA-Care", text: "DLA Care Component" },
+            { value: "ESA", text: "Employment and Support Allowance" },
+            { value: "IB", text: "Incapacity Benefit" },
+            { value: "IS", text: "Income Support" },
+            { value: "IS-JSA", text: "Income Support / Jobseekers Allowance" },
+            { value: "IS-PC", text: "Income Support / Pension Credit" },
+            { value: "IVB", text: "Invalidity Benefit" },
+            { value: "IVB-IB", text: "Invalidity / Incapacity Benefit" },
+            { value: "JSA", text: "Jobseekers Allowance" },
+            { value: "MA", text: "Maternity Allowance" },
+            { value: "PIB", text: "Passported Incapacity Benefit" },
+            { value: "PC", text: "Pension Credit" },
+            { value: "RP", text: "Retirement Pension" },
+            { value: "SDA", text: "Severe Disablement Allowance" },
+            { value: "SB", text: "Sickness Benefit" },
+            { value: "WMA", text: "Widowed Mother's Allowance" },
+            { value: "WPA", text: "Widowed Parent's Allowance" },
+            { value: "WP", text: "Widow's Pension" }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Continue",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/landingpage",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}
+
+

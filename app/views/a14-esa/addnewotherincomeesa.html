@@ -1,0 +1,179 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Other income details – A14 form (ESA) – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/a14esa#income"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">A14 ESA income</span>
+
+      <h1 class="govuk-heading-l">
+        Other income details
+      </h1>
+
+      <p class="govuk-body">Record income the customer or their partner received that is not a benefit.</p>
+
+      <form action="/return-to-tab" method="post">
+
+        <input type="hidden" name="returnTo" value="/a14esa#income">
+
+        {{ govukSelect({
+          id: "esa-income-category",
+          name: "esaIncomeCategory",
+          label: {
+            text: "Category"
+          },
+          hint: {
+            text: "The category sets the income type code used on the A14."
+          },
+          items: [
+            { value: "", text: "Select a category", selected: not data.esaIncomeCategory },
+            { value: "earnings", text: "Earnings", selected: data.esaIncomeCategory == "earnings" },
+            { value: "self-employed", text: "Self-employed earnings", selected: data.esaIncomeCategory == "self-employed" },
+            { value: "occupational-pension", text: "Occupational pension", selected: data.esaIncomeCategory == "occupational-pension" },
+            { value: "personal-pension", text: "Personal pension", selected: data.esaIncomeCategory == "personal-pension" },
+            { value: "maintenance", text: "Maintenance", selected: data.esaIncomeCategory == "maintenance" },
+            { value: "sub-tenant", text: "Sub-tenant or boarder", selected: data.esaIncomeCategory == "sub-tenant" },
+            { value: "other", text: "Other", selected: data.esaIncomeCategory == "other" }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "esa-income-other",
+          name: "esaIncomeOther",
+          label: {
+            text: "Description"
+          },
+          hint: {
+            text: "Only needed if you chose Other above."
+          },
+          value: data.esaIncomeOther
+        }) }}
+
+        {{ govukSelect({
+          id: "esa-income-payment-period",
+          name: "esaIncomePaymentPeriod",
+          label: {
+            text: "Payment period"
+          },
+          items: [
+            { value: "Weekly", text: "Weekly", selected: data.esaIncomePaymentPeriod == "Weekly" or not data.esaIncomePaymentPeriod },
+            { value: "Fortnightly", text: "Fortnightly", selected: data.esaIncomePaymentPeriod == "Fortnightly" },
+            { value: "4 weekly", text: "4 weekly", selected: data.esaIncomePaymentPeriod == "4 weekly" },
+            { value: "Monthly", text: "Monthly", selected: data.esaIncomePaymentPeriod == "Monthly" },
+            { value: "Quarterly", text: "Quarterly", selected: data.esaIncomePaymentPeriod == "Quarterly" },
+            { value: "Annually", text: "Annually", selected: data.esaIncomePaymentPeriod == "Annually" }
+          ]
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "esa-income-paid-to",
+          name: "esaIncomePaidTo",
+          classes: "govuk-radios--inline",
+          fieldset: {
+            legend: {
+              text: "Paid to"
+            }
+          },
+          hint: {
+            text: "Partner is only available on a couple case."
+          },
+          items: [
+            { value: "customer", text: "Customer", checked: data.esaIncomePaidTo == "customer" or not data.esaIncomePaidTo },
+            { value: "partner", text: "Partner", checked: data.esaIncomePaidTo == "partner" }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "esa-income-net-pay",
+          name: "esaIncomeNetPay",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Net pay"
+          },
+          value: data.esaIncomeNetPay
+        }) }}
+
+        {{ govukInput({
+          id: "esa-income-disregard",
+          name: "esaIncomeDisregard",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Disregard"
+          },
+          hint: {
+            text: "Leave blank if no disregard applies"
+          },
+          value: data.esaIncomeDisregard
+        }) }}
+
+        {{ govukSummaryList({
+          rows: [
+            { key: { text: "Net weekly" }, value: { text: "£0.00" } }
+          ]
+        }) }}
+
+        <p class="govuk-body govuk-hint">Net weekly is worked out from the net pay, payment period and disregard once this income is saved.</p>
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save income",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/a14esa#income",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

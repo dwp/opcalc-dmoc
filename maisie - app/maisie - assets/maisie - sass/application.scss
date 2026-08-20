@@ -1,0 +1,36 @@
+//
+// For guidance on how to add CSS and SCSS see:
+// https://prototype-kit.service.gov.uk/docs/adding-css-javascript-and-images
+// 
+
+// Add extra styles here
+
+// Keeps the footer at the bottom of the window on short pages, instead of
+// floating up under the content.
+//
+// The width container uses `margin: 0 auto`, and auto margins on the cross
+// axis of a flex column stop an item stretching - so it needs an explicit
+// width: 100% or the whole page collapses to the width of its content.
+
+.govuk-template__body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.govuk-template__body > .govuk-width-container {
+  flex: 1 0 auto;
+  width: 100%;
+}
+
+.govuk-template__body > .dwp-header,
+.govuk-template__body > .dwp-footer,
+.govuk-template__body > .govuk-header,
+.govuk-template__body > .govuk-footer {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.govuk-width-container {
+  max-width: 1400px;
+}

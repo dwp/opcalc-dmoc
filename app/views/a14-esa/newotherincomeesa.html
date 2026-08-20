@@ -1,0 +1,175 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  A14 income details – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/a14esa"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        A14 income details
+      </h1>
+
+      <form action="/a14esa#income" method="post">
+
+        {{ govukSelect({
+          id: "noie-category",
+          name: "noieCategory",
+          label: {
+            text: "Category"
+          },
+          hint: {
+            text: "Please select a category"
+          },
+          items: [
+            { value: "", text: "Choose a category" },
+            { value: "occupational-pension", text: "Occupational pension" },
+            { value: "maintenance-payments", text: "Maintenance payments" },
+            { value: "charitable-payments", text: "Charitable payments" },
+            { value: "boarders-payments", text: "Boarder's payments" },
+            { value: "sub-tenants-payments", text: "Sub-tenant's payments" },
+            { value: "other", text: "Other" }
+          ],
+          value: data.noieCategory
+        }) }}
+
+        {{ govukInput({
+          id: "noie-other",
+          name: "noieOther",
+          label: {
+            text: "Other"
+          },
+          hint: {
+            text: "Only needed if you selected Other above"
+          },
+          value: data.noieOther
+        }) }}
+
+        {{ govukSelect({
+          id: "noie-payment-period",
+          name: "noiePaymentPeriod",
+          label: {
+            text: "Payment period"
+          },
+          items: [
+            { value: "weekly", text: "Weekly", selected: data.noiePaymentPeriod == "weekly" or not data.noiePaymentPeriod },
+            { value: "fortnightly", text: "Fortnightly", selected: data.noiePaymentPeriod == "fortnightly" },
+            { value: "four-weekly", text: "Four-weekly", selected: data.noiePaymentPeriod == "four-weekly" },
+            { value: "monthly", text: "Monthly", selected: data.noiePaymentPeriod == "monthly" },
+            { value: "annually", text: "Annually", selected: data.noiePaymentPeriod == "annually" }
+          ]
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "noie-paid-to",
+          name: "noiePaidTo",
+          classes: "govuk-radios--inline",
+          fieldset: {
+            legend: {
+              text: "Paid to"
+            }
+          },
+          items: [
+            { value: "customer", text: "Customer", checked: data.noiePaidTo == "customer" or not data.noiePaidTo },
+            { value: "partner", text: "Partner", checked: data.noiePaidTo == "partner" }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "noie-net-pay",
+          name: "noieNetPay",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Net pay"
+          },
+          value: data.noieNetPay
+        }) }}
+
+        {{ govukInput({
+          id: "noie-disregard",
+          name: "noieDisregard",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Disregard"
+          },
+          hint: {
+            text: "Always a weekly amount, regardless of the payment period selected above"
+          },
+          value: data.noieDisregard
+        }) }}
+
+        {{ govukSummaryList({
+          rows: [
+            {
+              key: { text: "Net weekly" },
+              value: { text: "£" + (data.noieNetWeekly if data.noieNetWeekly else "0.00") }
+            }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save other income",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/a14esa",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help with A14 income details</a>
+      </p>
+
+    </div>
+  </div>
+
+{% endblock %}
+

@@ -1,0 +1,175 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Benefit details – A14 form – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {# data.returnTo comes from the link that opened this page, so Back goes    #}
+  {# to the tab it came from.                                                 #}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/opcalctype"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">A14 income</span>
+
+      <h1 class="govuk-heading-l">
+        Benefit details
+      </h1>
+
+      <form action="/return-to-tab" method="post">
+
+        <p class="govuk-body">Record a benefit the customer or their partner received.</p>
+
+        {{ govukSelect({
+          id: "benefit-name",
+          name: "benefitName",
+          label: {
+            text: "Benefit"
+          },
+          items: [
+            { value: "", text: "Choose a benefit", selected: not data.benefitName },
+            { value: "Attendance Allowance", text: "Attendance Allowance", selected: data.benefitName == "Attendance Allowance" },
+            { value: "Bereavement Allowance", text: "Bereavement Allowance", selected: data.benefitName == "Bereavement Allowance" },
+            { value: "Child Benefit", text: "Child Benefit", selected: data.benefitName == "Child Benefit" },
+            { value: "DLA Care Component", text: "DLA Care Component", selected: data.benefitName == "DLA Care Component" },
+            { value: "DLA Mobility Component", text: "DLA Mobility Component", selected: data.benefitName == "DLA Mobility Component" },
+            { value: "Incapacity Benefit", text: "Incapacity Benefit", selected: data.benefitName == "Incapacity Benefit" },
+            { value: "Maternity Allowance", text: "Maternity Allowance", selected: data.benefitName == "Maternity Allowance" },
+            { value: "Severe Disablement Allowance", text: "Severe Disablement Allowance", selected: data.benefitName == "Severe Disablement Allowance" },
+            { value: "State Pension", text: "State Pension", selected: data.benefitName == "State Pension" },
+            { value: "Widowed Parent\'s Allowance", text: "Widowed Parent\'s Allowance", selected: data.benefitName == "Widowed Parent\'s Allowance" }
+          ]
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "benefit-paid-to",
+          name: "benefitPaidTo",
+          classes: "govuk-radios--inline",
+          fieldset: {
+            legend: {
+              text: "Paid to"
+            }
+          },
+          hint: {
+            text: "Partner is only available on a couple case"
+          },
+          items: [
+            { value: "customer", text: "Customer", checked: data.benefitPaidTo == "customer" or not data.benefitPaidTo },
+            { value: "partner", text: "Partner", checked: data.benefitPaidTo == "partner" }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "benefit-amount",
+          name: "benefitAmount",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Amount"
+          },
+          value: data.benefitAmount
+        }) }}
+
+        {{ govukSelect({
+          id: "benefit-qualifying-period",
+          name: "benefitQualifyingPeriod",
+          label: {
+            text: "Qualifying period"
+          },
+          items: [
+            { value: "Weekly", text: "Weekly", selected: data.benefitQualifyingPeriod == "Weekly" or not data.benefitQualifyingPeriod },
+            { value: "Fortnightly", text: "Fortnightly", selected: data.benefitQualifyingPeriod == "Fortnightly" },
+            { value: "4 weekly", text: "4 weekly", selected: data.benefitQualifyingPeriod == "4 weekly" },
+            { value: "Monthly", text: "Monthly", selected: data.benefitQualifyingPeriod == "Monthly" },
+            { value: "Quarterly", text: "Quarterly", selected: data.benefitQualifyingPeriod == "Quarterly" },
+            { value: "Annually", text: "Annually", selected: data.benefitQualifyingPeriod == "Annually" }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "benefit-disregards",
+          name: "benefitDisregards",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Disregards"
+          },
+          hint: {
+            text: "Leave blank if no disregard applies"
+          },
+          value: data.benefitDisregards
+        }) }}
+
+        {{ govukInput({
+          id: "benefit-text",
+          name: "benefitText",
+          label: {
+            text: "Text"
+          },
+          hint: {
+            text: "Any note to show against this benefit"
+          },
+          value: data.benefitText
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help with benefit details</a>
+      </p>
+
+    </div>
+  </div>
+
+{% endblock %}

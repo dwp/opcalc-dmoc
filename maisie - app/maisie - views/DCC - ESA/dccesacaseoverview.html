@@ -1,0 +1,109 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Case overview – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBreadcrumbs({
+    items: [
+      {
+        text: "OpCalc",
+        href: "/landingpage"
+      },
+      {
+        text: "Case overview"
+      }
+    ]
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+
+      {{ govukNotificationBanner({
+        type: "success",
+        html: '<h3 class="govuk-notification-banner__heading">Diminishing capital calculation complete</h3><p class="govuk-body">The calculation ran for 27 October 2008 to 16 July 2026.</p>'
+      }) }}
+
+      <h1 class="govuk-heading-l">
+        Case overview: {{ data.nino if data.nino else "AB 12 34 56 C" }}
+      </h1>
+
+      {{ govukTable({
+        caption: "Records held for this case",
+        captionClasses: "govuk-visually-hidden",
+        head: [
+          { text: "Type" },
+          { text: "Reference" },
+          { text: "Actions" }
+        ],
+        rows: [
+          [
+            { text: "Customer Details" },
+            { text: "Mr Max Martin" },
+            { html: '<a class="govuk-link" href="/customerdetails">View<span class="govuk-visually-hidden"> customer details</span></a> | <a class="govuk-link" href="/customerdetails">Edit<span class="govuk-visually-hidden"> customer details</span></a>' }
+          ],
+          [
+            { text: "A14 Forms" },
+            { text: "" },
+            { html: '<a class="govuk-link" href="/newform">New<span class="govuk-visually-hidden"> A14 form</span></a>' }
+          ],
+          [
+            { text: "QB16 Entry Details" },
+            { text: "" },
+            { html: '<a class="govuk-link" href="/qb16listofentries">New<span class="govuk-visually-hidden"> QB16 entry</span></a>' }
+          ],
+          [
+            { text: "Diminishing Capital Calculation" },
+            { text: "DCC: 27/10/2008 to 16/07/2026" },
+            { html: '<a class="govuk-link" href="/dccesaviewcaseoverview">View<span class="govuk-visually-hidden"> diminishing capital calculation</span></a> | <a class="govuk-link" href="/dccesa">Edit<span class="govuk-visually-hidden"> diminishing capital calculation</span></a>' }
+          ]
+        ]
+      }) }}
+
+      <h2 class="govuk-heading-m">
+        This case
+      </h2>
+
+      <ul class="govuk-list">
+        <li><a class="govuk-link" href="/dccesacaseprintselection">Print PDFs for this case</a></li>
+        <li><a class="govuk-link" href="/opcalctype">Back to the full case overview</a></li>
+      </ul>
+
+    </div>
+  </div>
+
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Start page – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBreadcrumbs({
+    items: [
+      {
+        text: "Home",
+        href: "#"
+      },
+      {
+        text: "Benefit calculation tools",
+        href: "#"
+      },
+      {
+        text: "OpCalc"
+      }
+    ]
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-xl">
+        OpCalc
+      </h1>
+
+      <p>Use OpCalc to work out a customer's benefit entitlement based on their income, savings and household circumstances.</p>
+
+      <p>Use this service to:</p>
+
+      <ul class="govuk-list govuk-list--bullet">
+        <li>open an existing case or start a new one</li>
+        <li>record customer, appointee and household details</li>
+        <li>calculate entitlement for benefits including Income Support, Jobseeker's Allowance, Employment and Support Allowance, Pension Credit and State Pension</li>
+        <li>work out income, housing costs, non-dependant deductions and diminishing capital</li>
+        <li>generate supporting forms, such as A14, BA3 and QB16</li>
+      </ul>
+
+      {{ govukButton({
+        text: "Start now",
+        href: "/signin",
+        isStartButton: true
+      }) }}
+
+      <h2 class="govuk-heading-m">
+        Before you start
+      </h2>
+
+      <p>
+        If you're opening an existing case, you'll need the case reference number.
+      </p>
+
+      <p>
+        For a new case, you'll need the customer's benefit type and details of their income, savings, housing costs and any non-dependants living with them.
+      </p>
+
+      <p>
+        If you're not sure which forms a benefit type needs, check the <a href="#">list of benefit types and forms</a> before you start.
+      </p>
+
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+
+      <aside class="govuk-prototype-kit-common-templates-related-items" role="complementary">
+        <h2 class="govuk-heading-m" id="subsection-title">
+          Guidance
+        </h2>
+        <nav role="navigation" aria-labelledby="subsection-title">
+          <ul class="govuk-list govuk-!-font-size-16">
+            <li>
+              <a href="#">
+                A14 forms guidance
+              </a>
+            </li>
+            <li>
+              <a href="#">
+                QB16 entry guidance
+              </a>
+            </li>
+            <li>
+              <a href="#">
+                Diminishing capital calculation guidance
+              </a>
+            </li>
+            <li>
+              <a href="#" class="govuk-!-font-weight-bold">
+                More <span class="govuk-visually-hidden">OpCalc guidance</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+    </div>
+  </div>
+
+{% endblock %}
+
+

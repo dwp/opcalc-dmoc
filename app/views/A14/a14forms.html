@@ -1,0 +1,167 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  A14 forms – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/opcalctype"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  {# Highlights the row whose radio is selected, so the choice is obvious    #}
+  {# at a glance as well as from the radio itself.                           #}
+  <style>
+    .opcalc-a14-row:has(input:checked) {
+      background-color: #d2e2f1;
+    }
+    .opcalc-a14-row:has(input:focus) {
+      background-color: #fff2d3;
+    }
+  </style>
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+
+      <h1 class="govuk-heading-l">
+        A14 forms
+      </h1>
+
+      <p class="govuk-body">Select a form to print its PDF on its own, or print PDFs for every form on this case.</p>
+
+      <form action="/a14PDF" method="post">
+
+        <fieldset class="govuk-fieldset">
+
+          <legend class="govuk-fieldset__legend govuk-visually-hidden">
+            Select an A14 form
+          </legend>
+
+          {% set a14s = [
+            { ref: "A14PC: 10/07/2015", to: "11/04/2016", generated: "10/07/2015", reason: "User" },
+            { ref: "A14PC: 12/04/2016", to: "10/04/2017", generated: "12/04/2016", reason: "Uprating" },
+            { ref: "A14PC: 11/04/2017", to: "09/04/2018", generated: "11/04/2017", reason: "Uprating" },
+            { ref: "A14PC: 10/04/2018", to: "08/04/2019", generated: "10/04/2018", reason: "Uprating" },
+            { ref: "A14PC: 09/04/2019", to: "06/04/2020", generated: "09/04/2019", reason: "Uprating" },
+            { ref: "A14PC: 07/04/2020", to: "12/04/2021", generated: "07/04/2020", reason: "Uprating" },
+            { ref: "A14PC: 10/07/2020", to: "12/04/2021", generated: "10/07/2020", reason: "Savings credit start" },
+            { ref: "A14PC: 13/04/2021", to: "11/04/2022", generated: "13/04/2021", reason: "Uprating" },
+            { ref: "A14PC: 12/04/2022", to: "10/04/2023", generated: "12/04/2022", reason: "Uprating" },
+            { ref: "A14PC: 11/04/2023", to: "08/04/2024", generated: "11/04/2023", reason: "Uprating" },
+            { ref: "A14PC: 09/04/2024", to: "07/04/2025", generated: "09/04/2024", reason: "Uprating" },
+            { ref: "A14PC: 08/04/2025", to: "06/04/2026", generated: "08/04/2025", reason: "Uprating" },
+            { ref: "A14PC: 07/04/2026", to: "16/07/2026", generated: "07/04/2026", reason: "Uprating" }
+          ] %}
+
+          <table class="govuk-table">
+            <caption class="govuk-table__caption govuk-visually-hidden">A14 forms on this case</caption>
+            <thead class="govuk-table__head">
+              <tr class="govuk-table__row">
+                <th scope="col" class="govuk-table__header"><span class="govuk-visually-hidden">Select</span></th>
+                <th scope="col" class="govuk-table__header">Reference</th>
+                <th scope="col" class="govuk-table__header">To</th>
+                <th scope="col" class="govuk-table__header">Date generated</th>
+                <th scope="col" class="govuk-table__header">Reason</th>
+                <th scope="col" class="govuk-table__header">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="govuk-table__body">
+              {% for a14 in a14s %}
+                <tr class="govuk-table__row opcalc-a14-row">
+                  <td class="govuk-table__cell">
+                    <div class="govuk-radios govuk-radios--small">
+                      <div class="govuk-radios__item">
+                        <input class="govuk-radios__input" id="a14-{{ loop.index }}" name="selectedA14" type="radio" value="{{ a14.ref }}" {{ "checked" if data.selectedA14 == a14.ref }}>
+                        <label class="govuk-label govuk-radios__label" for="a14-{{ loop.index }}">
+                          <span class="govuk-visually-hidden">Select {{ a14.ref }}</span>
+                        </label>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="govuk-table__cell">{{ a14.ref }}</td>
+                  <td class="govuk-table__cell">{{ a14.to }}</td>
+                  <td class="govuk-table__cell">{{ a14.generated }}</td>
+                  <td class="govuk-table__cell">{{ a14.reason }}</td>
+                  <td class="govuk-table__cell">
+                    <a class="govuk-link" href="/a14PDF">View<span class="govuk-visually-hidden"> {{ a14.ref }}</span></a>
+                    |
+                    <a class="govuk-link" href="/copyforma14">Copy<span class="govuk-visually-hidden"> {{ a14.ref }}</span></a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+        </fieldset>
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Print selected PDF",
+            name: "printScope",
+            value: "selected",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Print all PDFs",
+            name: "printScope",
+            value: "all",
+            classes: "govuk-button--secondary",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Back to case overview",
+            href: "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <h2 class="govuk-heading-m">Manage forms</h2>
+
+      <ul class="govuk-list">
+        <li><a class="govuk-link" href="/newform">New A14 form</a></li>
+        <li><a class="govuk-link" href="/a14isjsa">Edit the selected form</a></li>
+        <li><a class="govuk-link" href="#">Delete the selected form</a></li>
+      </ul>
+
+    </div>
+  </div>
+
+{% endblock %}

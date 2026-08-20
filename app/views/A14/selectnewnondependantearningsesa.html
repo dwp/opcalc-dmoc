@@ -1,0 +1,101 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Non-dependant's earnings – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/nondependantesa"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Non-dependant's earnings
+      </h1>
+
+      <form action="/nondependantesa" method="post">
+
+        {{ govukInput({
+          id: "ndee-name",
+          name: "ndeeName",
+          label: {
+            text: "Name"
+          },
+          value: data.ndeeName
+        }) }}
+
+        {{ govukInput({
+          id: "ndee-earnings",
+          name: "ndeeEarnings",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Earnings"
+          },
+          hint: {
+            text: "Please enter a valid earnings amount"
+          },
+          value: data.ndeeEarnings if data.ndeeEarnings else "0.00"
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/nondependantesa",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help with non-dependant's earnings</a>
+      </p>
+
+    </div>
+  </div>
+
+{% endblock %}
+

@@ -1,0 +1,104 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  A value for this date already exists – DCC (IS or JSA) – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/opcalctype"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      {% set existingDate = (data["isjsaNewValueDate-day"] if data["isjsaNewValueDate-day"] else "27") + "/" + (data["isjsaNewValueDate-month"] if data["isjsaNewValueDate-month"] else "10") + "/" + (data["isjsaNewValueDate-year"] if data["isjsaNewValueDate-year"] else "2008") %}
+
+      {{ govukWarningText({
+        text: "A value for " + existingDate + " has already been recorded against this asset.",
+        iconFallbackText: "Warning"
+      }) }}
+
+      <form action="/dccisjsa-value-replace" method="post">
+
+        {{ govukRadios({
+          idPrefix: "isjsa-replace-value",
+          name: "isjsaReplaceValue",
+          fieldset: {
+            legend: {
+              text: "Do you want to replace it?",
+              isPageHeading: true,
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          items: [
+            {
+              value: "yes",
+              text: "Yes, replace the existing value",
+              hint: {
+                text: "The value already recorded for " + existingDate + " will be overwritten."
+              }
+            },
+            {
+              value: "no",
+              text: "No, let me change the date",
+              hint: {
+                text: "You will go back to the asset value so you can enter a different date."
+              }
+            }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Continue",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/opcalctype",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

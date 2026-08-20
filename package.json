@@ -1,0 +1,27 @@
+{
+  "scripts": {
+    "dev": "govuk-prototype-kit dev",
+    "serve": "govuk-prototype-kit serve",
+    "start": "govuk-prototype-kit start"
+  },
+  "dependencies": {
+    "govuk-prototype-kit": "npm:@dwp-govuk/govuk-prototype-kit@13.20.1",
+    "@dwp/dwp-frontend": "4.1.0",
+    "@govuk-prototype-kit/common-templates": "3.0.0",
+    "body-parser": "2.2.2",
+    "express": "5.2.1",
+    "govuk-frontend": "6.2.0",
+    "qs": "6.15.2"
+  },
+  "overrides": {
+    "qs": "6.15.2",
+    "express": {
+      "qs": "6.15.2"
+    },
+    "body-parser": {
+      "qs": "6.15.1"
+    },
+    "minimatch": "^9.0.0"
+  },
+  "immutable": "^4.0.0"
+}

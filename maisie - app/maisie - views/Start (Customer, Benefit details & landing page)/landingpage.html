@@ -1,0 +1,87 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/landingpage",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        OpCalc
+      </h1>
+
+      <p>
+        Create, open and manage benefit calculation cases.
+      </p>
+
+      {{ govukButton({
+        text: "Start a new case",
+        href: "/selectbenefit",
+        isStartButton: true
+      }) }}
+
+      <h2 class="govuk-heading-m">
+        Cases
+      </h2>
+
+      <ul class="govuk-list">
+        <li><a class="govuk-link" href="/openingexistingcase">Open an existing case</a></li>
+        <li><a class="govuk-link" href="/importacase">Import a case</a></li>
+        <li><a class="govuk-link" href="/exportacase">Export a case</a></li>
+        <li><a class="govuk-link" href="/deleteacase">Delete a case</a></li>
+      </ul>
+
+      <h2 class="govuk-heading-m">
+        Settings and support
+      </h2>
+
+      <ul class="govuk-list">
+        <li><a class="govuk-link" href="/printsettings">Print settings</a></li>
+        <li><a class="govuk-link" href="/help">Help using OpCalc</a></li>
+        <li><a class="govuk-link" href="/aboutopcalc">About OpCalc</a></li>
+      </ul>
+
+    </div>
+  </div>
+
+{% endblock %}
+
+
+
+
+
+
+
