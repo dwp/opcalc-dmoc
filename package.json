@@ -5,6 +5,7 @@
     "start": "govuk-prototype-kit start"
   },
   "dependencies": {
+    "govuk-prototype-kit": "13.20.2",
     "@dwp/dwp-frontend": "4.1.0",
     "@govuk-prototype-kit/common-templates": "3.0.0",
     "body-parser": "2.2.2",
