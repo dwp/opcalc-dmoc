@@ -1,5 +1,5 @@
 {
-  "serviceName": "Service name goes here",
+  "serviceName": "OpCalc",
   "useServiceNavigation": true,
   "plugins": {
     "govuk-frontend": {
