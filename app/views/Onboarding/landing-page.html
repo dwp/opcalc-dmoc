@@ -7,7 +7,7 @@
 {% block header %}
   {{ dwpHeader({
     serviceName: "OpCalc",
-    serviceHref: "/onboarding/landing-page",
+    serviceHref: "/",
     container: true
   }) }}
 {% endblock %}
@@ -41,11 +41,14 @@
   }) }}
 {% endblock %}
 
-
-
 {% block content %}
 
-{{ govukTable({
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+  {% from "govuk/components/select/macro.njk" import govukSelect %}
+
+      {{ govukTable({
   caption: "Saved Cases",
   captionClasses: "govuk-table__caption--l",
   firstCellIsHeader: true,
@@ -236,9 +239,38 @@
 </p>
 
 
-
  
     </div>
+
+    <div class="govuk-grid-column-one-third">
+ 
+      <aside class="govuk-prototype-kit-common-templates-related-items" role="complementary">
+        <h2 class="govuk-heading-m" id="subsection-title">
+          More actions
+        </h2>
+        <nav role="navigation" aria-labelledby="subsection-title">
+          <ul class="govuk-list govuk-!-font-size-16">
+            <li>
+              <a href="/Onboarding/import-case">
+                Import a case <span class="govuk-visually-hidden">in Subsection</span>
+              </a>
+            </li>
+            <li>
+              <a href="/Onboarding/export-case">
+                Export a case <span class="govuk-visually-hidden">in Subsection</span>
+              </a>
+            </li>
+            <li>
+              <a href="/Onboarding/print-setup">
+                Print setup <span class="govuk-visually-hidden">in Subsection</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+ 
+    </div>
+
   </div>
  
 {% endblock %}

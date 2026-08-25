@@ -1,16 +1,101 @@
 {#
-For guidance on how to use layouts see:
-https://prototype-kit.service.gov.uk/docs/how-to-use-layouts
+  app/views/layouts/main.html
+
+  Every page in the prototype extends this file, which is why one missing
+  wrapper here showed up as all 60 screens rendering flush to the left edge
+  with a sliver of horizontal scroll.
+
+  What was happening: govuk-grid-row carries margin-left: -15px and
+  margin-right: -15px. Those negative margins are meant to be absorbed by the
+  15px padding on govuk-width-container. With no width container around the
+  content, nothing absorbed them - so every page started at 0 instead of 15px
+  and ran 15px past the right edge of the window, and nothing capped the
+  content at the 1020px GOV.UK maximum.
+
+  Rather than rebuild the page skeleton by hand, this extends the Prototype
+  Kit's own layout. That brings, already correct and already tested:
+
+    - the viewport meta tag
+    - govuk-width-container, with its max width and responsive side margins
+    - govuk-main-wrapper, with the vertical padding above and below content
+    - the skip link, the html and body classes, and the asset paths
+
+  Your pages need no changes. The blocks they already use - pageTitle, header,
+  footer, containerStart and content - all still work.
 #}
 
 {% extends "govuk-prototype-kit/layouts/govuk-branded.njk" %}
-{% from "govuk/components/service-navigation/macro.njk" import govukServiceNavigation %}
+
+{#
+  ---------------------------------------------------------------------------
+  Anything your old main.html imported
+
+  Macros are global in this setup, so pages call dwpHeader, govukTabs and the
+  rest without importing them, and that keeps working.
+
+  Your handover notes one exception: dwpQuickReference, which had to be
+  imported here rather than per page. I have not guessed at its path - if your
+  previous main.html carried a {% raw %}{% from "..." import dwpQuickReference %}{% endraw %}
+  line, paste it back directly below this comment and it will behave exactly
+  as it did before.
+  ---------------------------------------------------------------------------
+#}
+
+
+{#
+  ---------------------------------------------------------------------------
+  Header and footer
+
+  Set here so a page that does not override them still gets DWP branding
+  rather than the plain GOV.UK header. Pages that do declare their own
+  {% raw %}{% block header %}{% endraw %} - which is most of them - still win.
+  ---------------------------------------------------------------------------
+#}
 
 {% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/",
+    container: true
+  }) }}
+{% endblock %}
 
-    {{ govukHeader() }}
-    {{ govukServiceNavigation({
-        serviceName: OpCalc
-    })}}
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
 
+{#
+  ---------------------------------------------------------------------------
+  containerStart
+
+  Your pages put their back link in a containerStart block. That is not a
+  block the kit layout knows about, so it is declared here inside
+  beforeContent - the slot the design system reserves for back links,
+  breadcrumbs and phase banners, sitting inside the width container and above
+  the main wrapper.
+
+  Pages carry on using containerStart exactly as they do now.
+  ---------------------------------------------------------------------------
+#}
+
+{% block beforeContent %}
+  {% block containerStart %}{% endblock %}
 {% endblock %}

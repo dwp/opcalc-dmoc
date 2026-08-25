@@ -7,7 +7,7 @@
 {% block header %}
   {{ dwpHeader({
     serviceName: "OpCalc",
-    serviceHref: "/onboarding/landing-page",
+    serviceHref: "/",
     container: true
   }) }}
 {% endblock %}
@@ -158,8 +158,8 @@
 {% from "govuk/components/button/macro.njk" import govukButton %}
  
 {{ govukButton({
-        text: "Continue",
-        href: "/export-case"
+        text: "Confirm",
+        href: "#"
       }) }}
 
  
