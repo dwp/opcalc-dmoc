@@ -1,0 +1,237 @@
+{% extends "layouts/main.html" %}
+
+{#
+  The tables here are drawn from what the sub-pages saved, using the same
+  macro as the A14 forms. That is what gives you more than one row, an Edit
+  link that reopens the entry prefilled, and a Delete that goes through a
+  confirmation page.
+#}
+{% from "a14-tables.html" import a14Table %}
+
+{% block pageTitle %}
+  QB16 entry details – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBreadcrumbs({
+    items: [
+      {
+        text: "OpCalc",
+        href: "/onboarding/landing-page"
+      },
+      {
+        text: "Case overview",
+        href: "/onboarding/case-overview"
+      },
+      {
+        text: "QB16 entry details"
+      }
+    ]
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+
+      <h1 class="govuk-heading-l">
+        QB16 entry details
+      </h1>
+
+      <p class="govuk-body">
+        {{ data.nino if data.nino else "AB 12 34 56 C" }}{{ " · " + data.benefitLabel if data.benefitLabel }}
+      </p>
+
+      <form action="/qb16-complete" method="post">
+
+        {% set listOfEntriesHtml %}
+
+          <h2 class="govuk-heading-m">List of entries</h2>
+
+          <p class="govuk-body govuk-hint">Add each period where the amount paid was different from the amount due.</p>
+
+          {#
+            Period and Excess are not here. They are worked out from the dates
+            and the amounts, and there is nothing to work them out with in a
+            prototype - so rather than show a column that is always blank, or
+            one with the same invented figure on every row, they are left out.
+            Say the word and I will put them back as fixed placeholder text.
+          #}
+          {{ a14Table(
+            data.qb16Entries,
+            [
+              { text: "Start", field: "qb16From" },
+              { text: "End", field: "qb16To" },
+              { text: "Form", field: "entryForm" },
+              { text: "Gross incorrect", field: "grossIncorrect", prefix: "£" },
+              { text: "Gross correct", field: "grossCorrect", prefix: "£" }
+            ],
+            "No entries recorded",
+            "qb16Entries",
+            "/qb16listofentries#list-of-entries",
+            "/qb16deleteentry"
+          ) }}
+
+          <p class="govuk-body"><a class="govuk-link" href="/qb16entrydetails?returnTo=/qb16listofentries%23list-of-entries">New entry</a></p>
+
+          {{ govukTextarea({
+            label: {
+              text: "Cause",
+              classes: "govuk-label--m"
+            },
+            hint: {
+              text: "Describe why the overpayment or underpayment happened."
+            },
+            id: "cause",
+            name: "cause",
+            rows: 3,
+            value: data.cause if data.cause else data.standardText
+          }) }}
+
+          <ul class="govuk-list">
+            <li><a class="govuk-link" href="/qb16listofentriesinsertstandardtext?returnTo=/qb16listofentries%23list-of-entries">Insert standard text</a></li>
+            {% if data.cause or data.standardText %}
+              <li><a class="govuk-link" href="/qb16-clear-cause">Clear the cause</a></li>
+            {% endif %}
+          </ul>
+
+          {{ govukCheckboxes({
+            idPrefix: "exclusion-case",
+            name: "exclusionCase",
+            fieldset: {
+              legend: {
+                text: "Exclusion case",
+                classes: "govuk-fieldset__legend--m"
+              }
+            },
+            items: [
+              {
+                value: "exclusionCase",
+                text: "Overpayment is an exclusion case",
+                id: "exclusion-case",
+                checked: data.exclusionCase,
+                conditional: {
+                  html: govukCheckboxes({
+                    idPrefix: "part-week-payment",
+                    name: "partWeekPayment",
+                    classes: "govuk-checkboxes--small",
+                    fieldset: {
+                      legend: {
+                        text: "When was benefit payable?",
+                        classes: "govuk-fieldset__legend--s"
+                      }
+                    },
+                    items: [
+                      { value: "payableBefore", text: "Benefit was payable before the start of the part week payment", checked: data.partWeekPayment and "payableBefore" in data.partWeekPayment },
+                      { value: "payableAfter", text: "Benefit was payable after the end of the part week payment", checked: data.partWeekPayment and "payableAfter" in data.partWeekPayment }
+                    ]
+                  })
+                }
+              }
+            ]
+          }) }}
+
+        {% endset %}
+
+        {% set bweBwcHtml %}
+
+          <h2 class="govuk-heading-m">Benefit weeks</h2>
+
+          <p class="govuk-body">Initial Benefit Week: {{ data.initialBenefitWeek if data.initialBenefitWeek else "Monday" }} {{ "Week Ending" if data.benefitWeekType != "BWC" else "Week Commencing" }}</p>
+
+          {{ a14Table(
+            data.qb16BenefitWeeks,
+            [
+              { text: "Start date", field: "bwDateOfChange" },
+              { text: "Pay day", field: "benefitPayDay" },
+              { text: "Ben week", field: "benefitWeekType" }
+            ],
+            "No benefit weeks recorded",
+            "qb16BenefitWeeks",
+            "/qb16listofentries#bwe-bwc",
+            "/qb16deletebenefitweek"
+          ) }}
+
+          <p class="govuk-body"><a class="govuk-link" href="/qb16bwebwcnewbenefit?returnTo=/qb16listofentries%23bwe-bwc">New benefit week</a></p>
+
+          <h2 class="govuk-heading-m">Exclusions</h2>
+
+          {{ a14Table(
+            data.qb16Exclusions,
+            [
+              { text: "Start date", field: "exclusionFrom" },
+              { text: "End date", field: "exclusionTo" },
+              { text: "Code", field: "exclusionCode" },
+              { text: "Reason", field: "exclusionReason" }
+            ],
+            "No exclusions recorded",
+            "qb16Exclusions",
+            "/qb16listofentries#bwe-bwc",
+            "/qb16deleteexclusion"
+          ) }}
+
+          <p class="govuk-body"><a class="govuk-link" href="/qb16bwebwcnewexclusion?returnTo=/qb16listofentries%23bwe-bwc">New exclusion</a></p>
+
+        {% endset %}
+
+        {{ govukTabs({
+          items: [
+            { label: "List of Entries", id: "list-of-entries", panel: { html: listOfEntriesHtml } },
+            { label: "BWE/BWC", id: "bwe-bwc", panel: { html: bweBwcHtml } }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Run the calculation",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/onboarding/case-overview",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help with QB16 entries</a>
+      </p>
+
+    </div>
+  </div>
+
+{% endblock %}

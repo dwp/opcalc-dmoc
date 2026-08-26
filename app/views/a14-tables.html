@@ -31,10 +31,15 @@
                data.a14NonDependants
     columns    what to show, in order. field is the name attribute of the
                input on the sub-page. A date input's three fields are also
-               joined under its prefix, so use the prefix rather than -day
+               joined under its prefix, so use the prefix rather than -day.
+               Add prefix: "£" to a column to put a symbol in front of the
+               value, so a money column reads £86.40 rather than 86.40
     emptyText  the line shown when nothing has been added yet
     key        the same array name again, so Delete knows what to remove from
     returnTo   where Delete comes back to - this page and tab
+    deletePath optional. A confirmation page to send Delete to, instead of
+               deleting the row there and then. The table and the row number
+               go with it, so one page can confirm any row
 
   If a column is blank when you expect a value, the field name does not match
   the input on the sub-page. Add ?show-fields=yes to the page address to list
@@ -44,7 +49,7 @@
 {% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/details/macro.njk" import govukDetails %}
 
-{% macro a14Table(rows, columns, emptyText, key, returnTo) %}
+{% macro a14Table(rows, columns, emptyText, key, returnTo, deletePath) %}
 
   {% set list = rows if rows else [] %}
 
@@ -65,12 +70,34 @@
     {% for column in columns %}
       {% set names = column.field if column.field is iterable and column.field is not string else [column.field] %}
       {% set found = [] %}
+
+      {# 1. The field name exactly as configured. #}
       {% for name in names %}
         {% if row[name] and not found | length %}
           {% set _ = found.push(row[name]) %}
         {% endif %}
       {% endfor %}
-      {% set _ = cells.push({ text: found[0] if found | length else "" }) %}
+
+      {# 2. Sub-pages prefix their fields - esaExclusionFrom rather than
+            exclusionFrom, isjsaBenefitAmount rather than benefitAmount. So if
+            nothing matched exactly, take any field whose name contains the one
+            configured. Fields holding a single part of a date are skipped, so
+            a date column shows 05/05/2003 rather than just the 05. #}
+      {% if not found | length %}
+        {% for name in names %}
+          {% for field, value in row %}
+            {% if not found | length and value
+                  and field[0] != "_"
+                  and "-" not in field
+                  and (name | lower) in (field | lower) %}
+              {% set _ = found.push(value) %}
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+      {% endif %}
+
+      {% set shown = (column.prefix if column.prefix else "") + found[0] if found | length else "" %}
+      {% set _ = cells.push({ text: shown }) %}
     {% endfor %}
     {% if key %}
       {# Edit reopens the sub-page this entry was made on, prefilled. Rows
@@ -85,10 +112,22 @@
           '">Edit<span class="govuk-visually-hidden"> row ' + loop.index + '</span></a>') %}
       {% endif %}
 
-      {% set _ = actions.push('<a class="govuk-link" href="/a14-row-delete?key=' + key +
-        '&index=' + loop.index0 +
-        '&returnTo=' + (returnTo | urlencode) +
-        '">Delete<span class="govuk-visually-hidden"> row ' + loop.index + '</span></a>') %}
+      {# With a deletePath the row is not removed yet - you get a page asking
+         whether you meant it, which is right for something that cannot be
+         undone. Without one, Delete removes the row straight away, which is
+         how the A14 tables have always worked. #}
+      {% if deletePath %}
+        {% set _ = actions.push('<a class="govuk-link" href="' + deletePath +
+          '?deleteKey=' + key +
+          '&deleteIndex=' + loop.index0 +
+          '&deleteReturnTo=' + (returnTo | urlencode) +
+          '">Delete<span class="govuk-visually-hidden"> row ' + loop.index + '</span></a>') %}
+      {% else %}
+        {% set _ = actions.push('<a class="govuk-link" href="/a14-row-delete?key=' + key +
+          '&index=' + loop.index0 +
+          '&returnTo=' + (returnTo | urlencode) +
+          '">Delete<span class="govuk-visually-hidden"> row ' + loop.index + '</span></a>') %}
+      {% endif %}
 
       {% set _ = cells.push({ html: actions | join(' | ') }) %}
     {% endif %}

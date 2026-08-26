@@ -10,7 +10,7 @@
 {% block header %}
   {{ dwpHeader({
     serviceName: "OpCalc",
-    serviceHref: "/onboarding/landing-page",
+    serviceHref: "/landingpage",
     container: true
   }) }}
 {% endblock %}
@@ -40,7 +40,7 @@
 {% block containerStart %}
   {{ govukBackLink({
     text: "Back",
-    href: "/onboarding/case-overview"
+    href: "/case-overview"
   }) }}
 {% endblock %}
 
@@ -553,7 +553,15 @@
           ]
         }) }}
 
-        <input type="hidden" name="a14Complete" value="yes">
+        {# There was a hidden a14Complete field here, and it marked this form
+           finished for no better reason than being on the page: the Prototype
+           Kit copies every posted field into the session, so one Add press -
+           or on an A14 form, one keystroke, because the tabs autosave - was
+           enough to turn the case overview row green.
+
+           The link on "Generate A14 forms" carries a14Complete in its address,
+           which is the only thing that should. #}
+
 
         <div class="govuk-button-group">
           {# Goes to the case overview as a link, with the answers carried in

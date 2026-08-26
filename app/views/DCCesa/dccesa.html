@@ -1,0 +1,724 @@
+{% extends "layouts/main.html" %}
+
+{#
+  Errors come from routes.js, which checks every entry against the DCC period
+  and the amount limits before it goes into a table. It puts them in
+  data.dccErrors as { tab, tabLabel, field, href, message }.
+
+  This picks the message for one field out of that list, so a field can be
+  given its own error without repeating the loop everywhere.
+#}
+{% from "a14-tables.html" import a14Table %}
+
+{% macro errorFor(field) %}{% for problem in data.dccErrors %}{% if problem.field == field %}{{ problem.message }}{% endif %}{% endfor %}{% endmacro %}
+
+{% block pageTitle %}
+  DCC (ESA) – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/onboarding/case-overview"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+
+      {#
+        The error summary, grouped by tab - a field can be on a tab that is
+        not showing, so each entry says where it is before you click it.
+        Same shape as the A14 forms.
+      #}
+      {% if data.dccErrors | length %}
+        <div class="govuk-error-summary" data-module="govuk-error-summary" tabindex="-1" id="dcc-error-summary">
+          <div role="alert">
+            <h2 class="govuk-error-summary__title">There is a problem</h2>
+            <div class="govuk-error-summary__body">
+              {% set seenTabs = [] %}
+              {% for problem in data.dccErrors %}
+                {% if problem.tab not in seenTabs %}
+                  {% set _ = seenTabs.push(problem.tab) %}
+                {% endif %}
+              {% endfor %}
+
+              {% for tabId in seenTabs %}
+                {% set forThisTab = [] %}
+                {% for problem in data.dccErrors %}
+                  {% if problem.tab == tabId %}{% set _ = forThisTab.push(problem) %}{% endif %}
+                {% endfor %}
+
+                {% if seenTabs | length > 1 %}
+                  <h3 class="govuk-heading-s govuk-!-margin-bottom-1">{{ forThisTab[0].tabLabel }} tab ({{ forThisTab | length }} {{ "problem" if forThisTab | length == 1 else "problems" }})</h3>
+                {% endif %}
+
+                <ul class="govuk-list govuk-error-summary__list govuk-!-margin-bottom-4">
+                  {% for problem in forThisTab %}
+                    <li><a href="{{ problem.href }}">{{ problem.message }}</a></li>
+                  {% endfor %}
+                </ul>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <h1 class="govuk-heading-l">
+        Diminishing capital calculation (Employment and Support Allowance)
+      </h1>
+
+      <p class="govuk-body">{{ data.nino if data.nino else "AB 12 34 56 C" }}{{ " · " + data.benefitLabel if data.benefitLabel }} · DCC: 27/10/2008 to 16/07/2026</p>
+
+      <form action="/dccesa-action" method="post">
+
+        {% set assetsHtml %}
+
+          <h2 class="govuk-heading-m">Assets</h2>
+
+          <p class="govuk-body govuk-hint">Record the capital the customer held during this period. Add a value to an asset each time its worth changed.</p>
+
+          {# Assets are held in data.esaAssets, each with its own list of      #}
+          {# dated values. The Actions column only exists once there is an    #}
+          {# asset to act on.                                                  #}
+          {% set assetHead = [
+            { text: "Name" }, { text: "Date" }, { text: "Value" }, { text: "C.S." }
+          ] %}
+
+          {% if data.esaAssets and data.esaAssets.length %}
+            {% set _ = assetHead.push({ text: "Actions" }) %}
+          {% endif %}
+
+          {% set assetRows = [] %}
+
+          {% for asset in data.esaAssets %}
+
+            {% set _ = assetRows.push([
+              { text: asset.name if asset.name else asset.type },
+              { text: "" },
+              { text: "" },
+              { text: asset.shareHeld + "/" + asset.shareTotal },
+              { html: '<a class="govuk-link" href="/dccesanewassetaccumulatingassetno?asset=' + loop.index0 + '&returnTo=/dccesa%23assets">Edit</a> | <a class="govuk-link" href="/dccesaassetsshowvalues?asset=' + loop.index0 + '&returnTo=/dccesa%23assets">Add value</a> | <a class="govuk-link" href="/dccesadeleteasset?asset=' + loop.index0 + '">Delete</a>' }
+            ]) %}
+
+            {# Value rows sit under their asset. Show values toggles them.    #}
+            {% for value in asset.values %}
+              {% set _ = assetRows.push([
+                { text: "", classes: "opcalc-value-row" },
+                { text: value.date, classes: "opcalc-value-row" },
+                { text: "£" + value.amount, classes: "opcalc-value-row" },
+                { text: "", classes: "opcalc-value-row" },
+                { text: "", classes: "opcalc-value-row" }
+              ]) %}
+            {% endfor %}
+
+          {% endfor %}
+
+          {{ govukTable({
+            head: assetHead,
+            rows: assetRows if assetRows.length else [
+              [{ html: '<span class="govuk-hint">No assets recorded</span>' }, { text: "" }, { text: "" }, { text: "" }]
+            ]
+          }) }}
+
+          <p class="govuk-body"><a class="govuk-link" href="/dccesanewassetaccumulatingassetno?returnTo=/dccesa%23assets">New asset</a></p>
+
+          {% if data.esaAssets and data.esaAssets.length %}
+            {{ govukCheckboxes({
+              idPrefix: "esa-show-values",
+              name: "esaShowValues",
+              classes: "govuk-checkboxes--small",
+              items: [
+                {
+                  value: "showValues",
+                  text: "Show values",
+                  id: "esa-show-values",
+                  checked: data.esaShowValues,
+                  hint: { text: "Shows the dated values recorded against each asset" }
+                }
+              ]
+            }) }}
+          {% endif %}
+
+        {% endset %}
+
+        {% set paidHtml %}
+
+          <h2 class="govuk-heading-m">Employment and Support Allowance paid</h2>
+
+          <p class="govuk-body govuk-hint">At least one rate must be recorded here before the calculation can be run.</p>
+
+          {# The Actions column only exists once there is a row to act on.    #}
+          {% set headpaidHtml = [
+            { text: "Date" }, { text: "Amount" }, { text: "TE" }
+          ] %}
+
+          {% if data.esaRates and data.esaRates.length %}
+            {% set _ = headpaidHtml.push({ text: "Actions" }) %}
+          {% endif %}
+
+          {% set rowspaidHtml = [] %}
+
+          {% for row in data.esaRates %}
+            {% set _ = rowspaidHtml.push([
+              { text: row.date }, { text: "£" + row.amount }, { text: "£" + row.taxableElements if row.taxableElements else "" },
+              { html: '<a class="govuk-link" href="/dccesa-edit-rate?index=' + loop.index0 + '">Edit</a> | <a class="govuk-link" href="/dccesa-delete-rate?index=' + loop.index0 + '">Delete</a>' }
+            ]) %}
+          {% endfor %}
+
+          {{ govukTable({
+            head: headpaidHtml,
+            rows: rowspaidHtml if rowspaidHtml.length else [
+              [{ html: '<span class="govuk-hint">No rates recorded</span>' }, { text: "" }, { text: "" }]
+            ]
+          }) }}
+
+          <h3 class="govuk-heading-s">{{ "Edit" if data.editRate is defined and data.editRate != "" else "Add" }} rate</h3>
+
+          <div class="js-add-group">
+
+            {# The row being edited, if an Edit link sent an index through. #}
+            {% set editingRate = data.esaRates[data.editRate] if (data.editRate is defined and data.editRate != "") else { dateParts: {} } %}
+
+            <input type="hidden" name="editRateIndex" value="{{ data.editRate }}">
+
+            {{ govukDateInput({
+              id: "esa-rate-date",
+              errorMessage: { text: errorFor("esa-rate-date") | trim } if errorFor("esa-rate-date") | trim else false,
+              namePrefix: "esaRateDate",
+              fieldset: { legend: { text: "Date" } },
+              hint: { text: "For example, 27 10 2008" },
+              items: [
+                { name: "day", classes: "govuk-input--width-2", value: data["esaRateDate-day"], attributes: { "data-required": "true" } },
+                { name: "month", classes: "govuk-input--width-2", value: data["esaRateDate-month"], attributes: { "data-required": "true" } },
+                { name: "year", classes: "govuk-input--width-4", value: data["esaRateDate-year"], attributes: { "data-required": "true" } }
+              ]
+            }) }}
+
+            {{ govukInput({
+              id: "esa-rate-amount",
+              errorMessage: { text: errorFor("esa-rate-amount") | trim } if errorFor("esa-rate-amount") | trim else false,
+              name: "esaRateAmount",
+              classes: "govuk-input--width-5",
+              prefix: { text: "£" },
+              label: { text: "Amount" },
+              attributes: { "data-required": "true" },
+              value: data.esaRateAmount
+            }) }}
+
+            {{ govukCheckboxes({
+              idPrefix: "esa-rate-taxable",
+              name: "esaRateTaxable",
+              items: [
+                {
+                  value: "taxable",
+                  text: "Taxable",
+                  id: "esa-rate-taxable",
+                  checked: data.esaRateTaxable,
+                  conditional: {
+                    html: govukInput({
+                      id: "esa-taxable-elements",
+              errorMessage: { text: errorFor("esa-taxable-elements") | trim } if errorFor("esa-taxable-elements") | trim else false,
+                      name: "esaTaxableElements",
+                      classes: "govuk-input--width-5",
+                      prefix: { text: "£" },
+                      label: { text: "Taxable elements" },
+                      hint: { text: "Needed because this rate is taxable" },
+                      attributes: { "data-required-if": "#esa-rate-taxable" }
+                    })
+                  }
+                }
+              ],
+              value: data.esaTaxableElements
+            }) }}
+
+
+            {{ govukButton({
+              text: "Save changes" if data.editRate is defined and data.editRate != "" else "Add rate",
+              classes: "govuk-button--secondary js-add-button",
+              name: "action",
+              value: "add-rate",
+              type: "submit"
+            }) }}
+
+            {% if data.editRate is defined and data.editRate != "" %}
+              <p class="govuk-body"><a class="govuk-link" href="/dccesa-cancel-rate">Cancel this edit</a></p>
+            {% endif %}
+
+          </div>
+
+        {% endset %}
+
+        {% set incomeHtml %}
+
+          <h2 class="govuk-heading-m">Income</h2>
+
+          <p class="govuk-body govuk-hint">Record any other income the customer received during this period.</p>
+
+          {# The Actions column only exists once there is a row to act on.    #}
+          {% set headincomeHtml = [
+            { text: "Date" }, { text: "Amount" }, { text: "PP" }, { text: "Disregard" }, { text: "Description" }
+          ] %}
+
+          {% if data.esaIncomes and data.esaIncomes.length %}
+            {% set _ = headincomeHtml.push({ text: "Actions" }) %}
+          {% endif %}
+
+          {% set rowsincomeHtml = [] %}
+
+          {% for row in data.esaIncomes %}
+            {% set _ = rowsincomeHtml.push([
+              { text: row.date }, { text: "£" + row.amount }, { text: row.paymentPeriod }, { text: "£" + row.disregard if row.disregard else "" }, { text: row.description },
+              { html: '<a class="govuk-link" href="/dccesa-edit-income?index=' + loop.index0 + '">Edit</a> | <a class="govuk-link" href="/dccesa-delete-income?index=' + loop.index0 + '">Delete</a>' }
+            ]) %}
+          {% endfor %}
+
+          {{ govukTable({
+            head: headincomeHtml,
+            rows: rowsincomeHtml if rowsincomeHtml.length else [
+              [{ html: '<span class="govuk-hint">No income recorded</span>' }, { text: "" }, { text: "" }, { text: "" }, { text: "" }]
+            ]
+          }) }}
+
+          <h3 class="govuk-heading-s">{{ "Edit" if data.editIncome is defined and data.editIncome != "" else "Add" }} income</h3>
+
+          <div class="js-add-group">
+
+            {# The row being edited, if an Edit link sent an index through. #}
+            {% set editingIncome = data.esaIncomes[data.editIncome] if (data.editIncome is defined and data.editIncome != "") else { dateParts: {} } %}
+
+            <input type="hidden" name="editIncomeIndex" value="{{ data.editIncome }}">
+
+            {{ govukDateInput({
+              id: "esa-income-date",
+              errorMessage: { text: errorFor("esa-income-date") | trim } if errorFor("esa-income-date") | trim else false,
+              namePrefix: "esaIncomeDate",
+              fieldset: { legend: { text: "Date" } },
+              hint: { text: "For example, 27 10 2008" },
+              items: [
+                { name: "day", classes: "govuk-input--width-2", value: data["esaIncomeDate-day"], attributes: { "data-required": "true" } },
+                { name: "month", classes: "govuk-input--width-2", value: data["esaIncomeDate-month"], attributes: { "data-required": "true" } },
+                { name: "year", classes: "govuk-input--width-4", value: data["esaIncomeDate-year"], attributes: { "data-required": "true" } }
+              ]
+            }) }}
+
+            {{ govukInput({
+              id: "esa-income-amount",
+              errorMessage: { text: errorFor("esa-income-amount") | trim } if errorFor("esa-income-amount") | trim else false,
+              name: "esaIncomeAmount",
+              classes: "govuk-input--width-5",
+              prefix: { text: "£" },
+              label: { text: "Amount" },
+              attributes: { "data-required": "true" },
+              value: data.esaIncomeAmount
+            }) }}
+
+            {{ govukSelect({
+              id: "esa-income-payment-period",
+              errorMessage: { text: errorFor("esa-income-payment-period") | trim } if errorFor("esa-income-payment-period") | trim else false,
+              name: "esaIncomePaymentPeriod",
+              label: { text: "Payment period" },
+              attributes: { "data-required": "true" },
+              items: [
+                { value: "", text: "Select a payment period" },
+                { value: "Weekly", text: "Weekly", selected: data.esaIncomePaymentPeriod == "Weekly" },
+                { value: "Fortnightly", text: "Fortnightly", selected: data.esaIncomePaymentPeriod == "Fortnightly" },
+                { value: "4 weekly", text: "4 weekly", selected: data.esaIncomePaymentPeriod == "4 weekly" },
+                { value: "Monthly", text: "Monthly", selected: data.esaIncomePaymentPeriod == "Monthly" },
+                { value: "Quarterly", text: "Quarterly", selected: data.esaIncomePaymentPeriod == "Quarterly" },
+                { value: "Annually", text: "Annually", selected: data.esaIncomePaymentPeriod == "Annually" }
+              ]
+            }) }}
+
+            {{ govukInput({
+              id: "esa-income-disregard",
+              errorMessage: { text: errorFor("esa-income-disregard") | trim } if errorFor("esa-income-disregard") | trim else false,
+              name: "esaIncomeDisregard",
+              classes: "govuk-input--width-5",
+              prefix: { text: "£" },
+              label: { text: "Weekly disregard" },
+              hint: { text: "Leave blank if no disregard applies" },
+              value: data.esaIncomeDisregard
+            }) }}
+
+            {{ govukInput({
+              id: "esa-income-description",
+              name: "esaIncomeDescription",
+              label: { text: "Description" },
+              value: data.esaIncomeDescription
+            }) }}
+
+
+            {{ govukButton({
+              text: "Save changes" if data.editIncome is defined and data.editIncome != "" else "Add income",
+              classes: "govuk-button--secondary js-add-button",
+              name: "action",
+              value: "add-income",
+              type: "submit"
+            }) }}
+
+            {% if data.editIncome is defined and data.editIncome != "" %}
+              <p class="govuk-body"><a class="govuk-link" href="/dccesa-cancel-income">Cancel this edit</a></p>
+            {% endif %}
+
+          </div>
+
+        {% endset %}
+
+        {% set tariffIncomeHtml %}
+
+          <h2 class="govuk-heading-m">Tariff income allowed</h2>
+
+          <p class="govuk-body govuk-hint">Record the tariff income allowed for the capital held during this period.</p>
+
+          {# The Actions column only exists once there is a row to act on.    #}
+          {% set headtariffIncomeHtml = [
+            { text: "Date" }, { text: "Amount" }
+          ] %}
+
+          {% if data.esaTariffs and data.esaTariffs.length %}
+            {% set _ = headtariffIncomeHtml.push({ text: "Actions" }) %}
+          {% endif %}
+
+          {% set rowstariffIncomeHtml = [] %}
+
+          {% for row in data.esaTariffs %}
+            {% set _ = rowstariffIncomeHtml.push([
+              { text: row.date }, { text: "£" + row.amount },
+              { html: '<a class="govuk-link" href="/dccesa-edit-tariff?index=' + loop.index0 + '">Edit</a> | <a class="govuk-link" href="/dccesa-delete-tariff?index=' + loop.index0 + '">Delete</a>' }
+            ]) %}
+          {% endfor %}
+
+          {{ govukTable({
+            head: headtariffIncomeHtml,
+            rows: rowstariffIncomeHtml if rowstariffIncomeHtml.length else [
+              [{ html: '<span class="govuk-hint">No tariff income recorded</span>' }, { text: "" }]
+            ]
+          }) }}
+
+          <h3 class="govuk-heading-s">{{ "Edit" if data.editTariff is defined and data.editTariff != "" else "Add" }} tariff income</h3>
+
+          <div class="js-add-group">
+
+            {# The row being edited, if an Edit link sent an index through. #}
+            {% set editingTariff = data.esaTariffs[data.editTariff] if (data.editTariff is defined and data.editTariff != "") else { dateParts: {} } %}
+
+            <input type="hidden" name="editTariffIndex" value="{{ data.editTariff }}">
+
+            {{ govukDateInput({
+              id: "esa-tariff-date",
+              errorMessage: { text: errorFor("esa-tariff-date") | trim } if errorFor("esa-tariff-date") | trim else false,
+              namePrefix: "esaTariffDate",
+              fieldset: { legend: { text: "Date" } },
+              hint: { text: "For example, 27 10 2008" },
+              items: [
+                { name: "day", classes: "govuk-input--width-2", value: data["esaTariffDate-day"], attributes: { "data-required": "true" } },
+                { name: "month", classes: "govuk-input--width-2", value: data["esaTariffDate-month"], attributes: { "data-required": "true" } },
+                { name: "year", classes: "govuk-input--width-4", value: data["esaTariffDate-year"], attributes: { "data-required": "true" } }
+              ]
+            }) }}
+
+            {{ govukInput({
+              id: "esa-tariff-amount",
+              errorMessage: { text: errorFor("esa-tariff-amount") | trim } if errorFor("esa-tariff-amount") | trim else false,
+              name: "esaTariffAmount",
+              classes: "govuk-input--width-5",
+              prefix: { text: "£" },
+              label: { text: "Amount" },
+              attributes: { "data-required": "true" },
+              value: data.esaTariffAmount
+            }) }}
+
+
+            {{ govukButton({
+              text: "Save changes" if data.editTariff is defined and data.editTariff != "" else "Add tariff income",
+              classes: "govuk-button--secondary js-add-button",
+              name: "action",
+              value: "add-tariff",
+              type: "submit"
+            }) }}
+
+            {% if data.editTariff is defined and data.editTariff != "" %}
+              <p class="govuk-body"><a class="govuk-link" href="/dccesa-cancel-tariff">Cancel this edit</a></p>
+            {% endif %}
+
+          </div>
+
+        {% endset %}
+
+        {% set resCareHtml %}
+
+          <h2 class="govuk-heading-m">Residential care periods</h2>
+
+          <p class="govuk-body govuk-hint">Every period recorded on this tab is treated as residential care, so there is nothing else to choose.</p>
+
+          {# The Actions column only exists once there is a row to act on.    #}
+          {% set headresCareHtml = [
+            { text: "From" }, { text: "To" }
+          ] %}
+
+          {% if data.esaResCare and data.esaResCare.length %}
+            {% set _ = headresCareHtml.push({ text: "Actions" }) %}
+          {% endif %}
+
+          {% set rowsresCareHtml = [] %}
+
+          {% for row in data.esaResCare %}
+            {% set _ = rowsresCareHtml.push([
+              { text: row.from }, { text: row.to },
+              { html: '<a class="govuk-link" href="/dccesa-edit-rescare?index=' + loop.index0 + '">Edit</a> | <a class="govuk-link" href="/dccesa-delete-rescare?index=' + loop.index0 + '">Delete</a>' }
+            ]) %}
+          {% endfor %}
+
+          {{ govukTable({
+            head: headresCareHtml,
+            rows: rowsresCareHtml if rowsresCareHtml.length else [
+              [{ html: '<span class="govuk-hint">No periods recorded</span>' }, { text: "" }]
+            ]
+          }) }}
+
+          <h3 class="govuk-heading-s">{{ "Edit" if data.editResCare is defined and data.editResCare != "" else "Add" }} period</h3>
+
+          <div class="js-add-group">
+
+            {# The row being edited, if an Edit link sent an index through. #}
+            {% set editingResCare = data.esaResCare[data.editResCare] if (data.editResCare is defined and data.editResCare != "") else { fromParts: {}, toParts: {} } %}
+
+            <input type="hidden" name="editResCareIndex" value="{{ data.editResCare }}">
+
+            {{ govukDateInput({
+              id: "esa-res-care-from",
+              errorMessage: { text: errorFor("esa-res-care-from") | trim } if errorFor("esa-res-care-from") | trim else false,
+              namePrefix: "esaResCareFrom",
+              fieldset: { legend: { text: "From" } },
+              hint: { text: "For example, 27 10 2008" },
+              items: [
+                { name: "day", classes: "govuk-input--width-2", value: data["esaResCareFrom-day"], attributes: { "data-required": "true" } },
+                { name: "month", classes: "govuk-input--width-2", value: data["esaResCareFrom-month"], attributes: { "data-required": "true" } },
+                { name: "year", classes: "govuk-input--width-4", value: data["esaResCareFrom-year"], attributes: { "data-required": "true" } }
+              ]
+            }) }}
+
+            {{ govukDateInput({
+              id: "esa-res-care-to",
+              errorMessage: { text: errorFor("esa-res-care-to") | trim } if errorFor("esa-res-care-to") | trim else false,
+              namePrefix: "esaResCareTo",
+              fieldset: { legend: { text: "To" } },
+              hint: { text: "For example, 16 7 2026" },
+              items: [
+                { name: "day", classes: "govuk-input--width-2", value: data["esaResCareTo-day"] },
+                { name: "month", classes: "govuk-input--width-2", value: data["esaResCareTo-month"] },
+                { name: "year", classes: "govuk-input--width-4", value: data["esaResCareTo-year"] }
+              ]
+            }) }}
+
+
+            {{ govukButton({
+              text: "Save changes" if data.editResCare is defined and data.editResCare != "" else "Add period",
+              classes: "govuk-button--secondary js-add-button",
+              name: "action",
+              value: "add-rescare",
+              type: "submit"
+            }) }}
+
+            {% if data.editResCare is defined and data.editResCare != "" %}
+              <p class="govuk-body"><a class="govuk-link" href="/dccesa-cancel-rescare">Cancel this edit</a></p>
+            {% endif %}
+
+          </div>
+
+        {% endset %}
+
+        {% set exclusionsHtml %}
+
+          <h2 class="govuk-heading-m">Exclusions</h2>
+
+          <p class="govuk-body govuk-hint">Record any period that should be excluded from this calculation.</p>
+
+          {{ a14Table(
+            data.dccEsaExclusions,
+            [
+              { text: "Start date", field: "esaExclusionFrom" },
+              { text: "End date", field: "esaExclusionTo" },
+              { text: "Code", field: "esaExclusionCode" },
+              { text: "Reason", field: "esaExclusionReason" }
+            ],
+            "No exclusions recorded",
+            "dccEsaExclusions",
+            "/dccesa#exclusions"
+          ) }}
+
+          <p class="govuk-body"><a class="govuk-link" href="/dccesaexclusionsnewexclusion?returnTo=/dccesa%23exclusions">New exclusion</a></p>
+
+        {% endset %}
+
+        {#
+          Six tabs and one summary at the top is a lot of scrolling to work out
+          where the trouble is, so the count goes on the tab as well.
+        #}
+        {% set tabItems = [] %}
+
+        {% for tab in [
+          { label: "Assets", id: "assets", panel: { html: assetsHtml } },
+          { label: "ESA Paid", id: "esa-paid", panel: { html: paidHtml } },
+          { label: "Income", id: "income", panel: { html: incomeHtml } },
+          { label: "Tariff Income", id: "tariff-income", panel: { html: tariffIncomeHtml } },
+          { label: "Res.Care", id: "res-care", panel: { html: resCareHtml } },
+          { label: "Exclusions", id: "exclusions", panel: { html: exclusionsHtml } }
+        ] %}
+          {% set problems = [] %}
+          {% for problem in data.dccErrors %}
+            {% if problem.tab == tab.id %}{% set _ = problems.push(problem) %}{% endif %}
+          {% endfor %}
+
+          {% set _ = tabItems.push({
+            label: tab.label + (" (" + (problems | length | string) + (" problem)" if problems | length == 1 else " problems)") if problems | length else ""),
+            id: tab.id,
+            panel: tab.panel
+          }) %}
+        {% endfor %}
+
+        {{ govukTabs({ items: tabItems }) }}
+
+        {# There was a hidden dccComplete field here, and it marked this form
+           finished for no better reason than being on the page: the Prototype
+           Kit copies every posted field into the session, so one Add press -
+           or on an A14 form, one keystroke, because the tabs autosave - was
+           enough to turn the case overview row green.
+
+           routes.js sets dccComplete when Run the calculation is pressed,
+           which is the only thing that should. #}
+
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Run the calculation",
+            name: "action",
+            value: "run",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/onboarding/case-overview",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help with the diminishing capital calculation</a>
+      </p>
+
+    </div>
+  </div>
+
+  {# Show values toggles the dated value rows under each asset. Doing it in #}
+  {# the browser avoids a page reload every time it is ticked.               #}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var toggle = document.querySelector('#esa-show-values')
+      if (!toggle) { return }
+
+      function refresh () {
+        document.querySelectorAll('.opcalc-value-row').forEach(function (cell) {
+          cell.closest('tr').style.display = toggle.checked ? '' : 'none'
+        })
+      }
+
+      toggle.addEventListener('change', refresh)
+      refresh()
+    })
+  </script>
+
+  {# Keeps each Add button switched off until the fields it needs have been  #}
+  {# filled in, matching the disabled buttons in the old system. Buttons     #}
+  {# start enabled in the markup, so if this script does not run they still  #}
+  {# work rather than being permanently stuck.                               #}
+  <script>
+    document.querySelectorAll('.js-add-group').forEach(function (group) {
+      var button = group.querySelector('.js-add-button')
+      var fields = group.querySelectorAll('[data-required="true"]')
+
+      if (!button || fields.length === 0) {
+        return
+      }
+
+      // Fields that only become required when a checkbox is ticked, for
+      // example Taxable elements once Taxable is selected.
+      var conditionalFields = group.querySelectorAll('[data-required-if]')
+
+      function checkFields () {
+        var ready = true
+
+        fields.forEach(function (field) {
+          if (!field.value.trim()) {
+            ready = false
+          }
+        })
+
+        conditionalFields.forEach(function (field) {
+          var trigger = document.querySelector(field.getAttribute('data-required-if'))
+          if (trigger && trigger.checked && !field.value.trim()) {
+            ready = false
+          }
+        })
+
+        button.disabled = !ready
+        button.setAttribute('aria-disabled', ready ? 'false' : 'true')
+      }
+
+      fields.forEach(function (field) {
+        field.addEventListener('input', checkFields)
+        field.addEventListener('change', checkFields)
+      })
+
+      conditionalFields.forEach(function (field) {
+        field.addEventListener('input', checkFields)
+        field.addEventListener('change', checkFields)
+
+        // Re-check when the checkbox that controls it is toggled.
+        var trigger = document.querySelector(field.getAttribute('data-required-if'))
+        if (trigger) {
+          trigger.addEventListener('change', checkFields)
+        }
+      })
+
+      checkFields()
+    })
+  </script>
+
+{% endblock %}

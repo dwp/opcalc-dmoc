@@ -1,0 +1,545 @@
+{% extends "layouts/main.html" %}
+
+{#
+  The tables here are drawn from what has been added, using the same macro as
+  the A14, QB16 and other DCC pages. The Add buttons on this page post the
+  whole form back to /dccpcispc-action, which files the answer into the right
+  table and clears the boxes ready for the next one.
+#}
+{% from "a14-tables.html" import a14Table %}
+
+{% block pageTitle %}
+  DCC (PC or IS/PC) – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/onboarding/case-overview"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+
+      <h1 class="govuk-heading-l">
+        Diminishing capital calculation (Pension Credit or Income Support / Pension Credit)
+      </h1>
+
+      <p class="govuk-body">{{ data.nino if data.nino else "AB 12 34 56 C" }}{{ " · " + data.benefitLabel if data.benefitLabel }} · DCC: 10/07/2015 to 16/07/2026</p>
+
+      <form action="/dccpcispc-action" method="post">
+
+        {% set assetsHtml %}
+
+          <h2 class="govuk-heading-m">Assets</h2>
+
+          <p class="govuk-body govuk-hint">Record the capital the customer held during this period.</p>
+
+          {{ a14Table(
+            data.dccPcispcAssets,
+            [
+              { text: "Type", field: "pcispcAssetType" },
+              { text: "Name", field: "pcispcAssetName" },
+              { text: "Date", field: ["pcispcAssetValueDate", "pcispcAccumulatingStart"] },
+              { text: "Value", field: ["pcispcAssetValue", "pcispcInitialValue"], prefix: "£" },
+              { text: "Share", field: "pcispcShareHeld" }
+            ],
+            "No assets recorded",
+            "dccPcispcAssets",
+            "/dccpcispc#assets"
+          ) }}
+
+          <p class="govuk-body"><a class="govuk-link" href="/dccpcispcnewassetaccumulatingassetno?returnTo=/dccpcispc%23assets">New asset</a></p>
+
+          {% if data.dccPcispcAssetValues | length %}
+            <h3 class="govuk-heading-s">Values</h3>
+
+            {{ a14Table(
+              data.dccPcispcAssetValues,
+              [
+                { text: "Date", field: "pcispcNewValueDate" },
+                { text: "Value", field: "pcispcNewValue", prefix: "£" }
+              ],
+              "No values recorded",
+              "dccPcispcAssetValues",
+              "/dccpcispc#assets"
+            ) }}
+          {% endif %}
+
+          {{ govukCheckboxes({
+            idPrefix: "pcispc-show-values",
+            name: "pcispcShowValues",
+            classes: "govuk-checkboxes--small",
+            items: [
+              {
+                value: "showValues",
+                text: "Show values",
+                id: "pcispc-show-values",
+                checked: data.pcispcShowValues,
+                conditional: {
+                  html: '<p class="govuk-body"><a class="govuk-link" href="/dccpcispcassetsshowvalues?returnTo=/dccpcispc%23assets">New value</a></p>'
+                }
+              }
+            ]
+          }) }}
+
+        {% endset %}
+
+        {% set amountPaidHtml %}
+
+          <h2 class="govuk-heading-m">Income Support or Pension Credit rate details</h2>
+
+          <p class="govuk-body govuk-hint">At least one rate must be recorded here before the calculation can be run.</p>
+
+          {{ a14Table(
+            data.dccPcispcRates,
+            [
+              { text: "Date", field: "pcispcRateDate" },
+              { text: "Savings credit", field: "pcispcSavingsCredit" },
+              { text: "Client group", field: "pcispcClientGroup" },
+              { text: "Amount paid", field: "pcispcApplicableAmount", prefix: "£" }
+            ],
+            "No rates recorded",
+            "dccPcispcRates",
+            "/dccpcispc#amount-paid"
+          ) }}
+
+          <h3 class="govuk-heading-s">Add a rate</h3>
+
+          <div class="js-add-group">
+
+            {{ govukDateInput({
+              id: "pcispc-rate-date",
+              namePrefix: "pcispcRateDate",
+              fieldset: {
+                legend: {
+                  text: "Date"
+                }
+              },
+              hint: {
+                text: "For example, 10 7 2015"
+              },
+              items: [
+                { name: "day", classes: "govuk-input--width-2", attributes: { "data-required": "true" } },
+                { name: "month", classes: "govuk-input--width-2", attributes: { "data-required": "true" } },
+                { name: "year", classes: "govuk-input--width-4", attributes: { "data-required": "true" } }
+              ]
+            }) }}
+
+            {{ govukCheckboxes({
+              idPrefix: "pcispc-savings-credit",
+              name: "pcispcSavingsCredit",
+              items: [
+                { value: "Yes", text: "Savings credit applies", id: "pcispc-savings-credit" }
+              ]
+            }) }}
+
+            {{ govukRadios({
+              idPrefix: "pcispc-client-group",
+              name: "pcispcClientGroup",
+              classes: "govuk-radios--inline",
+              fieldset: {
+                legend: {
+                  text: "Client group"
+                }
+              },
+              items: [
+                { value: "Single", text: "Single", checked: true },
+                { value: "Couple", text: "Couple" }
+              ]
+            }) }}
+
+            {{ govukInput({
+              id: "pcispc-applicable-amount",
+              name: "pcispcApplicableAmount",
+              classes: "govuk-input--width-5",
+              prefix: { text: "£" },
+              label: { text: "Applicable or appropriate amount" },
+              attributes: { "data-required": "true" }
+            }) }}
+
+            {{ govukInput({
+              id: "pcispc-income-from-capital",
+              name: "pcispcIncomeFromCapital",
+              classes: "govuk-input--width-5",
+              prefix: { text: "£" },
+              label: { text: "Income from capital" }
+            }) }}
+
+            {{ govukInput({
+              id: "pcispc-other-qualifying",
+              name: "pcispcOtherQualifying",
+              classes: "govuk-input--width-5",
+              prefix: { text: "£" },
+              label: { text: "Other qualifying income or benefits" }
+            }) }}
+
+            {{ govukInput({
+              id: "pcispc-non-qualifying",
+              name: "pcispcNonQualifying",
+              classes: "govuk-input--width-5",
+              prefix: { text: "£" },
+              label: { text: "Non-qualifying income or benefits" }
+            }) }}
+
+            {{ govukButton({
+              text: "Add rate",
+              classes: "govuk-button--secondary js-add-button",
+              name: "action",
+              value: "add-rate",
+              type: "submit"
+            }) }}
+
+          </div>
+
+        {% endset %}
+
+        {% set incomeHtml %}
+
+          <h2 class="govuk-heading-m">Income details</h2>
+
+          <p class="govuk-body govuk-hint">Record any other income the customer received during this period.</p>
+
+          {{ a14Table(
+            data.dccPcispcIncome,
+            [
+              { text: "Start date", field: "pcispcIncomeStart" },
+              { text: "End date", field: "pcispcIncomeEnd" },
+              { text: "Amount", field: "pcispcIncomeAmount", prefix: "£" },
+              { text: "PP", field: "pcispcIncomePaymentPeriod" },
+              { text: "Type", field: "pcispcIncomeType" },
+              { text: "Disregard", field: "pcispcIncomeDisregard", prefix: "£" },
+              { text: "Description", field: "pcispcIncomeDescription" }
+            ],
+            "No income recorded",
+            "dccPcispcIncome",
+            "/dccpcispc#income"
+          ) }}
+
+          <h3 class="govuk-heading-s">Add income</h3>
+
+          <div class="js-add-group">
+
+            {{ govukDateInput({
+              id: "pcispc-income-start",
+              namePrefix: "pcispcIncomeStart",
+              fieldset: {
+                legend: {
+                  text: "Start date"
+                }
+              },
+              hint: {
+                text: "For example, 10 7 2015"
+              },
+              items: [
+                { name: "day", classes: "govuk-input--width-2", attributes: { "data-required": "true" } },
+                { name: "month", classes: "govuk-input--width-2", attributes: { "data-required": "true" } },
+                { name: "year", classes: "govuk-input--width-4", attributes: { "data-required": "true" } }
+              ]
+            }) }}
+
+            {{ govukDateInput({
+              id: "pcispc-income-end",
+              namePrefix: "pcispcIncomeEnd",
+              fieldset: {
+                legend: {
+                  text: "End date"
+                }
+              },
+              hint: {
+                text: "For example, 16 7 2026"
+              },
+              items: [
+                { name: "day", classes: "govuk-input--width-2" },
+                { name: "month", classes: "govuk-input--width-2" },
+                { name: "year", classes: "govuk-input--width-4" }
+              ]
+            }) }}
+
+            {{ govukInput({
+              id: "pcispc-income-amount",
+              name: "pcispcIncomeAmount",
+              classes: "govuk-input--width-5",
+              prefix: { text: "£" },
+              label: { text: "Amount" },
+              attributes: { "data-required": "true" }
+            }) }}
+
+            {{ govukSelect({
+              id: "pcispc-income-payment-period",
+              name: "pcispcIncomePaymentPeriod",
+              label: { text: "Payment period" },
+              attributes: { "data-required": "true" },
+              items: [
+                { value: "", text: "Select a payment period" },
+                { value: "Weekly", text: "Weekly" },
+                { value: "Fortnightly", text: "Fortnightly" },
+                { value: "4 weekly", text: "4 weekly" },
+                { value: "Monthly", text: "Monthly" },
+                { value: "Quarterly", text: "Quarterly" },
+                { value: "Annually", text: "Annually" }
+              ]
+            }) }}
+
+            {{ govukInput({
+              id: "pcispc-income-disregard",
+              name: "pcispcIncomeDisregard",
+              classes: "govuk-input--width-5",
+              prefix: { text: "£" },
+              label: { text: "Weekly disregard" },
+              hint: { text: "Leave blank if no disregard applies" }
+            }) }}
+
+            {{ govukInput({
+              id: "pcispc-income-description",
+              name: "pcispcIncomeDescription",
+              label: { text: "Description" }
+            }) }}
+
+            {{ govukRadios({
+              idPrefix: "pcispc-income-type",
+              name: "pcispcIncomeType",
+              fieldset: {
+                legend: {
+                  text: "Income type"
+                }
+              },
+              items: [
+                { value: "Qualifying", text: "Qualifying income", checked: true },
+                { value: "Non-qualifying", text: "Non-qualifying income" }
+              ]
+            }) }}
+
+            {{ govukButton({
+              text: "Add income",
+              classes: "govuk-button--secondary js-add-button",
+              name: "action",
+              value: "add-income",
+              type: "submit"
+            }) }}
+
+          </div>
+
+        {% endset %}
+
+        {% set resCareHtml %}
+
+          <h2 class="govuk-heading-m">Residential care periods</h2>
+
+          <p class="govuk-body govuk-hint">Record any period where the customer was in residential care.</p>
+
+          {{ a14Table(
+            data.dccPcispcResCare,
+            [
+              { text: "From", field: "pcispcResCareFrom" },
+              { text: "To", field: "pcispcResCareTo" }
+            ],
+            "No periods recorded",
+            "dccPcispcResCare",
+            "/dccpcispc#res-care"
+          ) }}
+
+          <h3 class="govuk-heading-s">Add a period</h3>
+
+          <div class="js-add-group">
+
+            {{ govukDateInput({
+              id: "pcispc-res-care-from",
+              namePrefix: "pcispcResCareFrom",
+              fieldset: {
+                legend: {
+                  text: "From"
+                }
+              },
+              hint: {
+                text: "For example, 10 7 2015"
+              },
+              items: [
+                { name: "day", classes: "govuk-input--width-2", attributes: { "data-required": "true" } },
+                { name: "month", classes: "govuk-input--width-2", attributes: { "data-required": "true" } },
+                { name: "year", classes: "govuk-input--width-4", attributes: { "data-required": "true" } }
+              ]
+            }) }}
+
+            {{ govukDateInput({
+              id: "pcispc-res-care-to",
+              namePrefix: "pcispcResCareTo",
+              fieldset: {
+                legend: {
+                  text: "To"
+                }
+              },
+              hint: {
+                text: "For example, 16 7 2026"
+              },
+              items: [
+                { name: "day", classes: "govuk-input--width-2" },
+                { name: "month", classes: "govuk-input--width-2" },
+                { name: "year", classes: "govuk-input--width-4" }
+              ]
+            }) }}
+
+            <p class="govuk-body govuk-hint">Every period recorded on this tab is treated as residential care, so there is nothing to choose here.</p>
+
+            {{ govukButton({
+              text: "Add period",
+              classes: "govuk-button--secondary js-add-button",
+              name: "action",
+              value: "add-rescare",
+              type: "submit"
+            }) }}
+
+          </div>
+
+        {% endset %}
+
+        {% set bweBwcHtml %}
+
+          <h2 class="govuk-heading-m">Benefit weeks</h2>
+
+          <p class="govuk-body">Initial Benefit Week: Monday Week Ending</p>
+
+          {{ a14Table(
+            data.dccPcispcBenefitWeeks,
+            [
+              { text: "Start date", field: "pcispcBwDateOfChange" },
+              { text: "Pay day", field: "pcispcBwPayDay" },
+              { text: "Ben week", field: "pcispcBwType" }
+            ],
+            "No benefit weeks recorded",
+            "dccPcispcBenefitWeeks",
+            "/dccpcispc#bwe-bwc"
+          ) }}
+
+          <p class="govuk-body"><a class="govuk-link" href="/dccpcispcbwebwcselectnewbenefit?returnTo=/dccpcispc%23bwe-bwc">New benefit week</a></p>
+
+          <h2 class="govuk-heading-m">Exclusions</h2>
+
+          {{ a14Table(
+            data.dccPcispcExclusions,
+            [
+              { text: "Start date", field: "pcispcExclusionFrom" },
+              { text: "End date", field: "pcispcExclusionTo" },
+              { text: "Code", field: "pcispcExclusionCode" },
+              { text: "Reason", field: "pcispcExclusionReason" }
+            ],
+            "No exclusions recorded",
+            "dccPcispcExclusions",
+            "/dccpcispc#bwe-bwc"
+          ) }}
+
+          <p class="govuk-body"><a class="govuk-link" href="/dccpcispcbwebwcselectnewexclusion?returnTo=/dccpcispc%23bwe-bwc">New exclusion</a></p>
+
+        {% endset %}
+
+        {{ govukTabs({
+          items: [
+            { label: "Assets", id: "assets", panel: { html: assetsHtml } },
+            { label: "Amount Paid", id: "amount-paid", panel: { html: amountPaidHtml } },
+            { label: "Income", id: "income", panel: { html: incomeHtml } },
+            { label: "Res.Care", id: "res-care", panel: { html: resCareHtml } },
+            { label: "BWE/BWC", id: "bwe-bwc", panel: { html: bweBwcHtml } }
+          ]
+        }) }}
+
+        {# There was a hidden dccComplete field here, and it marked this form
+           finished for no better reason than being on the page: the Prototype
+           Kit copies every posted field into the session, so one Add press -
+           or on an A14 form, one keystroke, because the tabs autosave - was
+           enough to turn the case overview row green.
+
+           routes.js sets dccComplete when Run the calculation is pressed,
+           which is the only thing that should. #}
+
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Run the calculation",
+            name: "action",
+            value: "run",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/onboarding/case-overview",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help with the diminishing capital calculation</a>
+      </p>
+
+    </div>
+  </div>
+
+  {# Keeps each Add button switched off until the fields it needs have been  #}
+  {# filled in, matching the disabled buttons in the old system. Buttons     #}
+  {# start enabled in the markup, so if this script does not run they still  #}
+  {# work rather than being permanently stuck.                               #}
+  <script>
+    document.querySelectorAll('.js-add-group').forEach(function (group) {
+      var button = group.querySelector('.js-add-button')
+      var fields = group.querySelectorAll('[data-required="true"]')
+
+      if (!button || fields.length === 0) {
+        return
+      }
+
+      function checkFields () {
+        var ready = true
+        fields.forEach(function (field) {
+          if (!field.value.trim()) {
+            ready = false
+          }
+        })
+        button.disabled = !ready
+        button.setAttribute('aria-disabled', ready ? 'false' : 'true')
+      }
+
+      fields.forEach(function (field) {
+        field.addEventListener('input', checkFields)
+        field.addEventListener('change', checkFields)
+      })
+
+      checkFields()
+    })
+  </script>
+
+{% endblock %}

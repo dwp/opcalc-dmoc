@@ -1,0 +1,92 @@
+{% extends "layouts/main.html" %}
+
+{#
+  NEW FILE. The Assets tab on dccesa.html has a Delete link that had nowhere to
+  go. Deleting an asset takes its dated values with it, so it asks first.
+
+  Which asset is in the address, as ?asset=N.
+#}
+
+{% set asset = data.esaAssets[data.asset] if data.esaAssets | length else {} %}
+
+{% block pageTitle %}
+  Are you sure you want to delete this asset? – DCC (ESA) – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        { href: "#", text: "Accessibility statement" },
+        { href: "#", text: "Privacy notice" },
+        { href: "#", text: "Cookies" }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/dccesa#assets"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Diminishing capital calculation</span>
+
+      <h1 class="govuk-heading-l">
+        Are you sure you want to delete this asset?
+      </h1>
+
+      {{ govukWarningText({
+        text: "Any values recorded against this asset are deleted with it. This cannot be undone.",
+        iconFallbackText: "Warning"
+      }) }}
+
+      {{ govukSummaryList({
+        rows: [
+          { key: { text: "Asset type" }, value: { text: asset.type if asset.type else "Not recorded" } },
+          { key: { text: "Name" }, value: { text: asset.name if asset.name else "Not given" } },
+          { key: { text: "Share held" }, value: { text: (asset.shareHeld if asset.shareHeld else "1") + "/" + (asset.shareTotal if asset.shareTotal else "1") } },
+          { key: { text: "Values recorded" }, value: { text: (asset.values | length | string) if asset.values else "0" } }
+        ]
+      }) }}
+
+      <form action="/dccesa-asset-delete" method="post">
+
+        <input type="hidden" name="assetIndex" value="{{ data.asset }}">
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Yes, delete this asset",
+            classes: "govuk-button--warning",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/dccesa#assets",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

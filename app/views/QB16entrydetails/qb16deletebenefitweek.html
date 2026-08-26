@@ -1,0 +1,89 @@
+{% extends "layouts/main.html" %}
+
+{#
+  Reached from a Delete link in one of the tables, which carries the table and
+  the row number in the address. So this page can show the entry that is about
+  to go, whichever row it is - the old version could only ever describe one.
+#}
+{% set rows = data[data.deleteKey] if data.deleteKey else [] %}
+{% set row = rows[data.deleteIndex] if rows | length else {} %}
+{% set backTo = data.deleteReturnTo if data.deleteReturnTo else "/qb16listofentries#bwe-bwc" %}
+
+{% block pageTitle %}
+  Are you sure you want to delete this benefit week? – QB16 – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        { href: "#", text: "Accessibility statement" },
+        { href: "#", text: "Privacy notice" },
+        { href: "#", text: "Cookies" }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: backTo
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">QB16 entry details</span>
+
+      <h1 class="govuk-heading-l">
+        Are you sure you want to delete this benefit week?
+      </h1>
+
+      {{ govukWarningText({
+        text: "This cannot be undone.",
+        iconFallbackText: "Warning"
+      }) }}
+
+      {{ govukSummaryList({
+        rows: [
+          { key: { text: "Date of change" }, value: { text: row.bwDateOfChange if row.bwDateOfChange else "Not recorded" } },
+          { key: { text: "Pay day" }, value: { text: row.benefitPayDay if row.benefitPayDay else "Not recorded" } },
+          { key: { text: "Benefit week type" }, value: { text: row.benefitWeekType if row.benefitWeekType else "BWE" } }
+        ]
+      }) }}
+
+      <form action="/qb16-delete-row" method="post">
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Yes, delete this benefit week",
+            classes: "govuk-button--warning",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: backTo,
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

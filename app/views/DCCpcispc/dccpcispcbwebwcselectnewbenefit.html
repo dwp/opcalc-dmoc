@@ -1,0 +1,147 @@
+{% extends "layouts/main.html" %}
+
+{#
+  NEW FILE. The BWE/BWC tab on dccpcispc.html links to a "New benefit week"
+  page and there was no such page in what you sent - so this is the IS/JSA
+  version with the pcispc field names the tab's table expects.
+
+  If you already have one, keep yours and throw this away.
+#}
+
+{% block pageTitle %}
+  Change of benefit payment day – DCC (PC or IS/PC) – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/dccpcispc#bwe-bwc"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Diminishing capital calculation</span>
+
+      <h1 class="govuk-heading-l">
+        Change of benefit payment day
+      </h1>
+
+      <form action="/return-to-tab" method="post">
+
+        {{ govukDateInput({
+          id: "pcispc-bw-date-of-change",
+          namePrefix: "pcispcBwDateOfChange",
+          fieldset: {
+            legend: {
+              text: "Date of change"
+            }
+          },
+          hint: {
+            text: "For example, 10 7 2015"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["pcispcBwDateOfChange-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["pcispcBwDateOfChange-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["pcispcBwDateOfChange-year"] }
+          ]
+        }) }}
+
+        {{ govukSelect({
+          id: "pcispc-bw-pay-day",
+          name: "pcispcBwPayDay",
+          label: {
+            text: "Benefit pay day"
+          },
+          items: [
+            { value: "Monday", text: "Monday", selected: data.pcispcBwPayDay == "Monday" or not data.pcispcBwPayDay },
+            { value: "Tuesday", text: "Tuesday", selected: data.pcispcBwPayDay == "Tuesday" },
+            { value: "Wednesday", text: "Wednesday", selected: data.pcispcBwPayDay == "Wednesday" },
+            { value: "Thursday", text: "Thursday", selected: data.pcispcBwPayDay == "Thursday" },
+            { value: "Friday", text: "Friday", selected: data.pcispcBwPayDay == "Friday" },
+            { value: "Saturday", text: "Saturday", selected: data.pcispcBwPayDay == "Saturday" },
+            { value: "Sunday", text: "Sunday", selected: data.pcispcBwPayDay == "Sunday" }
+          ]
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "pcispc-bw-type",
+          name: "pcispcBwType",
+          classes: "govuk-radios--inline",
+          fieldset: {
+            legend: {
+              text: "Benefit week type"
+            }
+          },
+          items: [
+            { value: "BWE", text: "BWE", checked: data.pcispcBwType == "BWE" or not data.pcispcBwType },
+            { value: "BWC", text: "BWC", checked: data.pcispcBwType == "BWC" }
+          ]
+        }) }}
+
+        <h2 class="govuk-heading-m">Benefit week information</h2>
+
+        {{ govukSummaryList({
+          rows: [
+            { key: { text: "Pay day and BWE or BWC" }, value: { text: "Unchanged, no part weeks" } },
+            { key: { text: "First week" }, value: { text: "10/07/2015 to 16/07/2015" } },
+            { key: { text: "Last week" }, value: { text: "07/07/2026 to 13/07/2026" } }
+          ]
+        }) }}
+
+        {{ govukInsetText({
+          text: "The current details are the same as the previous entry."
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/dccpcispc#bwe-bwc",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

@@ -68,7 +68,59 @@ const a14RowTypes = [
   { match: /benefit/, key: 'a14Benefits', label: 'benefit' }
 ]
 
+// QB16 has its own tables, and its sub-pages are named in a way that would
+// otherwise fall into the A14 list above - qb16bwebwcnewbenefit contains
+// "benefit", so without this a QB16 benefit week would be filed as an A14
+// benefit. So anything with qb16 in the name is matched here first.
+//
+// A null key means the page posts to /return-to-tab but is not a row: the
+// insert standard text page fills in the Cause box rather than adding a line
+// to a table.
+const qb16RowTypes = [
+  { match: /standardtext/, key: null, label: 'standard text' },
+  { match: /newbenefit/, key: 'qb16BenefitWeeks', label: 'benefit week' },
+  { match: /newexclusion/, key: 'qb16Exclusions', label: 'exclusion' },
+  { match: /entrydetails/, key: 'qb16Entries', label: 'entry' }
+]
+
+// The DCC sub-pages have the same problem as QB16, and worse: a page called
+// dccisjsabwebwcnewbenefitweek contains "benefitweek", so without this a DCC
+// benefit week would be filed in the A14 table.
+//
+// The table names are built from the benefit in the page name, so this works
+// for the PC/IS and ESA paths as they arrive - dccpcispcassets... files into
+// dccPcispcAssets without another line here.
+function dccRowTypeFor (segment) {
+  const variant = /isjsa/.test(segment)
+    ? 'Isjsa'
+    : (/pcispc/.test(segment) ? 'Pcispc' : (/esa/.test(segment) ? 'Esa' : ''))
+
+  if (!variant) { return null }
+
+  const base = 'dcc' + variant
+
+  // Order matters. An asset value page also has "asset" in its name, so it is
+  // matched first.
+  if (/showvalues|newvalue/.test(segment)) { return { key: base + 'AssetValues', label: 'asset value' } }
+  if (/asset/.test(segment)) { return { key: base + 'Assets', label: 'asset' } }
+  if (/benefitweek|newbenefit/.test(segment)) { return { key: base + 'BenefitWeeks', label: 'benefit week' } }
+  if (/exclusion/.test(segment)) { return { key: base + 'Exclusions', label: 'exclusion' } }
+
+  return null
+}
+
 function rowTypeFor (segment) {
+  if (segment.indexOf('dcc') !== -1) { return dccRowTypeFor(segment) }
+
+  if (segment.indexOf('qb16') !== -1) {
+    for (let i = 0; i < qb16RowTypes.length; i++) {
+      if (qb16RowTypes[i].match.test(segment)) {
+        return qb16RowTypes[i].key ? qb16RowTypes[i] : null
+      }
+    }
+    return null
+  }
+
   for (let i = 0; i < a14RowTypes.length; i++) {
     if (a14RowTypes[i].match.test(segment)) { return a14RowTypes[i] }
   }
@@ -188,6 +240,94 @@ router.post('/A14/a14caseoverview', generateA14)
 router.post('/a14forms', generateA14)
 router.post('/A14/a14forms', generateA14)
 
+// The confirmation you land on straight after creating a case. It was a third
+// copy of the case overview - a task list whose links went to "#" or to
+// addresses that have since moved, and buttons that submitted nowhere. Its one
+// real job is the green "case created" message, and the case overview can
+// carry that itself.
+//
+// So this sets the banner and goes there. Every link on the page you land on
+// is the same set that already works, for every benefit path, and there is one
+// page to keep right rather than three.
+//
+// Delete these lines if you want the separate page back.
+// Anything belonging to the records of a case, as opposed to the customer it
+// is about. Cleared when a new case starts, so a fresh case does not inherit
+// the last one's A14 forms, QB16 entries or DCC.
+//
+// The benefit, the customer's details and the discrepancy period are not here:
+// they are what was just entered, and they describe the case rather than the
+// work done on it.
+const RECORD_FIELD_PREFIXES = [
+  'a14', 'qb16', 'esa', 'isjsa', 'pcispc', 'dcc',
+  'bwDateOfChange', 'benefitPayDay', 'exclusion', 'gross', 'net', 'taxable',
+  'underpaid', 'calculationOptions', 'cause', 'standardText',
+  'personalAllowance', 'partWeek', 'entryForm', 'adjustDates', 'formsToPrint',
+  'a14sToPrint', 'delete', 'edit', 'action', 'assetIndex', 'showValues'
+]
+
+function clearRecords (data) {
+  Object.keys(data).forEach(function (field) {
+    // Every table of rows, whatever it is called. This catches the ESA arrays
+    // too, which are named esaRates rather than dccEsaRates.
+    if (Array.isArray(data[field])) {
+      delete data[field]
+      return
+    }
+
+    if (RECORD_FIELD_PREFIXES.some(function (prefix) { return field.indexOf(prefix) === 0 })) {
+      delete data[field]
+    }
+  })
+
+  delete data.a14Complete
+  delete data.qb16Complete
+  delete data.dccComplete
+  delete data.caseBannerSeen
+}
+
+function caseCreated (req, res) {
+  if (!req.session.data) { req.session.data = {} }
+
+  const data = req.session.data
+
+  // A different customer means a different case, so it starts with nothing
+  // recorded against it. Coming back to this address for the same case - the
+  // back button, a bookmark - changes nothing, which is why this compares
+  // rather than clearing every time.
+  const nino = data.nino || ''
+
+  if (data.caseRecordsFor !== nino) {
+    clearRecords(data)
+    data.caseRecordsFor = nino
+
+    console.log('New case' + (nino ? ' for ' + nino : '') + ': previous records cleared')
+  }
+
+  data.caseBanner = 'created'
+  delete data.caseBannerSeen
+
+  res.redirect(CASE_OVERVIEW_PAGE)
+}
+
+// Starts a case from scratch without going through the journey - handy while
+// testing, and safe: it only clears the records, not the customer.
+router.get('/new-case', function (req, res) {
+  if (!req.session.data) { req.session.data = {} }
+
+  clearRecords(req.session.data)
+  delete req.session.data.caseRecordsFor
+
+  res.redirect(CASE_OVERVIEW_PAGE)
+})
+
+router.get('/onboarding/case-overview-confirmation', caseCreated)
+router.get('/case-overview-confirmation', caseCreated)
+router.get('/onboarding/case-overviewconfirmation', caseCreated)
+router.get('/caseoverviewconfirmation', caseCreated)
+router.post('/case-overview-confirmation', caseCreated)
+router.post('/onboarding/case-overview-confirmation', caseCreated)
+
 // The old A14 case overview. Everything it showed is on the one overview now.
 // Delete these two lines if you want that page back.
 router.get('/a14caseoverview', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
@@ -223,45 +363,45 @@ router.get('/banner-check', function (req, res) {
 router.get('/a14-fields', function (req, res) {
   const data = (req.session && req.session.data) || {}
 
-  const sections = a14RowTypes.map(function (type) {
-    const rows = data[type.key] || []
+  // Every table in the case, not just the A14 ones. There are fifteen of them
+  // now across A14, QB16 and the three DCC paths, so this finds them rather
+  // than listing them: anything in the session that is an array of objects.
+  const keys = Object.keys(data).filter(function (key) {
+    return Array.isArray(data[key]) && data[key].length &&
+      typeof data[key][0] === 'object' && data[key][0] !== null
+  }).sort()
 
-    if (!rows.length) {
-      return '<h2 class="govuk-heading-m">' + type.label + '</h2>' +
-        '<p class="govuk-body">Nothing saved yet. Add one from the ' + type.label +
-        ' sub-page, then come back.</p>'
-    }
+  const sections = keys.length
+    ? keys.map(function (key) {
+      const rows = data[key]
+      const fields = Object.keys(rows[0])
 
-    const fields = Object.keys(rows[0])
+      return '<h2 class="govuk-heading-m"><code>data.' + key + '</code></h2>' +
+        '<p class="govuk-body">' + rows.length + (rows.length === 1 ? ' row' : ' rows') + '</p>' +
+        '<table class="govuk-table"><thead class="govuk-table__head"><tr class="govuk-table__row">' +
+        '<th scope="col" class="govuk-table__header">Field name</th>' +
+        '<th scope="col" class="govuk-table__header">Value in the first row</th></tr></thead>' +
+        '<tbody class="govuk-table__body">' +
+        fields.map(function (field) {
+          return '<tr class="govuk-table__row">' +
+            '<td class="govuk-table__cell"><code>' + field + '</code></td>' +
+            '<td class="govuk-table__cell">' + String(rows[0][field]) + '</td></tr>'
+        }).join('') +
+        '</tbody></table>'
+    }).join('')
+    : '<p class="govuk-body">Nothing saved yet. Add an entry from any sub-page, then come back.</p>'
 
-    return '<h2 class="govuk-heading-m">' + type.label + '</h2>' +
-      '<p class="govuk-body">' + rows.length + ' saved in <code>data.' + type.key + '</code></p>' +
-      '<table class="govuk-table"><thead class="govuk-table__head"><tr class="govuk-table__row">' +
-      '<th scope="col" class="govuk-table__header">Field name</th>' +
-      '<th scope="col" class="govuk-table__header">Value in the first row</th></tr></thead>' +
-      '<tbody class="govuk-table__body">' +
-      fields.map(function (field) {
-        return '<tr class="govuk-table__row">' +
-          '<td class="govuk-table__cell"><code>' + field + '</code></td>' +
-          '<td class="govuk-table__cell">' + String(rows[0][field]) + '</td></tr>'
-      }).join('') +
-      '</tbody></table>'
-  }).join('')
-
-  res.send('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">' +
-    '<title>A14 fields - OpCalc</title>' +
-    '<link rel="stylesheet" href="/govuk/govuk-frontend.min.css"></head>' +
+  res.send('<!DOCTYPE html><html><head><title>What is stored</title>' +
+    '<link rel="stylesheet" href="/govuk/govuk/govuk-frontend.min.css"></head>' +
     '<body class="govuk-template__body"><div class="govuk-width-container">' +
     '<main class="govuk-main-wrapper">' +
-    '<h1 class="govuk-heading-l">What the A14 sub-pages have saved</h1>' +
-    '<p class="govuk-body">Each field name below is what a table column should read from.</p>' +
+    '<h1 class="govuk-heading-l">What is stored against this case</h1>' +
+    '<p class="govuk-body">Every table, with the field names each row carries. ' +
+    'If a column on a page comes out blank, the name it is looking for is not in this list.</p>' +
     sections +
     '</main></div></body></html>')
 })
 
-// Edit a row: put its values back into the session so the sub-page's inputs
-// prefill, mark which row is being changed, and reopen the page it was made
-// on. Saving then replaces that row instead of adding another.
 router.get('/a14-row-edit', function (req, res) {
   const data = req.session.data || {}
   const key = req.query.key
@@ -576,6 +716,31 @@ const portablePages = {
   'benefit-details': anyView(BENEFIT_DETAILS_FILES),
   'benefits-details': anyView(BENEFIT_DETAILS_FILES)
 }
+
+// Every QB16 page, wherever you put the folder. This is why nothing in those
+// templates names the folder: /qb16listofentries resolves to the file called
+// qb16listofentries.html no matter where it is, so moving QB16entrydetails
+// somewhere else breaks nothing.
+Object.keys(viewsByName).forEach(function (name) {
+  if (/^(qb16|viewqb16|dcc)/i.test(name)) {
+    portablePages[name.replace(/\.html$/i, '')] = viewsByName[name]
+  }
+})
+
+// The A14 pages that are not one of the three forms - a14forms,
+// a14caseprintselection and so on. The three forms themselves are deliberately
+// left out: they are answered further up by the benefit fork, and putting them
+// here would let /a14esa serve the ESA form whatever benefit the case is for,
+// which is the bug that took a day to find the first time.
+//
+// a14-tables.html is a macro rather than a page, so it is skipped too.
+const A14_FORM_FILES = ['a14.html', 'a14esa.html', 'a14isjsa.html', 'a14-tables.html']
+
+Object.keys(viewsByName).forEach(function (name) {
+  if (/^a14/i.test(name) && A14_FORM_FILES.indexOf(name) === -1) {
+    portablePages[name.replace(/\.html$/i, '')] = viewsByName[name]
+  }
+})
 
 // One place that answers every request for a page whose location should not
 // matter. Because it works off the last part of the address, lower cased and
@@ -1074,11 +1239,73 @@ router.use(function (req, res, next) {
 // Overlapping dates warning.
 // Yes - dates get adjusted, so the entry is accepted.
 // No  - go back to the entry so the dates can be changed.
+// ---------------------------------------------------------------------------
+// QB16 entry details
+// ---------------------------------------------------------------------------
+
+// Finishing the QB16. Same shape as generating the A14 forms: mark it done,
+// set the banner, and go back to the one case overview.
+router.post('/qb16-complete', function (req, res) {
+  if (!req.session.data) { req.session.data = {} }
+  const data = req.session.data
+
+  data.qb16Complete = 'yes'
+  data.caseBanner = 'qb16'
+  delete data.caseBannerSeen
+
+  console.log('QB16: calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
+
+  res.redirect(CASE_OVERVIEW_PAGE)
+})
+
+// The old page that stood in for the case overview once a QB16 was filled in.
+// There is one case overview now, and it shows the QB16 row itself, so both
+// addresses go there.
+router.get('/landingpagewithqb16entrydetailsfilledin', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
+router.post('/landingpagewithqb16entrydetailsfilledin', function (req, res) {
+  if (!req.session.data) { req.session.data = {} }
+  req.session.data.qb16Complete = 'yes'
+  req.session.data.caseBanner = 'qb16'
+  res.redirect(CASE_OVERVIEW_PAGE)
+})
+
+// Printing. The selection itself does not need keeping in a prototype - what
+// matters is that pressing the button confirms something happened.
+router.post('/qb16-print', function (req, res) {
+  if (!req.session.data) { req.session.data = {} }
+  req.session.data.caseBanner = 'printed'
+  delete req.session.data.caseBannerSeen
+
+  res.redirect(CASE_OVERVIEW_PAGE)
+})
+
+// Insert standard text. It posts here rather than to /return-to-tab because
+// it is not a row - it fills in the Cause box on the list of entries.
+router.post('/qb16-standard-text', function (req, res) {
+  const data = req.session.data || {}
+  const destination = req.body.returnTo || data.returnTo || '/qb16listofentries#list-of-entries'
+
+  // Whatever was chosen goes into the Cause box, replacing anything typed
+  // there before - which is what "insert standard text" means here.
+  if (req.body.standardText) {
+    data.cause = req.body.standardText
+  }
+
+  delete data.returnTo
+
+  res.redirect(destination)
+})
+
+// The Yes/No branch on the overlapping dates warning.
+//
+//   Yes -> the dates get adjusted, so the entry is accepted and you go back
+//          to the list of entries
+//   No  -> you go back to the entry to change the dates yourself
 router.post('/qb16-overlap-answer', function (req, res) {
-  const adjustDates = req.body.adjustDates || req.session.data.adjustDates
+  const adjustDates = req.body.adjustDates || (req.session.data || {}).adjustDates
 
   if (adjustDates === 'no') {
-    res.redirect('/qb16entrydetails')
+    res.redirect('/qb16entrydetails?returnTo=/qb16listofentries%23list-of-entries')
   } else {
     res.redirect('/qb16listofentries#list-of-entries')
   }
@@ -1088,63 +1315,34 @@ router.post('/qb16-overlap-answer', function (req, res) {
 // inserted can be removed and started again. Both fields go, because the
 // textarea shows whichever of the two is set.
 router.get('/qb16-clear-cause', function (req, res) {
-  delete req.session.data.cause
-  delete req.session.data.standardText
+  const data = req.session.data || {}
+
+  delete data.cause
+  delete data.standardText
 
   res.redirect('/qb16listofentries#list-of-entries')
 })
 
-// Delete a QB16 entry, confirmed from /qb16deleteentry. Clears the fields the
-// entries table reads, so the row disappears and the empty state comes back.
-router.post('/qb16-delete-entry', function (req, res) {
-  const data = req.session.data
+// Deleting a row, confirmed from one of the three QB16 delete pages.
+//
+// Which row is on the address of the confirmation page, which the Prototype
+// Kit stores into the session for us - so by the time Yes is pressed, the
+// table and the row number are already here.
+router.post('/qb16-delete-row', function (req, res) {
+  const data = req.session.data || {}
+  const key = data.deleteKey
+  const index = parseInt(data.deleteIndex, 10)
+  const destination = data.deleteReturnTo || '/qb16listofentries'
 
-  delete data.grossIncorrect
-  delete data.grossCorrect
-  delete data.personalAllowance
-  delete data.taxableGrossExcess
-  delete data.netIncorrect
-  delete data.netCorrect
-  delete data.taxable
-  delete data.underpaid
-  delete data.calculationOptions
-  delete data['qb16From-day']
-  delete data['qb16From-month']
-  delete data['qb16From-year']
-  delete data['qb16To-day']
-  delete data['qb16To-month']
-  delete data['qb16To-year']
+  if (key && Array.isArray(data[key]) && !isNaN(index)) {
+    data[key].splice(index, 1)
+  }
 
-  res.redirect('/qb16listofentries#list-of-entries')
-})
+  delete data.deleteKey
+  delete data.deleteIndex
+  delete data.deleteReturnTo
 
-// Delete a benefit week, confirmed from /qb16deletebenefitweek.
-router.post('/qb16-delete-benefit-week', function (req, res) {
-  const data = req.session.data
-
-  delete data.benefitPayDay
-  delete data.benefitWeekType
-  delete data['bwDateOfChange-day']
-  delete data['bwDateOfChange-month']
-  delete data['bwDateOfChange-year']
-
-  res.redirect('/qb16listofentries#bwe-bwc')
-})
-
-// Delete an exclusion, confirmed from /qb16deleteexclusion.
-router.post('/qb16-delete-exclusion', function (req, res) {
-  const data = req.session.data
-
-  delete data.exclusionReason
-  delete data.exclusionCode
-  delete data['exclusionFrom-day']
-  delete data['exclusionFrom-month']
-  delete data['exclusionFrom-year']
-  delete data['exclusionTo-day']
-  delete data['exclusionTo-month']
-  delete data['exclusionTo-year']
-
-  res.redirect('/qb16listofentries#bwe-bwc')
+  res.redirect(destination)
 })
 
 // ---------------------------------------------------------------------------
@@ -1153,72 +1351,296 @@ router.post('/qb16-delete-exclusion', function (req, res) {
 
 // The tabs page has several submit buttons in one form. The 'action' value
 // says which was pressed, and each Add returns to the tab it came from.
-router.post('/dccisjsa-action', function (req, res) {
-  const action = req.body.action || req.session.data.action
+// The DCC tabs page has several submit buttons in one form - an Add button on
+// four of the tabs, plus Run the calculation. They all post here, and the
+// 'action' value says which one was pressed.
+//
+// Each Add files the answer into the table for that tab and clears the boxes
+// it used, so the form is empty and ready for the next one - which is what
+// makes the table hold more than a single row.
+//
+// fields lists exactly what belongs to that tab. It was a single prefix at
+// first, which broke as soon as PC/ISPC arrived: "Income from capital" sits on
+// the rates tab and is called pcispcIncomeFromCapital, so a pcispcIncome
+// prefix would drag it into the income table. Naming the fields is duller and
+// correct.
+//
+// A date input's three boxes are matched by their prefix, so listing
+// pcispcRateDate covers -day, -month and -year.
+const dccAddActions = {
+  'add-rate': { key: 'Rates', tab: 'isjsa-paid', fields: ['isjsaRateDate', 'isjsaRateAmount', 'isjsaRateTaxable', 'isjsaRatePersonalAllowance'] },
+  'add-income': { key: 'Income', tab: 'income', fields: ['isjsaIncomeDate', 'isjsaIncomeAmount', 'isjsaIncomePaymentPeriod', 'isjsaIncomeDisregard', 'isjsaIncomeDescription'] },
+  'add-tariff': { key: 'Tariff', tab: 'tariff-income', fields: ['isjsaTariffDate', 'isjsaTariffAmount'] },
+  'add-rescare': { key: 'ResCare', tab: 'res-care-pens', fields: ['isjsaResCareFrom', 'isjsaResCareTo', 'isjsaResCareType'] }
+}
 
-  if (action === 'add-rate') {
-    res.redirect('/dccisjsa#isjsa-paid')
-  } else if (action === 'add-income') {
-    res.redirect('/dccisjsa#income')
-  } else if (action === 'add-tariff') {
-    res.redirect('/dccisjsa#tariff-income')
-  } else if (action === 'add-rescare') {
-    res.redirect('/dccisjsa#res-care-pens')
+// True when a posted field belongs to this Add - an exact match, or one of the
+// three boxes of a date input.
+function belongsTo (field, names) {
+  return names.some(function (name) {
+    return field === name || field.indexOf(name + '-') === 0
+  })
+}
+
+function dccAdd (req, res, page, variant, actions) {
+  if (!req.session.data) { req.session.data = {} }
+
+  const data = req.session.data
+  const action = req.body.action || data.action
+  const add = (actions || dccAddActions)[action]
+
+  if (!add) { return false }
+
+  const key = 'dcc' + variant + add.key
+  const row = {}
+
+  Object.keys(req.body).forEach(function (field) {
+    if (belongsTo(field, add.fields)) { row[field] = req.body[field] }
+  })
+
+  const filled = Object.keys(row).some(function (field) {
+    return String(row[field] === undefined ? '' : row[field]).trim() !== ''
+  })
+
+  if (filled) {
+    // Dates arrive as three fields. buildRow also joins each set into one
+    // dd/mm/yyyy value, so the table can show a date without reassembling it.
+    data[key] = data[key] || []
+    data[key].push(buildRow(row))
+  }
+
+  // Empty the boxes that were just used, so the next entry starts blank
+  // rather than repeating the last one.
+  Object.keys(data).forEach(function (field) {
+    if (belongsTo(field, add.fields)) { delete data[field] }
+  })
+
+  delete data.action
+
+  res.redirect(page + '#' + add.tab)
+
+  // Says the request has been answered. res.redirect returns nothing, so
+  // returning it here would read as "not handled" and the caller would carry
+  // on into Run the calculation - marking the DCC done every time an Add was
+  // pressed, and answering the same request twice.
+  return true
+}
+
+router.post('/dccisjsa-action', function (req, res) {
+  const added = dccAdd(req, res, '/dccisjsa', 'Isjsa')
+  if (added) { return }
+
+  // Run the calculation. Same shape as the A14 forms and the QB16: mark it
+  // done, set the banner, and go back to the one case overview.
+  if (!req.session.data) { req.session.data = {} }
+  const data = req.session.data
+
+  data.dccComplete = 'yes'
+  data.caseBanner = 'dcc'
+  delete data.caseBannerSeen
+  delete data.action
+
+  console.log('DCC (IS/JSA): calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
+
+  res.redirect(CASE_OVERVIEW_PAGE)
+})
+
+// Asset page: choosing Yes or No to "Is this an accumulating asset?" swaps
+// which set of fields you get.
+router.post('/dccisjsa-asset-accumulating', function (req, res) {
+  const accumulating = req.body.isjsaAccumulatingAsset || (req.session.data || {}).isjsaAccumulatingAsset
+
+  if (accumulating === 'yes') {
+    res.redirect('/dccisjsaassetsnewassetaccumulatingassetyes')
   } else {
-    res.redirect('/dccisjsanewentry')
+    res.redirect('/dccisjsaassetsnewassetaccumulatingassetno')
   }
 })
 
-// Asset value page: saving shows the "already exists" warning. In the real
-// system this only fires when the date matches an existing value - a
-// prototype cannot work that out, so it always fires. To skip it, redirect
-// straight to /dccisjsa#assets instead.
+// Asset value page. In the real system the "already exists" warning only fires
+// when the date matches a value already recorded against that asset - a
+// prototype cannot work that out, so it always fires.
+//
+// The value is held here rather than saved, because the next screen offers the
+// chance to change the date instead. It is only written to the table if the
+// answer is yes.
 router.post('/dccisjsa-asset-value', function (req, res) {
+  if (!req.session.data) { req.session.data = {} }
+
+  req.session.data.dccPendingValue = buildRow(req.body)
+
   res.redirect('/dccisjsaassetstickshowvaluesalreadyexists')
 })
 
-// Already exists warning: Yes replaces the value, No goes back to change the date.
+// Already exists warning: Yes keeps the value, No goes back to change the date.
 router.post('/dccisjsa-value-replace', function (req, res) {
-  const replace = req.body.isjsaReplaceValue || req.session.data.isjsaReplaceValue
+  if (!req.session.data) { req.session.data = {} }
+
+  const data = req.session.data
+  const replace = req.body.isjsaReplaceValue || data.isjsaReplaceValue
 
   if (replace === 'no') {
-    res.redirect('/dccisjsaassetstickshowvalues')
-  } else {
-    res.redirect('/dccisjsa#assets')
+    return res.redirect('/dccisjsaassetstickshowvalues')
   }
+
+  if (data.dccPendingValue) {
+    data.dccIsjsaAssetValues = data.dccIsjsaAssetValues || []
+    data.dccIsjsaAssetValues.push(data.dccPendingValue)
+  }
+
+  delete data.dccPendingValue
+  delete data.isjsaReplaceValue
+
+  res.redirect('/dccisjsa#assets')
+})
+
+// The ESA path had its own case overview and its own print page. There is one
+// case overview now and it shows the DCC row itself, so that address goes
+// there rather than showing the same case twice, disagreeing.
+router.get('/dccesacaseoverview', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
+router.post('/dccesacaseoverview', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
+
+// Printing, from any of the print selection pages. The selection itself does
+// not need keeping in a prototype - what matters is that pressing the button
+// confirms something happened.
+router.post('/case-print', function (req, res) {
+  if (!req.session.data) { req.session.data = {} }
+
+  req.session.data.caseBanner = 'printed'
+  delete req.session.data.caseBannerSeen
+
+  res.redirect(CASE_OVERVIEW_PAGE)
+})
+
+// Looking at a finished DCC. ESA has its own results page; the other two use
+// the printed view until they get one.
+const dccViewPages = {
+  ESA: '/dccesaviewcaseoverview',
+  'IS-PC': '/dccpcispcviewcaseoverview',
+  PC: '/dccpcispcviewcaseoverview'
+}
+
+router.get('/dcc-view', function (req, res) {
+  const data = req.session.data || {}
+  res.redirect(dccViewPages[data.benefit] || '/dccPDF')
+})
+
+// The Diminishing capital calculation button on the case overview. Which DCC
+// page you get depends on the benefit chosen for the case, the same way the
+// A14 forms fork.
+const dccPages = {
+  'IS-JSA': '/dccisjsa',
+  IS: '/dccisjsa',
+  JSA: '/dccisjsa',
+  'IS-PC': '/dccpcispc',
+  PC: '/dccpcispc',
+  ESA: '/dccesa'
+}
+
+router.get('/dcc', function (req, res) {
+  const data = req.session.data || {}
+  const page = dccPages[data.benefit]
+
+  if (!page) {
+    // No benefit chosen yet, so there is nothing to decide with.
+    return res.redirect(SELECT_BENEFIT_PAGE)
+  }
+
+  res.redirect(page)
 })
 
 // ---------------------------------------------------------------------------
 // DCC - Pension Credit / Income Support and Pension Credit
 // ---------------------------------------------------------------------------
 
-router.post('/dccpcispc-action', function (req, res) {
-  const action = req.body.action || req.session.data.action
+// The PC/ISPC tabs page, the same shape as IS/JSA. Each Add files the answer
+// into the table for that tab and clears the boxes ready for the next one.
+//
+// The tab ids differ - the rates tab is "amount-paid" here, and there is no
+// tariff tab - so this path gets its own map rather than sharing the IS/JSA
+// one.
+const dccPcispcAddActions = {
+  'add-rate': {
+    key: 'Rates',
+    tab: 'amount-paid',
+    fields: ['pcispcRateDate', 'pcispcSavingsCredit', 'pcispcClientGroup', 'pcispcApplicableAmount',
+      'pcispcIncomeFromCapital', 'pcispcOtherQualifying', 'pcispcNonQualifying']
+  },
+  'add-income': {
+    key: 'Income',
+    tab: 'income',
+    fields: ['pcispcIncomeStart', 'pcispcIncomeEnd', 'pcispcIncomeAmount', 'pcispcIncomePaymentPeriod',
+      'pcispcIncomeDisregard', 'pcispcIncomeDescription', 'pcispcIncomeType']
+  },
+  'add-rescare': { key: 'ResCare', tab: 'res-care', fields: ['pcispcResCareFrom', 'pcispcResCareTo'] }
+}
 
-  if (action === 'add-rate') {
-    res.redirect('/dccpcispc#amount-paid')
-  } else if (action === 'add-income') {
-    res.redirect('/dccpcispc#income')
-  } else if (action === 'add-rescare') {
-    res.redirect('/dccpcispc#res-care')
+router.post('/dccpcispc-action', function (req, res) {
+  const added = dccAdd(req, res, '/dccpcispc', 'Pcispc', dccPcispcAddActions)
+  if (added) { return }
+
+  // Run the calculation. Same shape as every other path: mark it done, set
+  // the banner, and go back to the one case overview.
+  if (!req.session.data) { req.session.data = {} }
+  const data = req.session.data
+
+  data.dccComplete = 'yes'
+  data.caseBanner = 'dcc'
+  delete data.caseBannerSeen
+  delete data.action
+
+  console.log('DCC (PC/IS-PC): calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
+
+  res.redirect(CASE_OVERVIEW_PAGE)
+})
+
+// Asset page: Yes or No to "Is this an accumulating asset?" swaps which set
+// of fields you get.
+router.post('/dccpcispc-asset-accumulating', function (req, res) {
+  const accumulating = req.body.pcispcAccumulatingAsset || (req.session.data || {}).pcispcAccumulatingAsset
+
+  if (accumulating === 'yes') {
+    res.redirect('/dccpcispcnewassetaccumulatingassetyes')
   } else {
-    res.redirect('/dccpcispccaseoverview')
+    res.redirect('/dccpcispcnewassetaccumulatingassetno')
   }
 })
 
+// Asset value, through the "already exists" warning. The value is held rather
+// than saved, because the next screen offers the chance to change the date
+// instead - it is only written to the table if the answer is yes.
 router.post('/dccpcispc-asset-value', function (req, res) {
+  if (!req.session.data) { req.session.data = {} }
+
+  req.session.data.dccPendingValue = buildRow(req.body)
+
   res.redirect('/dccpcispcassetvaluesalreadyexist')
 })
 
 router.post('/dccpcispc-value-replace', function (req, res) {
-  const replace = req.body.pcispcReplaceValue || req.session.data.pcispcReplaceValue
+  if (!req.session.data) { req.session.data = {} }
+
+  const data = req.session.data
+  const replace = req.body.pcispcReplaceValue || data.pcispcReplaceValue
 
   if (replace === 'no') {
-    res.redirect('/dccpcispcassetsshowvalues')
-  } else {
-    res.redirect('/dccpcispc#assets')
+    return res.redirect('/dccpcispcassetsshowvalues')
   }
+
+  if (data.dccPendingValue) {
+    data.dccPcispcAssetValues = data.dccPcispcAssetValues || []
+    data.dccPcispcAssetValues.push(data.dccPendingValue)
+  }
+
+  delete data.dccPendingValue
+  delete data.pcispcReplaceValue
+
+  res.redirect('/dccpcispc#assets')
 })
+
+// The PC/ISPC path had its own case overview too. One case overview now.
+router.get('/dccpcispccaseoverview', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
+router.post('/dccpcispccaseoverview', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
 
 // ===========================================================================
 // DCC - Employment and Support Allowance
@@ -1940,9 +2362,14 @@ router.post('/dccesa-action', function (req, res) {
     return res.redirect('/dccesa')
   }
 
-  delete data.dccErrors
   data.dccComplete = 'yes'
-  res.redirect('/dccesacaseoverview')
+  data.caseBanner = 'dcc'
+  delete data.caseBannerSeen
+  delete data.dccErrors
+
+  console.log('DCC (ESA): calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
+
+  res.redirect(CASE_OVERVIEW_PAGE)
 })
 
 // ---------------------------------------------------------------------------
