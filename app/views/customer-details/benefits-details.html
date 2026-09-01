@@ -121,7 +121,7 @@
               classes: "govuk-fieldset__legend--s"
             }
           },
-          hint: { text: "For example, 27 10 2008" },
+          
           errorMessage: { text: fromError[0].message } if fromError[0] else false,
           items: [
             {
@@ -151,7 +151,7 @@
               classes: "govuk-fieldset__legend--s"
             }
           },
-          hint: { text: "For example, 16 7 2026" },
+         
           errorMessage: { text: toError[0].message } if toError[0] else false,
           items: [
             {
@@ -177,7 +177,6 @@
           id: "initial-benefit-week",
           name: "initialBenefitWeek",
           label: { text: "Initial benefit week" },
-          hint: { text: "Set from the benefit type. Change it if this case is different." },
           errorMessage: { text: weekError[0].message } if weekError[0] else false,
           items: [
             { value: "", text: "Select a day", selected: not data.initialBenefitWeek },
@@ -204,6 +203,69 @@
             { value: "BWC", text: "BWC (Benefit Week Commencing)", checked: data.benefitWeekType == "BWC" }
           ]
         }) }}
+
+        <div class="govuk-form-group">
+  <fieldset class="govuk-fieldset" role="group" aria-describedby="passport-issued-hint">
+    <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
+      <h1 class="govuk-fieldset__heading">
+        Entitlement start date
+      </h1>
+    </legend>
+    <div id="passport-issued-hint" class="govuk-hint">
+      If after 30/09/2003
+    </div>
+    <div class="govuk-date-input" id="passport-issued">
+      <div class="govuk-date-input__item">
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-date-input__label" for="passport-issued-day">
+            Day
+          </label>
+          <input class="govuk-input govuk-date-input__input govuk-input--width-2" id="passport-issued-day" name="passport-issued-day" type="text" inputmode="numeric">
+        </div>
+      </div>
+      <div class="govuk-date-input__item">
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-date-input__label" for="passport-issued-month">
+            Month
+          </label>
+          <input class="govuk-input govuk-date-input__input govuk-input--width-2" id="passport-issued-month" name="passport-issued-month" type="text" inputmode="numeric">
+        </div>
+      </div>
+      <div class="govuk-date-input__item">
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-date-input__label" for="passport-issued-year">
+            Year
+          </label>
+          <input class="govuk-input govuk-date-input__input govuk-input--width-4" id="passport-issued-year" name="passport-issued-year" type="text" inputmode="numeric">
+        </div>
+      </div>
+    </div>
+  </fieldset>
+</div>
+
+<div class="govuk-form-group">
+  <fieldset class="govuk-fieldset">
+    <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
+      <h2 class="govuk-fieldset__heading">
+        Is the date of claim prior to 06/04/2004?
+      </h2>
+    </legend>
+    <div class="govuk-radios govuk-radios--small govuk-radios--inline" data-module="govuk-radios">
+      <div class="govuk-radios__item">
+        <input class="govuk-radios__input" id="changedName" name="changedName" type="radio" value="month">
+        <label class="govuk-label govuk-radios__label" for="changedName">
+          Yes
+        </label>
+      </div>
+      <div class="govuk-radios__item">
+        <input class="govuk-radios__input" id="changedName-2" name="changedName" type="radio" value="year">
+        <label class="govuk-label govuk-radios__label" for="changedName-2">
+          No
+        </label>
+      </div>
+    </div>
+  </fieldset>
+</div>
 
         {{ govukButton({
           text: "Continue",

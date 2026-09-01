@@ -1,0 +1,119 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Start page – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "javascript:window.history.back()"
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy"
+        },
+        {
+          href: "https://intranet.dwp.gov.uk/manual/overpayments-department-work-and-pensions/general-overview-opcalc",
+          text: "About OpCalc"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+ <h1 class="govuk-heading-l">Saved cases</h1>
+
+ <!-- <p class="govuk-body">No saved cases</p> -->
+
+ <div class="govuk-inset-text">
+  No saved cases
+</div>
+
+{% from "govuk/components/button/macro.njk" import govukButton %}
+ 
+{{ govukButton({
+        text: "Start a new case",
+        href: "/customer-details/personal-details",
+        isStartButton: true
+      }) }}
+
+<!-- {{ govukButton({
+        text: "Open an exisiting case",
+        href: "/saved-cases",
+        isStartButton: true
+      }) }} -->
+ 
+
+<h1 class="govuk-heading-m">
+        More actions
+      </h1>
+
+<p class="govuk-body">
+  <a href="/onboarding/import-case" class="govuk-link govuk-link--no-visited-state">Import a case</a>
+  <br>
+  <a href="/onboarding/export-case" class="govuk-link govuk-link--no-visited-state">Export a case</a>
+  <br>
+  <a href="/onboarding/print-setup" class="govuk-link govuk-link--no-visited-state">Print setup</a>
+</p>
+
+
+ 
+    </div>
+
+    <!-- <div class="govuk-grid-column-one-third">
+ 
+      <aside class="govuk-prototype-kit-common-templates-related-items" role="complementary">
+        <h2 class="govuk-heading-m" id="subsection-title">
+          More actions
+        </h2>
+        <nav role="navigation" aria-labelledby="subsection-title">
+          <ul class="govuk-list govuk-!-font-size-16">
+            <li>
+              <a href="/onboarding/import-case">
+                Import a case <span class="govuk-visually-hidden">in Subsection</span>
+              </a>
+            </li>
+            <li>
+              <a href="/onboarding/export-case">
+                Export a case <span class="govuk-visually-hidden">in Subsection</span>
+              </a>
+            </li>
+            <li>
+              <a href="/onboarding/print-setup">
+                Print setup <span class="govuk-visually-hidden">in Subsection</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+ 
+    </div> -->
+
+  </div>
+ 
+{% endblock %}

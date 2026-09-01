@@ -13,26 +13,26 @@
 {# set available: true against the same code in routes.js.                   #}
 
 {% set benefits = [
-  { value: "AA",      text: "Attendance Allowance (AA)",                     available: false },
-  { value: "BA",      text: "Bereavement Allowance (BA)",                    available: false },
-  { value: "DLA",     text: "Disability Living Allowance (DLA)",             available: false },
+  { value: "AA",      text: "Attendance Allowance (AA)",                     available: true },
+  { value: "BA",      text: "Bereavement Allowance (BA)",                    available: true },
+  { value: "DLA",     text: "Disability Living Allowance (DLA)",             available: true },
   { value: "ESA",     text: "Employment and Support Allowance (ESA)",        available: true },
-  { value: "IB",      text: "Incapacity Benefit (IB)",                       available: false },
-  { value: "IS",      text: "Income Support (IS)",                           available: false },
+  { value: "IB",      text: "Incapacity Benefit (IB)",                       available: true },
+  { value: "IS",      text: "Income Support (IS)",                           available: true },
   { value: "IS-JSA",  text: "Income Support/Jobseeker’s Allowance (IS/JSA)", available: true },
   { value: "IS-PC",   text: "Income Support/Pension Credit (IS/PC)",         available: true },
-  { value: "IVB",     text: "Invalidity Benefit (IVB)",                      available: false },
-  { value: "IVB-IB",  text: "Invalidity/Incapacity Benefit (IVB/IB)",        available: false },
-  { value: "JSA",     text: "Jobseeker’s Allowance (JSA)",                   available: false },
-  { value: "MA",      text: "Maternity Allowance (MA)",                      available: false },
-  { value: "PIB",     text: "Passported Incapacity Benefit (PIB)",           available: false },
-  { value: "PC",      text: "Pension Credit (PC)",                           available: false },
-  { value: "RP",      text: "Retirement Pension (RP)",                       available: false },
-  { value: "SDA",     text: "Severe Disablement Allowance (SDA)",            available: false },
-  { value: "SB",      text: "Sickness Benefit (SB)",                         available: false },
-  { value: "WMA",     text: "Widowed Mother’s Allowance (WMA)",              available: false },
-  { value: "WPA",     text: "Widowed Parent’s Allowance (WPA)",              available: false },
-  { value: "WP",      text: "Widow’s Pension (WP)",                          available: false }
+  { value: "IVB",     text: "Invalidity Benefit (IVB)",                      available: true },
+  { value: "IVB-IB",  text: "Invalidity/Incapacity Benefit (IVB/IB)",        available: true },
+  { value: "JSA",     text: "Jobseeker’s Allowance (JSA)",                   available: true },
+  { value: "MA",      text: "Maternity Allowance (MA)",                      available: true },
+  { value: "PIB",     text: "Passported Incapacity Benefit (PIB)",           available: true },
+  { value: "PC",      text: "Pension Credit (PC)",                           available: true },
+  { value: "RP",      text: "Retirement Pension (RP)",                       available: true },
+  { value: "SDA",     text: "Severe Disablement Allowance (SDA)",            available: true },
+  { value: "SB",      text: "Sickness Benefit (SB)",                         available: true },
+  { value: "WMA",     text: "Widowed Mother’s Allowance (WMA)",              available: true },
+  { value: "WPA",     text: "Widowed Parent’s Allowance (WPA)",              available: true },
+  { value: "WP",      text: "Widow’s Pension (WP)",                          available: true }
 ] %}
 
 {% set benefitItems = [] %}
@@ -76,11 +76,11 @@
         },
         {
           href: "#",
-          text: "Privacy notice"
+          text: "Privacy"
         },
         {
           href: "#",
-          text: "Cookies"
+          text: "About OpCalc"
         }
       ]
     }
@@ -119,7 +119,7 @@
             }
           },
           hint: {
-            text: "This sets the tabs, calculations and forms available for the rest of the case. Benefits without an A14 form in this prototype cannot be selected."
+            text: "This sets the tabs, calculations and forms available for the rest of the case."
           },
           errorMessage: { text: data.benefitError } if data.benefitError else false,
           items: benefitItems

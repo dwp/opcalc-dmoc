@@ -78,7 +78,8 @@
 {% block content %}
 
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-full">
+        <div class="govuk-grid-column-two-thirds">
+
 
       {# Set by routes.js when something has just been done, and cleared as
          soon as you navigate away - so it confirms an action rather than
@@ -239,12 +240,7 @@
         rows: rows
       }) }}
 
-      <h2 class="govuk-heading-m">Printing</h2>
-
-      <ul class="govuk-list">
-        <li><a class="govuk-link" href="/A14/a14forms">Print A14 PDFs</a></li>
-        <li><a class="govuk-link" href="/A14/a14caseprintselection">Print PDFs for this case</a></li>
-      </ul>
+      <!-- <h2 class="govuk-heading-m">Printing</h2> -->
 
       {# Nothing here needs saving, so these navigate rather than submit. There
          is no form involved, which is why govukButton with href is right. #}
@@ -266,6 +262,11 @@
           classes: "govuk-button--warning"
         }) }}
       </div>
+
+       <ul class="govuk-list">
+        <!-- <li><a class="govuk-link" href="/A14/a14forms">Print A14 PDFs</a></li> -->
+        <li><a class="govuk-link" href="/A14/a14caseprintselection">Print PDFs for this case</a></li>
+      </ul>
 
     </div>
   </div>
