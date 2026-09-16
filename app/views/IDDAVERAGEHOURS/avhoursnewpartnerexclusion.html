@@ -1,0 +1,117 @@
+{% extends "layouts/main.html" %}
+
+{#
+  Reached from New partner exclusion on the Qualifying Hours tab.
+
+  Customer and partner have their own page rather than sharing one, because
+  which table a saved entry goes into is worked out from the page it came
+  from.
+#}
+
+{% block pageTitle %}
+  Partner worked hours exclusion – Average hours – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        { href: "#", text: "Accessibility statement" },
+        { href: "#", text: "Privacy notice" },
+        { href: "#", text: "Cookies" }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/avhours#qualifying-hours"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Average hours calculation</span>
+
+      <h1 class="govuk-heading-l">
+        Partner worked hours exclusion
+      </h1>
+
+      <form action="/return-to-tab" method="post">
+
+        {{ govukDateInput({
+          id: "avhours-partner-exclusion-start",
+          namePrefix: "avHoursPartnerExclusionStart",
+          fieldset: {
+            legend: {
+              text: "Start date"
+            }
+          },
+          hint: {
+            text: "The date this exclusion applied from. For example, 10 7 2015"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["avHoursPartnerExclusionStart-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["avHoursPartnerExclusionStart-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["avHoursPartnerExclusionStart-year"] }
+          ]
+        }) }}
+
+        {#
+          CHECK THIS LIST. The old dialog had a dropdown and I could not read
+          what was in it, so these are the reasons hours would normally stop
+          counting as remunerative work. Send me the real ones and I will swap
+          them - it is one edit.
+        #}
+        {{ govukSelect({
+          id: "avhours-partner-exclusion-type",
+          name: "avHoursPartnerExclusionType",
+          label: {
+            text: "Exclusion type"
+          },
+          items: [
+            { value: "", text: "Choose an exclusion type", selected: not data.avHoursPartnerExclusionType },
+            { value: "Sick leave", text: "Sick leave", selected: data.avHoursPartnerExclusionType == "Sick leave" },
+            { value: "Maternity leave", text: "Maternity leave", selected: data.avHoursPartnerExclusionType == "Maternity leave" },
+            { value: "Paternity leave", text: "Paternity leave", selected: data.avHoursPartnerExclusionType == "Paternity leave" },
+            { value: "Holiday", text: "Holiday", selected: data.avHoursPartnerExclusionType == "Holiday" },
+            { value: "Laid off", text: "Laid off", selected: data.avHoursPartnerExclusionType == "Laid off" },
+            { value: "Trade dispute", text: "Trade dispute", selected: data.avHoursPartnerExclusionType == "Trade dispute" },
+            { value: "Training", text: "Training", selected: data.avHoursPartnerExclusionType == "Training" },
+            { value: "No longer in remunerative work", text: "No longer in remunerative work", selected: data.avHoursPartnerExclusionType == "No longer in remunerative work" }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/avhours#qualifying-hours",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

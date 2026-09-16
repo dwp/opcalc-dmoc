@@ -1,0 +1,229 @@
+{% extends "layouts/main.html" %}
+
+{#
+  Average hours calculation.
+
+  The old dialog had a "Next Tab" button that was greyed out until there was an
+  entry, with the reason in a status bar at the bottom: "Must have at least one
+  entry for Customer or Partner."
+
+  Two things changed on the way over.
+
+  Next Tab is gone. It only existed because a Win32 dialog could not show you
+  where you were - the tabs do that themselves here, and you can go to any of
+  them in any order. What the old dialog was really building towards is one
+  action at the end, so that is what the button at the bottom is.
+
+  And the button is not disabled. A greyed-out button tells you that you cannot
+  do something but not why, and the reason was hidden in a status bar. Press it
+  and you are told what is missing, in the error summary, the same as every
+  other form here.
+#}
+{% from "a14-tables.html" import a14Table %}
+
+{% block pageTitle %}
+  {{ "Error: " if data.avHoursErrors | length }}Average hours calculation – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBreadcrumbs({
+    items: [
+      {
+        text: "OpCalc",
+        href: "/onboarding/landing-page"
+      },
+      {
+        text: "Case overview",
+        href: "/onboarding/case-overview"
+      },
+      {
+        text: "Average hours calculation"
+      }
+    ]
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+
+      {% if data.avHoursErrors | length %}
+        <div class="govuk-error-summary" data-module="govuk-error-summary" tabindex="-1" id="avhours-error-summary">
+          <div role="alert">
+            <h2 class="govuk-error-summary__title">There is a problem</h2>
+            <div class="govuk-error-summary__body">
+              <ul class="govuk-list govuk-error-summary__list">
+                {% for problem in data.avHoursErrors %}
+                  <li><a href="{{ problem.href }}">{{ problem.message }}</a></li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <h1 class="govuk-heading-l">
+        Average hours calculation
+      </h1>
+
+      <p class="govuk-body">
+        {{ data.nino if data.nino else "AB 12 34 56 C" }}{{ " · " + data.benefitLabel if data.benefitLabel }}
+      </p>
+
+      {% set customerHtml %}
+
+        <h2 class="govuk-heading-m">Customer employment details</h2>
+
+        <p class="govuk-body govuk-hint">Record each job the customer held during this period.</p>
+
+        {{ a14Table(
+          data.avHoursCustomerEmployment,
+          [
+            { text: "Employer", field: "avHoursCustomerEmployer" },
+            { text: "Start date", field: "avHoursCustomerStart" },
+            { text: "End date", field: "avHoursCustomerEnd" },
+            { text: "Payment period", field: "avHoursCustomerPaymentPeriod" },
+            { text: "Hours", field: "hoursCount" }
+          ],
+          "No employment recorded",
+          "avHoursCustomerEmployment",
+          "/avhours#customer"
+        ) }}
+
+        <p class="govuk-body"><a class="govuk-link" href="/avhoursnewcustomeremployment?returnTo=/avhours%23customer">New employment</a></p>
+
+
+      {% endset %}
+
+      {% set partnerHtml %}
+
+        <h2 class="govuk-heading-m">Partner employment details</h2>
+
+        <p class="govuk-body govuk-hint">Record each job the partner held during this period.</p>
+
+        {{ a14Table(
+          data.avHoursPartnerEmployment,
+          [
+            { text: "Employer", field: "avHoursPartnerEmployer" },
+            { text: "Start date", field: "avHoursPartnerStart" },
+            { text: "End date", field: "avHoursPartnerEnd" },
+            { text: "Payment period", field: "avHoursPartnerPaymentPeriod" },
+            { text: "Hours", field: "hoursCount" }
+          ],
+          "No employment recorded",
+          "avHoursPartnerEmployment",
+          "/avhours#partner"
+        ) }}
+
+        <p class="govuk-body"><a class="govuk-link" href="/avhoursnewpartneremployment?returnTo=/avhours%23partner">New employment</a></p>
+
+
+      {% endset %}
+
+      {% set qualifyingHtml %}
+
+        {#
+          Two tables on one tab, each with its own default. The default is part
+          of the heading because it is the thing the entries below are
+          departing from - an exclusion only means anything against it.
+        #}
+        <h2 class="govuk-heading-m">Customer hours qualifying as remunerative work</h2>
+
+        <p class="govuk-body govuk-hint">Default {{ data.avHoursCustomerDefault if data.avHoursCustomerDefault else "16" }} hours. Add a period where a different rule applied.</p>
+
+        {{ a14Table(
+          data.avHoursCustomerQualifying,
+          [
+            { text: "Start date", field: "avHoursCustomerExclusionStart" },
+            { text: "Exclusion", field: "avHoursCustomerExclusionType" }
+          ],
+          "No exclusions recorded",
+          "avHoursCustomerQualifying",
+          "/avhours#qualifying-hours"
+        ) }}
+
+        <p class="govuk-body"><a class="govuk-link" href="/avhoursnewcustomerexclusion?returnTo=/avhours%23qualifying-hours">New customer exclusion</a></p>
+
+        <h2 class="govuk-heading-m">Partner hours qualifying as remunerative work</h2>
+
+        <p class="govuk-body govuk-hint">Default {{ data.avHoursPartnerDefault if data.avHoursPartnerDefault else "24" }} hours. Add a period where a different rule applied.</p>
+
+        {{ a14Table(
+          data.avHoursPartnerQualifying,
+          [
+            { text: "Start date", field: "avHoursPartnerExclusionStart" },
+            { text: "Exclusion", field: "avHoursPartnerExclusionType" }
+          ],
+          "No exclusions recorded",
+          "avHoursPartnerQualifying",
+          "/avhours#qualifying-hours"
+        ) }}
+
+        <p class="govuk-body"><a class="govuk-link" href="/avhoursnewpartnerexclusion?returnTo=/avhours%23qualifying-hours">New partner exclusion</a></p>
+
+      {% endset %}
+
+      {{ govukTabs({
+        items: [
+          { label: "Customer", id: "customer", panel: { html: customerHtml } },
+          { label: "Partner", id: "partner", panel: { html: partnerHtml } },
+          { label: "Qualifying Hours", id: "qualifying-hours", panel: { html: qualifyingHtml } }
+        ]
+      }) }}
+
+      <form action="/avhours-complete" method="post">
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Run the calculation",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/onboarding/case-overview",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help with the average hours calculation</a>
+      </p>
+
+    </div>
+  </div>
+
+{% endblock %}

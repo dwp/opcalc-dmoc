@@ -1,0 +1,228 @@
+{% extends "layouts/main.html" %}
+
+{#
+  Reached from New employment on the Customer tab, and from an Edit link.
+  Everything the old Edit Customer Employment Details dialog held is here,
+  including the list of dated payments that is built up before saving.
+#}
+
+{% block pageTitle %}
+  Customer employment details – Average earnings – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        { href: "#", text: "Accessibility statement" },
+        { href: "#", text: "Privacy notice" },
+        { href: "#", text: "Cookies" }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/avearnings#customer"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Average earnings calculation</span>
+
+      <h1 class="govuk-heading-l">
+        Customer employment details
+      </h1>
+
+      <form action="/return-to-tab" method="post">
+
+        <h2 class="govuk-heading-m">Employment</h2>
+
+        {{ govukInput({
+          id: "av-customer-employer",
+          name: "avCustomerEmployer",
+          label: {
+            text: "Employer name"
+          },
+          hint: {
+            text: "As it should appear on the calculation"
+          },
+          value: data.avCustomerEmployer
+        }) }}
+
+        {#
+          The dialog you sent shows only an End Date, but the table it returns
+          to has a Start Date column - so there must be one. It is here.
+        #}
+        {{ govukDateInput({
+          id: "av-customer-start",
+          namePrefix: "avCustomerStart",
+          fieldset: {
+            legend: {
+              text: "Start date"
+            }
+          },
+          hint: {
+            text: "The date this employment began. For example, 10 7 2015"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["avCustomerStart-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["avCustomerStart-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["avCustomerStart-year"] }
+          ]
+        }) }}
+
+        {{ govukDateInput({
+          id: "av-customer-end",
+          namePrefix: "avCustomerEnd",
+          fieldset: {
+            legend: {
+              text: "End date"
+            }
+          },
+          hint: {
+            text: "Leave blank if the employment is still running"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["avCustomerEnd-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["avCustomerEnd-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["avCustomerEnd-year"] }
+          ]
+        }) }}
+
+        {{ govukSelect({
+          id: "av-customer-payment-period",
+          name: "avCustomerPaymentPeriod",
+          label: {
+            text: "Payment period"
+          },
+          items: [
+            { value: "", text: "Select a payment period", selected: not data.avCustomerPaymentPeriod },
+            { value: "Weekly", text: "Weekly", selected: data.avCustomerPaymentPeriod == "Weekly" },
+            { value: "Fortnightly", text: "Fortnightly", selected: data.avCustomerPaymentPeriod == "Fortnightly" },
+            { value: "4 weekly", text: "4 weekly", selected: data.avCustomerPaymentPeriod == "4 weekly" },
+            { value: "Monthly", text: "Monthly", selected: data.avCustomerPaymentPeriod == "Monthly" },
+            { value: "Quarterly", text: "Quarterly", selected: data.avCustomerPaymentPeriod == "Quarterly" },
+            { value: "Annually", text: "Annually", selected: data.avCustomerPaymentPeriod == "Annually" }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "av-customer-average-cycle",
+          name: "avCustomerAverageCycle",
+          classes: "govuk-input--width-3",
+          inputmode: "numeric",
+          label: {
+            text: "Average cycle"
+          },
+          hint: {
+            text: "How many payment periods the average is taken over. 0 if it does not apply"
+          },
+          value: data.avCustomerAverageCycle if data.avCustomerAverageCycle else "0"
+        }) }}
+
+        <h2 class="govuk-heading-m">Earnings details</h2>
+
+        <p class="govuk-body govuk-hint">Add each payment received from this employer. They are saved with the employment.</p>
+
+        {#
+          The list being built up. It lives in the session until Save, so the
+          dialog behaves the way the old one did: add several payments, then
+          keep the lot in one go - or cancel, and none of it is recorded.
+        #}
+        {% set earningRows = [] %}
+
+        {% for earning in data.avPendingEarnings %}
+          {% set _ = earningRows.push([
+            { text: earning.date },
+            { text: "£" + earning.amount },
+            { html: '<a class="govuk-link" href="/avearnings-remove-earning?index=' + loop.index0 + '">Remove<span class="govuk-visually-hidden"> the payment on ' + earning.date + '</span></a>' }
+          ]) %}
+        {% endfor %}
+
+        {{ govukTable({
+          head: [
+            { text: "Date" }, { text: "Earnings" }, { text: "Actions" }
+          ] if earningRows | length else [
+            { text: "Date" }, { text: "Earnings" }
+          ],
+          rows: earningRows if earningRows | length else [
+            [{ html: '<span class="govuk-hint">No earnings recorded</span>' }, { text: "" }]
+          ]
+        }) }}
+
+        {{ govukDateInput({
+          id: "av-earning-date",
+          namePrefix: "avEarningDate",
+          fieldset: {
+            legend: {
+              text: "Date"
+            }
+          },
+          hint: {
+            text: "The date this payment was received"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2" },
+            { name: "month", classes: "govuk-input--width-2" },
+            { name: "year", classes: "govuk-input--width-4" }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "av-earning-amount",
+          name: "avEarningAmount",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: {
+            text: "Earnings"
+          }
+        }) }}
+
+        {#
+          Add is a second button on the same form rather than a form of its
+          own, because a form cannot sit inside another one. routes.js looks at
+          which button was pressed.
+        #}
+        {{ govukButton({
+          text: "Add earning",
+          classes: "govuk-button--secondary",
+          name: "action",
+          value: "add-earning",
+          type: "submit"
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/avearnings#customer",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

@@ -1,0 +1,269 @@
+{% extends "layouts/main.html" %}
+
+{#
+  Average earnings calculation.
+
+  The old dialog had a "Next Tab" button that was greyed out until there was an
+  entry, with the reason in a status bar at the bottom: "Must have at least one
+  entry for Customer or Partner."
+
+  Two things changed on the way over.
+
+  Next Tab is gone. It only existed because a Win32 dialog could not show you
+  where you were - the tabs do that themselves here, and you can go to any of
+  them in any order. What the old dialog was really building towards is one
+  action at the end, so that is what the button at the bottom is.
+
+  And the button is not disabled. A greyed-out button tells you that you cannot
+  do something but not why, and the reason was hidden in a status bar. Press it
+  and you are told what is missing, in the error summary, the same as every
+  other form here.
+#}
+{% from "a14-tables.html" import a14Table %}
+
+{% block pageTitle %}
+  {{ "Error: " if data.avErrors | length }}Average earnings calculation – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBreadcrumbs({
+    items: [
+      {
+        text: "OpCalc",
+        href: "/onboarding/landing-page"
+      },
+      {
+        text: "Case overview",
+        href: "/onboarding/case-overview"
+      },
+      {
+        text: "Average earnings calculation"
+      }
+    ]
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+
+      {% if data.avErrors | length %}
+        <div class="govuk-error-summary" data-module="govuk-error-summary" tabindex="-1" id="av-error-summary">
+          <div role="alert">
+            <h2 class="govuk-error-summary__title">There is a problem</h2>
+            <div class="govuk-error-summary__body">
+              <ul class="govuk-list govuk-error-summary__list">
+                {% for problem in data.avErrors %}
+                  <li><a href="{{ problem.href }}">{{ problem.message }}</a></li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <h1 class="govuk-heading-l">
+        Average earnings calculation
+      </h1>
+
+      <p class="govuk-body">
+        {{ data.nino if data.nino else "AB 12 34 56 C" }}{{ " · " + data.benefitLabel if data.benefitLabel }}
+      </p>
+
+      {% set customerHtml %}
+
+        <h2 class="govuk-heading-m">Customer employment details</h2>
+
+        <p class="govuk-body govuk-hint">Record each job the customer held during this period.</p>
+
+        {{ a14Table(
+          data.avCustomerEmployment,
+          [
+            { text: "Employer", field: "avCustomerEmployer" },
+            { text: "Start date", field: "avCustomerStart" },
+            { text: "End date", field: "avCustomerEnd" },
+            { text: "Payment period", field: "avCustomerPaymentPeriod" },
+            { text: "Earnings", field: "earningsCount" }
+          ],
+          "No employment recorded",
+          "avCustomerEmployment",
+          "/avearnings#customer"
+        ) }}
+
+        <p class="govuk-body"><a class="govuk-link" href="/avearningsnewcustomeremployment?returnTo=/avearnings%23customer">New employment</a></p>
+
+        {#
+          The old dialog showed this checkbox greyed out with nothing to tick it
+          against. It appears once there is an employment to apply it to, which
+          says the same thing without the dead control.
+        #}
+        {% if data.avCustomerEmployment | length %}
+          {{ govukCheckboxes({
+            idPrefix: "av-use-customer-earnings",
+            name: "avUseCustomerEarnings",
+            classes: "govuk-checkboxes--small",
+            items: [
+              {
+                value: "yes",
+                text: "Use customer earnings in A14s",
+                id: "av-use-customer-earnings",
+                checked: data.avUseCustomerEarnings
+              }
+            ]
+          }) }}
+        {% endif %}
+
+      {% endset %}
+
+      {% set partnerHtml %}
+
+        <h2 class="govuk-heading-m">Partner employment details</h2>
+
+        <p class="govuk-body govuk-hint">Record each job the partner held during this period.</p>
+
+        {{ a14Table(
+          data.avPartnerEmployment,
+          [
+            { text: "Employer", field: "avPartnerEmployer" },
+            { text: "Start date", field: "avPartnerStart" },
+            { text: "End date", field: "avPartnerEnd" },
+            { text: "Payment period", field: "avPartnerPaymentPeriod" },
+            { text: "Earnings", field: "earningsCount" }
+          ],
+          "No employment recorded",
+          "avPartnerEmployment",
+          "/avearnings#partner"
+        ) }}
+
+        <p class="govuk-body"><a class="govuk-link" href="/avearningsnewpartneremployment?returnTo=/avearnings%23partner">New employment</a></p>
+
+        {% if data.avPartnerEmployment | length %}
+          {{ govukCheckboxes({
+            idPrefix: "av-use-partner-earnings",
+            name: "avUsePartnerEarnings",
+            classes: "govuk-checkboxes--small",
+            items: [
+              {
+                value: "yes",
+                text: "Use partner earnings in A14s",
+                id: "av-use-partner-earnings",
+                checked: data.avUsePartnerEarnings
+              }
+            ]
+          }) }}
+        {% endif %}
+
+      {% endset %}
+
+      {% set disregardHtml %}
+
+        <h2 class="govuk-heading-m">Earnings disregard</h2>
+
+        <p class="govuk-body govuk-hint">Record the disregard that applied from each date.</p>
+
+        {{ a14Table(
+          data.avDisregards,
+          [
+            { text: "Start date", field: "avDisregardStart" },
+            { text: "Disregard", field: "avDisregardAmount", prefix: "£" }
+          ],
+          "No disregards recorded",
+          "avDisregards",
+          "/avearnings#disregard"
+        ) }}
+
+        <p class="govuk-body"><a class="govuk-link" href="/avearningsnewdisregard?returnTo=/avearnings%23disregard">New disregard</a></p>
+
+      {% endset %}
+
+      {% set bweBwcHtml %}
+
+        <h2 class="govuk-heading-m">Benefit weeks</h2>
+
+        <p class="govuk-body">
+          Initial Benefit Week: {{ data.initialBenefitWeek if data.initialBenefitWeek else "Thursday" }}
+          {{ "Week Commencing" if data.benefitWeekType == "BWC" else "Week Ending" }}
+        </p>
+
+        {{ a14Table(
+          data.avBenefitWeeks,
+          [
+            { text: "Start date", field: "avBwStart" },
+            { text: "Pay day", field: "avBwPayDay" },
+            { text: "Ben week", field: "avBwType" },
+            { text: "Part week(s)", field: "avBwPartWeeks" }
+          ],
+          "No benefit weeks recorded",
+          "avBenefitWeeks",
+          "/avearnings#bwe-bwc"
+        ) }}
+
+        <p class="govuk-body"><a class="govuk-link" href="/avearningsnewbenefitweek?returnTo=/avearnings%23bwe-bwc">New benefit week</a></p>
+
+      {% endset %}
+
+      {{ govukTabs({
+        items: [
+          { label: "Customer", id: "customer", panel: { html: customerHtml } },
+          { label: "Partner", id: "partner", panel: { html: partnerHtml } },
+          { label: "Disregard", id: "disregard", panel: { html: disregardHtml } },
+          { label: "BWE/BWC", id: "bwe-bwc", panel: { html: bweBwcHtml } }
+        ]
+      }) }}
+
+      <form action="/avearnings-complete" method="post">
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Run the calculation",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/onboarding/case-overview",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help with the average earnings calculation</a>
+      </p>
+
+    </div>
+  </div>
+
+{% endblock %}

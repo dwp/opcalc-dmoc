@@ -1,0 +1,217 @@
+{% extends "layouts/main.html" %}
+
+{#
+  Reached from New employment on the Partner tab, and from an Edit link.
+#}
+
+{% block pageTitle %}
+  Partner employment details – Average hours – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        { href: "#", text: "Accessibility statement" },
+        { href: "#", text: "Privacy notice" },
+        { href: "#", text: "Cookies" }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/avhours#partner"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Average hours calculation</span>
+
+      <h1 class="govuk-heading-l">
+        Partner employment details
+      </h1>
+
+      <form action="/return-to-tab" method="post">
+
+        <h2 class="govuk-heading-m">Employment</h2>
+
+        {{ govukInput({
+          id: "avhours-partner-employer",
+          name: "avHoursPartnerEmployer",
+          label: {
+            text: "Employer name"
+          },
+          hint: {
+            text: "As it should appear on the calculation"
+          },
+          value: data.avHoursPartnerEmployer
+        }) }}
+
+        {{ govukDateInput({
+          id: "avhours-partner-start",
+          namePrefix: "avHoursPartnerStart",
+          fieldset: {
+            legend: {
+              text: "Start date"
+            }
+          },
+          hint: {
+            text: "The date this employment began. For example, 10 7 2015"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["avHoursPartnerStart-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["avHoursPartnerStart-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["avHoursPartnerStart-year"] }
+          ]
+        }) }}
+
+        {{ govukDateInput({
+          id: "avhours-partner-end",
+          namePrefix: "avHoursPartnerEnd",
+          fieldset: {
+            legend: {
+              text: "End date"
+            }
+          },
+          hint: {
+            text: "Leave blank if the employment is still running"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["avHoursPartnerEnd-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["avHoursPartnerEnd-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["avHoursPartnerEnd-year"] }
+          ]
+        }) }}
+
+        {{ govukSelect({
+          id: "avhours-partner-payment-period",
+          name: "avHoursPartnerPaymentPeriod",
+          label: {
+            text: "Payment period"
+          },
+          items: [
+            { value: "", text: "Select a payment period", selected: not data.avHoursPartnerPaymentPeriod },
+            { value: "Weekly", text: "Weekly", selected: data.avHoursPartnerPaymentPeriod == "Weekly" },
+            { value: "Fortnightly", text: "Fortnightly", selected: data.avHoursPartnerPaymentPeriod == "Fortnightly" },
+            { value: "4 weekly", text: "4 weekly", selected: data.avHoursPartnerPaymentPeriod == "4 weekly" },
+            { value: "Monthly", text: "Monthly", selected: data.avHoursPartnerPaymentPeriod == "Monthly" },
+            { value: "Quarterly", text: "Quarterly", selected: data.avHoursPartnerPaymentPeriod == "Quarterly" },
+            { value: "Annually", text: "Annually", selected: data.avHoursPartnerPaymentPeriod == "Annually" }
+          ]
+        }) }}
+
+        <h2 class="govuk-heading-m">Hours details</h2>
+
+        <p class="govuk-body govuk-hint">Add the hours worked on each date. They are saved with the employment.</p>
+
+        {#
+          The list being built up. It lives in the session until Save, so the
+          page behaves the way the old dialog did: add several entries, then
+          keep the lot in one go - or cancel, and none of it is recorded.
+        #}
+        {% set hoursRows = [] %}
+
+        {% for entry in data.avPendingHours %}
+          {% set _ = hoursRows.push([
+            { text: entry.date },
+            { text: entry.hours },
+            { html: '<a class="govuk-link" href="/avhours-remove-hours?index=' + loop.index0 + '">Remove<span class="govuk-visually-hidden"> the hours on ' + entry.date + '</span></a>' }
+          ]) %}
+        {% endfor %}
+
+        {{ govukTable({
+          head: [
+            { text: "Date" }, { text: "Hrs:Mins" }, { text: "Actions" }
+          ] if hoursRows | length else [
+            { text: "Date" }, { text: "Hrs:Mins" }
+          ],
+          rows: hoursRows if hoursRows | length else [
+            [{ html: '<span class="govuk-hint">No hours recorded</span>' }, { text: "" }]
+          ]
+        }) }}
+
+        {{ govukDateInput({
+          id: "avhours-entry-date",
+          namePrefix: "avHoursEntryDate",
+          fieldset: {
+            legend: {
+              text: "Date"
+            }
+          },
+          hint: {
+            text: "The date these hours were worked"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2" },
+            { name: "month", classes: "govuk-input--width-2" },
+            { name: "year", classes: "govuk-input--width-4" }
+          ]
+        }) }}
+
+        <div class="govuk-form-group">
+          {{ govukInput({
+            id: "avhours-entry-hours",
+            name: "avHoursEntryHours",
+            classes: "govuk-input--width-2",
+            inputmode: "numeric",
+            label: { text: "Hours" }
+          }) }}
+
+          {{ govukInput({
+            id: "avhours-entry-mins",
+            name: "avHoursEntryMins",
+            classes: "govuk-input--width-2",
+            inputmode: "numeric",
+            label: { text: "Minutes" },
+            hint: { text: "0 to 59" }
+          }) }}
+        </div>
+
+        {#
+          Add is a second button on the same form rather than a form of its
+          own, because a form cannot sit inside another one. routes.js looks at
+          which button was pressed.
+        #}
+        {{ govukButton({
+          text: "Add hours",
+          classes: "govuk-button--secondary",
+          name: "action",
+          value: "add-hours",
+          type: "submit"
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/avhours#partner",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

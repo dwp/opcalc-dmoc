@@ -1,0 +1,128 @@
+{% extends "layouts/main.html" %}
+
+{#
+  Reached from New benefit week on the BWE/BWC tab.
+#}
+
+{% block pageTitle %}
+  Change of benefit payment day – BA3 – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        { href: "#", text: "Accessibility statement" },
+        { href: "#", text: "Privacy notice" },
+        { href: "#", text: "Cookies" }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/ba3entrydetails#bwe-bwc"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">BA3 entry details</span>
+
+      <h1 class="govuk-heading-l">
+        Change of benefit payment day
+      </h1>
+
+      <form action="/return-to-tab" method="post">
+
+        {{ govukDateInput({
+          id: "ba3-bw-start",
+          namePrefix: "ba3BwStart",
+          fieldset: {
+            legend: {
+              text: "Start date"
+            }
+          },
+          hint: {
+            text: "The date the payment day changed. For example, 11 4 1988"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["ba3BwStart-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["ba3BwStart-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["ba3BwStart-year"] }
+          ]
+        }) }}
+
+        {{ govukSelect({
+          id: "ba3-bw-pay-day",
+          name: "ba3BwPayDay",
+          label: { text: "Pay day" },
+          items: [
+            { value: "Monday", text: "Monday", selected: data.ba3BwPayDay == "Monday" or not data.ba3BwPayDay },
+            { value: "Tuesday", text: "Tuesday", selected: data.ba3BwPayDay == "Tuesday" },
+            { value: "Wednesday", text: "Wednesday", selected: data.ba3BwPayDay == "Wednesday" },
+            { value: "Thursday", text: "Thursday", selected: data.ba3BwPayDay == "Thursday" },
+            { value: "Friday", text: "Friday", selected: data.ba3BwPayDay == "Friday" },
+            { value: "Saturday", text: "Saturday", selected: data.ba3BwPayDay == "Saturday" },
+            { value: "Sunday", text: "Sunday", selected: data.ba3BwPayDay == "Sunday" }
+          ]
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "ba3-bw-type",
+          name: "ba3BwType",
+          classes: "govuk-radios--inline",
+          fieldset: {
+            legend: {
+              text: "Benefit week type"
+            }
+          },
+          items: [
+            { value: "BWE", text: "BWE", checked: data.ba3BwType == "BWE" or not data.ba3BwType },
+            { value: "BWC", text: "BWC", checked: data.ba3BwType == "BWC" }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "ba3-bw-part-weeks",
+          name: "ba3BwPartWeeks",
+          classes: "govuk-input--width-3",
+          inputmode: "numeric",
+          label: { text: "Part week(s)" },
+          hint: { text: "Leave blank if the change creates no part weeks" },
+          value: data.ba3BwPartWeeks
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/ba3entrydetails#bwe-bwc",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

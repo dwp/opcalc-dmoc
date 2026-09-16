@@ -1,0 +1,204 @@
+{% extends "layouts/main.html" %}
+
+{#
+  BA3 entry details.
+
+  Two tabs, the same shape as the QB16: a list of entries, and the benefit
+  weeks and exclusions that the periods are measured against. The BWE/BWC tab
+  is the one from the DCC pages, with ba3 field names.
+
+  The entries table has a Copy action the others do not. That is from the old
+  dialog, and it earns its place - most BA3 entries differ from the one before
+  by a date and an amount, so copying and editing beats retyping.
+#}
+{% from "a14-tables.html" import a14Table %}
+
+{% block pageTitle %}
+  {{ "Error: " if data.ba3Errors | length }}BA3 entry details – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBreadcrumbs({
+    items: [
+      {
+        text: "OpCalc",
+        href: "/onboarding/landing-page"
+      },
+      {
+        text: "Case overview",
+        href: "/onboarding/case-overview"
+      },
+      {
+        text: "BA3 entry details"
+      }
+    ]
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+
+      {% if data.ba3Errors | length %}
+        <div class="govuk-error-summary" data-module="govuk-error-summary" tabindex="-1" id="ba3-error-summary">
+          <div role="alert">
+            <h2 class="govuk-error-summary__title">There is a problem</h2>
+            <div class="govuk-error-summary__body">
+              <ul class="govuk-list govuk-error-summary__list">
+                {% for problem in data.ba3Errors %}
+                  <li><a href="{{ problem.href }}">{{ problem.message }}</a></li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <h1 class="govuk-heading-l">
+        BA3 entry details
+      </h1>
+
+      <p class="govuk-body">
+        {{ data.nino if data.nino else "AB 12 34 56 C" }}{{ " · " + data.benefitLabel if data.benefitLabel }}
+      </p>
+
+      {% set entriesHtml %}
+
+        <h2 class="govuk-heading-m">Entries</h2>
+
+        <p class="govuk-body govuk-hint">Add each period where the amount paid was different from the amount due.</p>
+
+        {#
+          Period and Excess are worked out when an entry is saved - the number
+          of weeks and days between the two dates, and the difference between
+          the correct and incorrect amounts. Both are arithmetic on what was
+          typed, so unlike the QB16 they can be shown honestly.
+        #}
+        {{ a14Table(
+          data.ba3Entries,
+          [
+            { text: "Start", field: "ba3From" },
+            { text: "End", field: "ba3To" },
+            { text: "Period", field: "period" },
+            { text: "A14", field: "usesA14" },
+            { text: "Incorrect", field: "ba3AmountB2C2", prefix: "£" },
+            { text: "Correct", field: "ba3AmountDue", prefix: "£" },
+            { text: "Excess", field: "excess" }
+          ],
+          "No entries recorded",
+          "ba3Entries",
+          "/ba3entrydetails#entries",
+          "",
+          true
+        ) }}
+
+        <p class="govuk-body"><a class="govuk-link" href="/ba3newentry?returnTo=/ba3entrydetails%23entries">New entry</a></p>
+
+      {% endset %}
+
+      {% set bweBwcHtml %}
+
+        <h2 class="govuk-heading-m">Benefit weeks</h2>
+
+        <p class="govuk-body">
+          Initial Benefit Week: {{ data.initialBenefitWeek if data.initialBenefitWeek else "Monday" }}
+          {{ "Week Commencing" if data.benefitWeekType == "BWC" else "Week Ending" }}
+        </p>
+
+        {{ a14Table(
+          data.ba3BenefitWeeks,
+          [
+            { text: "Start date", field: "ba3BwStart" },
+            { text: "Pay day", field: "ba3BwPayDay" },
+            { text: "Ben week", field: "ba3BwType" },
+            { text: "Part week(s)", field: "ba3BwPartWeeks" }
+          ],
+          "No benefit weeks recorded",
+          "ba3BenefitWeeks",
+          "/ba3entrydetails#bwe-bwc"
+        ) }}
+
+        <p class="govuk-body"><a class="govuk-link" href="/ba3newbenefitweek?returnTo=/ba3entrydetails%23bwe-bwc">New benefit week</a></p>
+
+        <h2 class="govuk-heading-m">Exclusions</h2>
+
+        {{ a14Table(
+          data.ba3Exclusions,
+          [
+            { text: "Start date", field: "ba3ExclusionFrom" },
+            { text: "End date", field: "ba3ExclusionTo" },
+            { text: "Code", field: "ba3ExclusionCode" },
+            { text: "Reason", field: "ba3ExclusionReason" }
+          ],
+          "No exclusions recorded",
+          "ba3Exclusions",
+          "/ba3entrydetails#bwe-bwc"
+        ) }}
+
+        <p class="govuk-body"><a class="govuk-link" href="/ba3newexclusion?returnTo=/ba3entrydetails%23bwe-bwc">New exclusion</a></p>
+
+      {% endset %}
+
+      {{ govukTabs({
+        items: [
+          { label: "Entries", id: "entries", panel: { html: entriesHtml } },
+          { label: "BWE/BWC", id: "bwe-bwc", panel: { html: bweBwcHtml } }
+        ]
+      }) }}
+
+      <form action="/ba3-complete" method="post">
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Run the calculation",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: "/onboarding/case-overview",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+      <p>
+        <a href="#">Get help with BA3 entries</a>
+      </p>
+
+    </div>
+  </div>
+
+{% endblock %}

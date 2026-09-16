@@ -1,0 +1,205 @@
+{% extends "layouts/main.html" %}
+
+{#
+  Reached from New entry on the Entries tab, from an Edit link, and from Copy
+  once the copy has been made.
+#}
+
+{% block pageTitle %}
+  BA3 entry details – BA3 – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        { href: "#", text: "Accessibility statement" },
+        { href: "#", text: "Privacy notice" },
+        { href: "#", text: "Cookies" }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/ba3entrydetails#entries"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">BA3 entry details</span>
+
+      <h1 class="govuk-heading-l">
+        BA3 entry details
+      </h1>
+
+      <form action="/return-to-tab" method="post">
+
+        <h2 class="govuk-heading-m">Period</h2>
+
+        {{ govukDateInput({
+          id: "ba3-from",
+          namePrefix: "ba3From",
+          fieldset: {
+            legend: {
+              text: "From"
+            }
+          },
+          hint: {
+            text: "For example, 11 4 1988"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["ba3From-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["ba3From-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["ba3From-year"] }
+          ]
+        }) }}
+
+        {{ govukDateInput({
+          id: "ba3-to",
+          namePrefix: "ba3To",
+          fieldset: {
+            legend: {
+              text: "To"
+            }
+          },
+          hint: {
+            text: "The number of weeks and days is worked out from these two dates when you save"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["ba3To-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["ba3To-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["ba3To-year"] }
+          ]
+        }) }}
+
+        {#
+          The old dialog showed "Use A14(s)" greyed out when the case had no
+          A14 forms to use. It appears once there are some, which says the same
+          thing without the dead control.
+        #}
+        {% if data.a14Complete %}
+          {{ govukCheckboxes({
+            idPrefix: "ba3-use-a14",
+            name: "ba3UseA14",
+            classes: "govuk-checkboxes--small",
+            items: [
+              {
+                value: "yes",
+                text: "Use the A14s recorded on this case",
+                id: "ba3-use-a14",
+                hint: { text: "The amounts due are taken from the A14 forms rather than typed in below" },
+                checked: data.ba3UseA14
+              }
+            ]
+          }) }}
+        {% else %}
+          {{ govukInsetText({
+            text: "There are no A14 forms on this case yet, so the amounts have to be entered by hand. Generate the A14 forms first if you want them used here."
+          }) }}
+        {% endif %}
+
+        <h2 class="govuk-heading-m">Income</h2>
+
+        {{ govukInput({
+          id: "ba3-declared",
+          name: "ba3Declared",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: { text: "Declared" },
+          value: data.ba3Declared
+        }) }}
+
+        {{ govukInput({
+          id: "ba3-actual",
+          name: "ba3Actual",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: { text: "Actual" },
+          value: data.ba3Actual
+        }) }}
+
+        {{ govukTextarea({
+          id: "ba3-dates-worked",
+          name: "ba3DatesWorked",
+          rows: 4,
+          label: { text: "Dates worked and hours for each day" },
+          hint: { text: "For example, Mon 12 Apr 6 hours, Tue 13 Apr 4 hours" },
+          value: data.ba3DatesWorked
+        }) }}
+
+        <h2 class="govuk-heading-m">Paid</h2>
+
+        {{ govukInput({
+          id: "ba3-amount-b2c2",
+          name: "ba3AmountB2C2",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: { text: "Amount on B2/C2" },
+          value: data.ba3AmountB2C2
+        }) }}
+
+        {{ govukInput({
+          id: "ba3-paid-d2",
+          name: "ba3PaidD2",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: { text: "Amount on D2" },
+          value: data.ba3PaidD2
+        }) }}
+
+        <h2 class="govuk-heading-m">Due</h2>
+
+        {{ govukInput({
+          id: "ba3-amount-due",
+          name: "ba3AmountDue",
+          classes: "govuk-input--width-5",
+          prefix: { text: "£" },
+          label: { text: "Amount due" },
+          value: data.ba3AmountDue
+        }) }}
+
+        {#
+          Balance payable, the D2 figure under Due, and the A14(s) list were all
+          read-only totals on the old dialog, worked out by OpCalc rather than
+          typed. There is nothing to work them out with in a prototype, so they
+          are described rather than shown as boxes that would never fill in.
+        #}
+        {{ govukInsetText({
+          text: "Balance payable, balance due and the list of A14s that apply are worked out by OpCalc from the figures above and the A14 forms on the case."
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/ba3entrydetails#entries",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

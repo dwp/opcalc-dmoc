@@ -1,0 +1,113 @@
+{% extends "layouts/main.html" %}
+
+{#
+  Reached from New customer exclusion on the Qualifying Hours tab.
+#}
+
+{% block pageTitle %}
+  Customer worked hours exclusion – Average hours – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        { href: "#", text: "Accessibility statement" },
+        { href: "#", text: "Privacy notice" },
+        { href: "#", text: "Cookies" }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/avhours#qualifying-hours"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Average hours calculation</span>
+
+      <h1 class="govuk-heading-l">
+        Customer worked hours exclusion
+      </h1>
+
+      <form action="/return-to-tab" method="post">
+
+        {{ govukDateInput({
+          id: "avhours-customer-exclusion-start",
+          namePrefix: "avHoursCustomerExclusionStart",
+          fieldset: {
+            legend: {
+              text: "Start date"
+            }
+          },
+          hint: {
+            text: "The date this exclusion applied from. For example, 10 7 2015"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["avHoursCustomerExclusionStart-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["avHoursCustomerExclusionStart-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["avHoursCustomerExclusionStart-year"] }
+          ]
+        }) }}
+
+        {#
+          CHECK THIS LIST. The old dialog had a dropdown and I could not read
+          what was in it, so these are the reasons hours would normally stop
+          counting as remunerative work. Send me the real ones and I will swap
+          them - it is one edit.
+        #}
+        {{ govukSelect({
+          id: "avhours-customer-exclusion-type",
+          name: "avHoursCustomerExclusionType",
+          label: {
+            text: "Exclusion type"
+          },
+          items: [
+            { value: "", text: "Choose an exclusion type", selected: not data.avHoursCustomerExclusionType },
+            { value: "Sick leave", text: "Sick leave", selected: data.avHoursCustomerExclusionType == "Sick leave" },
+            { value: "Maternity leave", text: "Maternity leave", selected: data.avHoursCustomerExclusionType == "Maternity leave" },
+            { value: "Paternity leave", text: "Paternity leave", selected: data.avHoursCustomerExclusionType == "Paternity leave" },
+            { value: "Holiday", text: "Holiday", selected: data.avHoursCustomerExclusionType == "Holiday" },
+            { value: "Laid off", text: "Laid off", selected: data.avHoursCustomerExclusionType == "Laid off" },
+            { value: "Trade dispute", text: "Trade dispute", selected: data.avHoursCustomerExclusionType == "Trade dispute" },
+            { value: "Training", text: "Training", selected: data.avHoursCustomerExclusionType == "Training" },
+            { value: "No longer in remunerative work", text: "No longer in remunerative work", selected: data.avHoursCustomerExclusionType == "No longer in remunerative work" }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/avhours#qualifying-hours",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

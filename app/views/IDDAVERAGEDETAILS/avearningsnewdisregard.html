@@ -1,0 +1,128 @@
+{% extends "layouts/main.html" %}
+
+{#
+  Reached from New disregard on the Disregard tab.
+#}
+
+{% block pageTitle %}
+  Earnings disregard – Average earnings – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        { href: "#", text: "Accessibility statement" },
+        { href: "#", text: "Privacy notice" },
+        { href: "#", text: "Cookies" }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/avearnings#disregard"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Average earnings calculation</span>
+
+      <h1 class="govuk-heading-l">
+        Earnings disregard
+      </h1>
+
+      <form action="/return-to-tab" method="post">
+
+        {{ govukDateInput({
+          id: "av-disregard-start",
+          namePrefix: "avDisregardStart",
+          fieldset: {
+            legend: {
+              text: "Start date"
+            }
+          },
+          hint: {
+            text: "The date this disregard applied from. For example, 10 7 2015"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["avDisregardStart-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["avDisregardStart-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["avDisregardStart-year"] }
+          ]
+        }) }}
+
+        {#
+          The old dialog had a dropdown with an "Other Amount" box next to it,
+          greyed out until Other was chosen. A dropdown cannot reveal a field
+          beneath it, so this is radios - which can, and which show the whole
+          short list at once rather than hiding it behind a click.
+
+          CHECK THE AMOUNTS. These are the usual earnings disregards, but I do
+          not have your list - tell me the real ones and I will swap them.
+        #}
+        {{ govukRadios({
+          idPrefix: "av-disregard-amount-choice",
+          name: "avDisregardChoice",
+          fieldset: {
+            legend: {
+              text: "Disregard"
+            }
+          },
+          items: [
+            { value: "5.00", text: "£5.00", checked: data.avDisregardChoice == "5.00" },
+            { value: "10.00", text: "£10.00", checked: data.avDisregardChoice == "10.00" },
+            { value: "20.00", text: "£20.00", checked: data.avDisregardChoice == "20.00" },
+            { value: "25.00", text: "£25.00", checked: data.avDisregardChoice == "25.00" },
+            {
+              value: "other",
+              text: "Other amount",
+              checked: data.avDisregardChoice == "other",
+              conditional: {
+                html: govukInput({
+                  id: "av-disregard-other",
+                  name: "avDisregardOther",
+                  classes: "govuk-input--width-5",
+                  prefix: { text: "£" },
+                  label: { text: "Other amount" },
+                  value: data.avDisregardOther
+                })
+              }
+            }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/avearnings#disregard",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}
