@@ -109,7 +109,37 @@ function dccRowTypeFor (segment) {
   return null
 }
 
+// Average earnings. Its sub-pages have to be matched before anything else:
+// avearningsnewcustomeremployment contains neither dcc nor qb16, so it would
+// otherwise fall through to the A14 list and match nothing at all.
+function avRowTypeFor (segment) {
+  // Average earnings and average hours are the same shape with different
+  // contents, so they share this. The prefix keeps their tables apart.
+  const base = segment.indexOf('avhours') !== -1 ? 'avHours' : 'av'
+
+  if (/customeremployment/.test(segment)) { return { key: base + 'CustomerEmployment', label: 'customer employment' } }
+  if (/partneremployment/.test(segment)) { return { key: base + 'PartnerEmployment', label: 'partner employment' } }
+  if (/customerexclusion/.test(segment)) { return { key: 'avHoursCustomerQualifying', label: 'customer exclusion' } }
+  if (/partnerexclusion/.test(segment)) { return { key: 'avHoursPartnerQualifying', label: 'partner exclusion' } }
+  if (/disregard/.test(segment)) { return { key: 'avDisregards', label: 'disregard' } }
+  if (/benefitweek/.test(segment)) { return { key: 'avBenefitWeeks', label: 'benefit week' } }
+  return null
+}
+
+// BA3. Its sub-pages contain "benefitweek" and "exclusion", which the A14 list
+// further down would otherwise claim.
+function ba3RowTypeFor (segment) {
+  if (/benefitweek/.test(segment)) { return { key: 'ba3BenefitWeeks', label: 'benefit week' } }
+  if (/exclusion/.test(segment)) { return { key: 'ba3Exclusions', label: 'exclusion' } }
+  if (/entry/.test(segment)) { return { key: 'ba3Entries', label: 'entry' } }
+  return null
+}
+
 function rowTypeFor (segment) {
+  if (segment.indexOf('ba3') !== -1) { return ba3RowTypeFor(segment) }
+
+  if (segment.indexOf('avearnings') !== -1 || segment.indexOf('avhours') !== -1) { return avRowTypeFor(segment) }
+
   if (segment.indexOf('dcc') !== -1) { return dccRowTypeFor(segment) }
 
   if (segment.indexOf('qb16') !== -1) {
@@ -125,6 +155,20 @@ function rowTypeFor (segment) {
     if (a14RowTypes[i].match.test(segment)) { return a14RowTypes[i] }
   }
   return null
+}
+
+// A real Date from a posted date input, or null when it is not one. Used to
+// work out how long a BA3 period is.
+function dateFromParts (body, prefix) {
+  const day = parseInt(body[prefix + '-day'], 10)
+  const month = parseInt(body[prefix + '-month'], 10)
+  const year = parseInt(body[prefix + '-year'], 10)
+
+  if (isNaN(day) || isNaN(month) || isNaN(year)) { return null }
+
+  const made = new Date(year, month - 1, day)
+
+  return made.getDate() === day ? made : null
 }
 
 // Turns a posted form into a row.
@@ -260,7 +304,7 @@ router.post('/A14/a14forms', generateA14)
 // work done on it.
 const RECORD_FIELD_PREFIXES = [
   'a14', 'qb16', 'esa', 'isjsa', 'pcispc', 'dcc',
-  'bwDateOfChange', 'benefitPayDay', 'exclusion', 'gross', 'net', 'taxable',
+  'av', 'ba3', 'bwDateOfChange', 'benefitPayDay', 'exclusion', 'gross', 'net', 'taxable',
   'underpaid', 'calculationOptions', 'cause', 'standardText',
   'personalAllowance', 'partWeek', 'entryForm', 'adjustDates', 'formsToPrint',
   'a14sToPrint', 'delete', 'edit', 'action', 'assetIndex', 'showValues'
@@ -283,6 +327,9 @@ function clearRecords (data) {
   delete data.a14Complete
   delete data.qb16Complete
   delete data.dccComplete
+  delete data.avEarningsComplete
+  delete data.avHoursComplete
+  delete data.ba3Complete
   delete data.caseBannerSeen
 }
 
@@ -309,6 +356,201 @@ function caseCreated (req, res) {
 
   res.redirect(CASE_OVERVIEW_PAGE)
 }
+
+// ---------------------------------------------------------------------------
+// Average earnings calculation
+// ---------------------------------------------------------------------------
+//
+// The old dialog greyed out its Next Tab button until there was an entry, and
+// put the reason in a status bar. Here the button works and the reason is an
+// error, which is the pattern every other form in OpCalc now follows.
+// The employment pages build up a list of dated payments before anything is
+// saved, the way the old dialog did: add several, then keep the lot in one go
+// with Save - or Cancel, and none of it is recorded.
+//
+// Add is a second submit button on the same form rather than a form of its
+// own, because a form cannot sit inside another one. So /return-to-tab looks
+// at which button was pressed, and sends the add here.
+function addEarning (req, res) {
+  if (!req.session.data) { req.session.data = {} }
+
+  const data = req.session.data
+  const body = req.body
+
+  const day = (body['avEarningDate-day'] || '').trim()
+  const month = (body['avEarningDate-month'] || '').trim()
+  const year = (body['avEarningDate-year'] || '').trim()
+  const amount = (body.avEarningAmount || '').trim()
+
+  if (day && month && year && amount) {
+    data.avPendingEarnings = data.avPendingEarnings || []
+    data.avPendingEarnings.push({
+      date: (day.length === 1 ? '0' + day : day) + '/' +
+            (month.length === 1 ? '0' + month : month) + '/' + year,
+      amount: amount
+    })
+  }
+
+  // Empty the boxes so the next payment starts blank.
+  delete data['avEarningDate-day']
+  delete data['avEarningDate-month']
+  delete data['avEarningDate-year']
+  delete data.avEarningAmount
+  delete data.action
+
+  // Coming back to the same page, so the list stays.
+  data.avKeepPending = true
+
+  res.redirect(data.a14SubPagePath || '/avearnings')
+}
+
+// The hours version of the same thing. Hours and minutes are joined into one
+// value, because Hrs:Mins is one column in the table.
+function addHours (req, res) {
+  if (!req.session.data) { req.session.data = {} }
+
+  const data = req.session.data
+  const body = req.body
+
+  const day = (body['avHoursEntryDate-day'] || '').trim()
+  const month = (body['avHoursEntryDate-month'] || '').trim()
+  const year = (body['avHoursEntryDate-year'] || '').trim()
+  const hours = (body.avHoursEntryHours || '').trim()
+  const mins = (body.avHoursEntryMins || '').trim()
+
+  if (day && month && year && (hours || mins)) {
+    data.avPendingHours = data.avPendingHours || []
+    data.avPendingHours.push({
+      date: (day.length === 1 ? '0' + day : day) + '/' +
+            (month.length === 1 ? '0' + month : month) + '/' + year,
+      hours: (hours || '0') + ':' + (mins.length === 1 ? '0' + mins : (mins || '00'))
+    })
+  }
+
+  delete data['avHoursEntryDate-day']
+  delete data['avHoursEntryDate-month']
+  delete data['avHoursEntryDate-year']
+  delete data.avHoursEntryHours
+  delete data.avHoursEntryMins
+  delete data.action
+
+  data.avKeepPending = true
+
+  res.redirect(data.a14SubPagePath || '/avhours')
+}
+
+router.get('/avhours-remove-hours', function (req, res) {
+  const data = req.session.data || {}
+  const index = parseInt(req.query.index, 10)
+
+  if (Array.isArray(data.avPendingHours) && !isNaN(index)) {
+    data.avPendingHours.splice(index, 1)
+  }
+
+  data.avKeepPending = true
+
+  res.redirect(data.a14SubPagePath || '/avhours')
+})
+
+router.get('/avearnings-remove-earning', function (req, res) {
+  const data = req.session.data || {}
+  const index = parseInt(req.query.index, 10)
+
+  if (Array.isArray(data.avPendingEarnings) && !isNaN(index)) {
+    data.avPendingEarnings.splice(index, 1)
+  }
+
+  data.avKeepPending = true
+
+  res.redirect(data.a14SubPagePath || '/avearnings')
+})
+
+router.post('/avearnings-complete', function (req, res) {
+  if (!req.session.data) { req.session.data = {} }
+
+  const data = req.session.data
+  const errors = []
+
+  const customer = (data.avCustomerEmployment || []).length
+  const partner = (data.avPartnerEmployment || []).length
+
+  if (!customer && !partner) {
+    errors.push({
+      href: '#customer',
+      message: 'Add at least one employment for the customer or the partner'
+    })
+  }
+
+  if (errors.length) {
+    data.avErrors = errors
+    return res.redirect('/avearnings#customer')
+  }
+
+  data.avEarningsComplete = 'yes'
+  data.caseBanner = 'avearnings'
+  delete data.caseBannerSeen
+  delete data.avErrors
+
+  console.log('Average earnings: calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
+
+  res.redirect(CASE_OVERVIEW_PAGE)
+})
+
+// Average hours, the same rule as average earnings.
+router.post('/avhours-complete', function (req, res) {
+  if (!req.session.data) { req.session.data = {} }
+
+  const data = req.session.data
+  const errors = []
+
+  const customer = (data.avHoursCustomerEmployment || []).length
+  const partner = (data.avHoursPartnerEmployment || []).length
+
+  if (!customer && !partner) {
+    errors.push({
+      href: '#customer',
+      message: 'Add at least one employment for the customer or the partner'
+    })
+  }
+
+  if (errors.length) {
+    data.avHoursErrors = errors
+    return res.redirect('/avhours#customer')
+  }
+
+  data.avHoursComplete = 'yes'
+  data.caseBanner = 'avhours'
+  delete data.caseBannerSeen
+  delete data.avHoursErrors
+
+  console.log('Average hours: calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
+
+  res.redirect(CASE_OVERVIEW_PAGE)
+})
+
+// BA3, the same shape as the QB16: at least one entry before it can be run.
+router.post('/ba3-complete', function (req, res) {
+  if (!req.session.data) { req.session.data = {} }
+
+  const data = req.session.data
+
+  if (!(data.ba3Entries || []).length) {
+    data.ba3Errors = [{
+      href: '#entries',
+      message: 'Add at least one entry before running the calculation'
+    }]
+    return res.redirect('/ba3entrydetails#entries')
+  }
+
+  data.ba3Complete = 'yes'
+  data.caseBanner = 'ba3'
+  delete data.caseBannerSeen
+  delete data.ba3Errors
+
+  console.log('BA3: calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
+
+  res.redirect(CASE_OVERVIEW_PAGE)
+})
 
 // Starts a case from scratch without going through the journey - handy while
 // testing, and safe: it only clears the records, not the customer.
@@ -418,6 +660,11 @@ router.get('/a14-row-edit', function (req, res) {
     if (field.charAt(0) !== '_') { data[field] = row[field] }
   })
 
+  // An employment carries its payments with it, so editing one puts the list
+  // back the way it was rather than starting empty and losing them on save.
+  data.avPendingEarnings = Array.isArray(row.earnings) ? row.earnings.slice() : []
+  data.avPendingHours = Array.isArray(row.hours) ? row.hours.slice() : []
+
   data.a14EditKey = key
   data.a14EditIndex = index
   data.returnTo = row._returnTo || req.query.returnTo || ''
@@ -434,6 +681,22 @@ router.get('/a14-row-edit', function (req, res) {
 })
 
 // Delete a row from one of the A14 tables.
+// Copy a row. The duplicate goes on the end of the same table, ready to be
+// opened and changed - which is what Copy is for on the BA3 entries table:
+// most entries differ from the one before by a date and an amount.
+router.get('/a14-row-copy', function (req, res) {
+  const data = req.session.data || {}
+  const key = req.query.key
+  const index = parseInt(req.query.index, 10)
+  const rows = data[key]
+
+  if (Array.isArray(rows) && !isNaN(index) && rows[index]) {
+    data[key] = rows.concat([Object.assign({}, rows[index])])
+  }
+
+  res.redirect(req.query.returnTo || '/onboarding/case-overview')
+})
+
 router.get('/a14-row-delete', function (req, res) {
   const data = req.session.data || {}
   const key = req.query.key
@@ -447,6 +710,11 @@ router.get('/a14-row-delete', function (req, res) {
 })
 
 router.post('/return-to-tab', function (req, res) {
+  // The employment pages have two submit buttons. Adding a payment is not
+  // saving the employment, so it never gets as far as the table.
+  if (req.body.action === 'add-earning') { return addEarning(req, res) }
+  if (req.body.action === 'add-hours') { return addHours(req, res) }
+
   const data = req.session.data
   const destination = req.body.returnTo || data.returnTo
 
@@ -462,6 +730,73 @@ router.post('/return-to-tab', function (req, res) {
     const hasSomething = Object.keys(row).some(function (field) {
       return String(row[field] === undefined ? '' : row[field]).trim() !== ''
     })
+
+    // The payments built up on an employment page travel with the employment.
+    if (rowType.key === 'avCustomerEmployment' || rowType.key === 'avPartnerEmployment') {
+      const payments = data.avPendingEarnings || []
+
+      row.earnings = payments
+      row.earningsCount = payments.length
+        ? payments.length + (payments.length === 1 ? ' payment' : ' payments')
+        : ''
+
+      delete data.avPendingEarnings
+    }
+
+    if (rowType.key === 'avHoursCustomerEmployment' || rowType.key === 'avHoursPartnerEmployment') {
+      const entries = data.avPendingHours || []
+
+      row.hours = entries
+      row.hoursCount = entries.length
+        ? entries.length + (entries.length === 1 ? ' entry' : ' entries')
+        : ''
+
+      delete data.avPendingHours
+    }
+
+    // A BA3 entry carries two things the old dialog worked out for you: how
+    // long the period is, and the difference between the two amounts. Both
+    // are arithmetic on what was just typed, so they can be settled here and
+    // shown in the table rather than left as empty columns.
+    if (rowType.key === 'ba3Entries') {
+      const from = dateFromParts(req.body, 'ba3From')
+      const to = dateFromParts(req.body, 'ba3To')
+
+      if (from && to && to >= from) {
+        // Inclusive of both ends, which is how a benefit period is counted.
+        const days = Math.round((to - from) / 86400000) + 1
+        row.period = Math.floor(days / 7) + ' wks ' + (days % 7) + ' dys'
+      } else {
+        row.period = ''
+      }
+
+      const incorrect = parseFloat(String(req.body.ba3AmountB2C2 || '').replace(/[£,\s]/g, ''))
+      const correct = parseFloat(String(req.body.ba3AmountDue || '').replace(/[£,\s]/g, ''))
+
+      // Paid less due. Positive is an overpayment, which is what a BA3 is
+      // usually recording; the other way round is a credit, and says so
+      // rather than showing a minus sign the eye slides past.
+      if (!isNaN(incorrect) && !isNaN(correct)) {
+        const excess = incorrect - correct
+
+        row.excess = excess < 0
+          ? '£' + Math.abs(excess).toFixed(2) + ' credit'
+          : '£' + excess.toFixed(2)
+      } else {
+        row.excess = ''
+      }
+
+      row.usesA14 = req.body.ba3UseA14 ? 'Yes' : 'No'
+    }
+
+    // The disregard is chosen from a list, or typed in when Other is picked.
+    // The table shows one column either way, so it is settled here rather
+    // than leaving the page to work out which of the two to read.
+    if (rowType.key === 'avDisregards') {
+      row.avDisregardAmount = row.avDisregardChoice === 'other'
+        ? (row.avDisregardOther || '')
+        : (row.avDisregardChoice || '')
+    }
 
     if (hasSomething) {
       data[rowType.key] = data[rowType.key] || []
@@ -722,7 +1057,7 @@ const portablePages = {
 // qb16listofentries.html no matter where it is, so moving QB16entrydetails
 // somewhere else breaks nothing.
 Object.keys(viewsByName).forEach(function (name) {
-  if (/^(qb16|viewqb16|dcc)/i.test(name)) {
+  if (/^(qb16|viewqb16|dcc|av|ba3)/i.test(name)) {
     portablePages[name.replace(/\.html$/i, '')] = viewsByName[name]
   }
 })
@@ -756,6 +1091,15 @@ router.use(function (req, res, next) {
 
   const segment = lastSegment(req.path)
   const data = (req.session && req.session.data) || {}
+
+  // Errors on the average earnings page belong to the visit that follows the
+  // attempt, the same as the banner below. Left alone they would still be
+  // there days later.
+  if (!/\.[a-z0-9]+$/i.test(req.path)) {
+    if (data.avErrors && segment !== 'avearnings') { delete data.avErrors }
+    if (data.avHoursErrors && segment !== 'avhours') { delete data.avHoursErrors }
+    if (data.ba3Errors && segment !== 'ba3entrydetails') { delete data.ba3Errors }
+  }
 
   // The success banner belongs to the visit that follows the action.
   //
@@ -793,6 +1137,20 @@ router.use(function (req, res, next) {
     // fields the last entry left behind and start with an empty form.
     // Anything another page also relies on is left alone.
     if (!data.a14EditKey) {
+      // Opening a New employment starts with no payments, rather than the
+      // ones added to the employment before it.
+      //
+      // Adding or removing a payment comes straight back to this same page, so
+      // that counts as still being on it rather than opening it again - which
+      // is what avKeepPending says. Without it every Add wiped the list it
+      // had just been added to.
+      if (data.avKeepPending) {
+        delete data.avKeepPending
+      } else {
+        delete data.avPendingEarnings
+        delete data.avPendingHours
+      }
+
       snapshotShared(data)
 
       const previous = (data[openedType.key] || [])[0]
