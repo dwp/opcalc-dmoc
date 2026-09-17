@@ -48,10 +48,37 @@
   (", " + discrepancyPeriod if discrepancyPeriod else "")
 ) if data.dccComplete else "" %}
 
+{% set avEmployments = (data.avCustomerEmployment | length if data.avCustomerEmployment else 0)
+  + (data.avPartnerEmployment | length if data.avPartnerEmployment else 0) %}
+
+{% set avEarningsReference = (
+  (avEmployments | string) + (" employments" if avEmployments != 1 else " employment")
+) if data.avEarningsComplete else "" %}
+
+{% set avHoursEmployments = (data.avHoursCustomerEmployment | length if data.avHoursCustomerEmployment else 0)
+  + (data.avHoursPartnerEmployment | length if data.avHoursPartnerEmployment else 0) %}
+
+{% set avHoursReference = (
+  (avHoursEmployments | string) + (" employments" if avHoursEmployments != 1 else " employment")
+) if data.avHoursComplete else "" %}
+
+{% set ba3Count = data.ba3Entries | length if data.ba3Entries else 0 %}
+
+{% set ba3Reference = (
+  (ba3Count | string) + (" entries" if ba3Count != 1 else " entry")
+) if data.ba3Complete else "" %}
+
 {% set a14Reference = (
   (data.benefitLabel if data.benefitLabel else "A14 forms") +
   (", " + discrepancyPeriod if discrepancyPeriod else "")
 ) if data.a14Complete else "" %}
+
+{# Nothing sets hclComplete yet. It will be set once the loan page has a
+   real finish step, and the row will turn green then. #}
+{% set hclReference = (
+  "Loan " + data.hclRef +
+  (", fixed term loan" if data.hclLoanType == "fixed-term" else ", normal loan")
+) if (data.hclComplete and data.hclRef) else "" %}
 
 {% block pageTitle %}
   Case overview – OpCalc – GOV.UK Prototype Kit
@@ -83,11 +110,11 @@
         },
         {
           href: "#",
-          text: "Privacy"
+          text: "Privacy notice"
         },
         {
           href: "#",
-          text: "About OpCalc"
+          text: "Cookies"
         }
       ]
     }
@@ -97,8 +124,7 @@
 {% block content %}
 
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-
+    <div class="govuk-grid-column-full">
 
       {# Set by routes.js when something has just been done, and cleared as
          soon as you navigate away - so it confirms an action rather than
@@ -129,6 +155,21 @@
               <h3 class="govuk-notification-banner__heading">QB16 calculation run</h3>
               <p class="govuk-body">
                 {{ qb16Reference if qb16Reference else "The QB16 entry details are complete" }}.
+              </p>
+            {% elif data.caseBanner == "avearnings" %}
+              <h3 class="govuk-notification-banner__heading">Average earnings calculation run</h3>
+              <p class="govuk-body">
+                {{ avEarningsReference if avEarningsReference else "The average earnings calculation is complete" }}.
+              </p>
+            {% elif data.caseBanner == "avhours" %}
+              <h3 class="govuk-notification-banner__heading">Average hours calculation run</h3>
+              <p class="govuk-body">
+                {{ avHoursReference if avHoursReference else "The average hours calculation is complete" }}.
+              </p>
+            {% elif data.caseBanner == "ba3" %}
+              <h3 class="govuk-notification-banner__heading">BA3 calculation run</h3>
+              <p class="govuk-body">
+                {{ ba3Reference if ba3Reference else "The BA3 entry details are complete" }}.
               </p>
             {% elif data.caseBanner == "created" %}
               <h3 class="govuk-notification-banner__heading">Customer details recorded and case created</h3>
@@ -184,7 +225,11 @@
         },
         {
           name: "BA3 entry details",
-          status: "inactive"
+          status: "completed" if data.ba3Complete else "incomplete",
+          ref: ba3Reference,
+          view: "/ba3entrydetails",
+          edit: "/ba3entrydetails",
+          start: "/ba3entrydetails"
         },
         {
           name: "QB16 entry details",
@@ -200,7 +245,11 @@
         },
         {
           name: "Housing cost loans",
-          status: "inactive"
+          status: "completed" if data.hclComplete else "incomplete",
+          ref: hclReference,
+          view: "/housingcostloans/housingcostloanspage",
+          edit: "/housingcostloans/housingcostloanspage",
+          start: "/housingcostloans/housingcostnewform"
         },
         {
           name: "Diminishing capital calculation",
@@ -212,11 +261,19 @@
         },
         {
           name: "Average hours calculation",
-          status: "inactive"
+          status: "completed" if data.avHoursComplete else "incomplete",
+          ref: avHoursReference,
+          view: "/avhours",
+          edit: "/avhours",
+          start: "/avhours"
         },
         {
           name: "Average earnings calculation",
-          status: "inactive"
+          status: "completed" if data.avEarningsComplete else "incomplete",
+          ref: avEarningsReference,
+          view: "/avearnings",
+          edit: "/avearnings",
+          start: "/avearnings"
         },
         {
           name: "QB33 entry details",
@@ -269,7 +326,14 @@
         rows: rows
       }) }}
 
-      <!-- <h2 class="govuk-heading-m">Printing</h2> -->
+      <h2 class="govuk-heading-m">Printing</h2>
+
+      <ul class="govuk-list">
+        <li><a class="govuk-link" href="/a14forms">Print A14 PDFs</a></li>
+        <li><a class="govuk-link" href="/qb16PDF">Print the QB16 calculation</a></li>
+        <li><a class="govuk-link" href="/dccPDF">Print the diminishing capital calculation</a></li>
+        <li><a class="govuk-link" href="/qb16caseprintselection">Print PDFs for this case</a></li>
+      </ul>
 
       {# Nothing here needs saving, so these navigate rather than submit. There
          is no form involved, which is why govukButton with href is right. #}
@@ -291,13 +355,6 @@
           classes: "govuk-button--warning"
         }) }}
       </div>
-
-        <ul class="govuk-list">
-        <!-- <li><a class="govuk-link" href="/a14forms">Print A14 PDFs</a></li>
-        <li><a class="govuk-link" href="/qb16PDF">Print the QB16 calculation</a></li>
-        <li><a class="govuk-link" href="/dccPDF">Print the diminishing capital calculation</a></li> -->
-        <li><a class="govuk-link" href="/qb16caseprintselection">Print PDFs for this case</a></li>
-      </ul>
 
     </div>
   </div>

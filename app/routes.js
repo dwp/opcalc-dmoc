@@ -304,7 +304,7 @@ router.post('/A14/a14forms', generateA14)
 // work done on it.
 const RECORD_FIELD_PREFIXES = [
   'a14', 'qb16', 'esa', 'isjsa', 'pcispc', 'dcc',
-  'av', 'ba3', 'bwDateOfChange', 'benefitPayDay', 'exclusion', 'gross', 'net', 'taxable',
+  'av', 'ba3', 'hcl', 'bwDateOfChange', 'benefitPayDay', 'exclusion', 'gross', 'net', 'taxable',
   'underpaid', 'calculationOptions', 'cause', 'standardText',
   'personalAllowance', 'partWeek', 'entryForm', 'adjustDates', 'formsToPrint',
   'a14sToPrint', 'delete', 'edit', 'action', 'assetIndex', 'showValues'
@@ -550,6 +550,58 @@ router.post('/ba3-complete', function (req, res) {
   console.log('BA3: calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
 
   res.redirect(CASE_OVERVIEW_PAGE)
+})
+
+// ---------------------------------------------------------------------------
+// Housing cost loans
+// ---------------------------------------------------------------------------
+//
+// Start on the case overview opens /housingcostloans/housingcostnewform. That
+// page asks for a loan reference and the type of loan, then posts here.
+//
+// Both answers are needed. The old system kept OK greyed out until a reference
+// was typed; here Continue always works and an error explains what is missing.
+//
+// The type of loan decides the third tab on the loan page:
+//   normal      -> Interest rates
+//   fixed-term  -> Fixed term payments
+//
+// Every field starts with hcl, so a new case clears them along with the other
+// records (see RECORD_FIELD_PREFIXES).
+const HCL_NEW_FORM_PAGE = '/housingcostloans/housingcostnewform'
+const HCL_LOAN_PAGE = '/housingcostloans/housingcostloanspage'
+
+router.post('/housingcostloans/housingcostnewform-continue', function (req, res) {
+  if (!req.session.data) { req.session.data = {} }
+
+  const data = req.session.data
+  const body = req.body || {}
+  const ref = String(body.hclRef || '').trim()
+  const loanType = body.hclLoanType
+  const errors = []
+
+  // Keep the reference check first: the page relies on that order to show
+  // each message beside the right field.
+  if (!ref) {
+    errors.push({ href: '#hcl-ref', message: 'Enter a loan reference' })
+  }
+
+  if (loanType !== 'normal' && loanType !== 'fixed-term') {
+    errors.push({ href: '#hcl-loan-type', message: 'Select the type of loan' })
+  }
+
+  // Kept either way, so whatever was typed is still there if an error shows
+  data.hclRef = ref
+  data.hclLoanType = loanType
+
+  if (errors.length) {
+    data.hclNewFormErrors = errors
+    return res.redirect(HCL_NEW_FORM_PAGE)
+  }
+
+  delete data.hclNewFormErrors
+
+  res.redirect(HCL_LOAN_PAGE)
 })
 
 // Starts a case from scratch without going through the journey - handy while
@@ -1099,6 +1151,7 @@ router.use(function (req, res, next) {
     if (data.avErrors && segment !== 'avearnings') { delete data.avErrors }
     if (data.avHoursErrors && segment !== 'avhours') { delete data.avHoursErrors }
     if (data.ba3Errors && segment !== 'ba3entrydetails') { delete data.ba3Errors }
+    if (data.hclNewFormErrors && segment !== 'housingcostnewform') { delete data.hclNewFormErrors }
   }
 
   // The success banner belongs to the visit that follows the action.

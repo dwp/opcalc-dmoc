@@ -73,6 +73,13 @@
   (", " + discrepancyPeriod if discrepancyPeriod else "")
 ) if data.a14Complete else "" %}
 
+{# Nothing sets hclComplete yet. It will be set once the loan page has a
+   real finish step, and the row will turn green then. #}
+{% set hclReference = (
+  "Loan " + data.hclRef +
+  (", fixed term loan" if data.hclLoanType == "fixed-term" else ", normal loan")
+) if (data.hclComplete and data.hclRef) else "" %}
+
 {% block pageTitle %}
   Case overview – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
@@ -238,7 +245,11 @@
         },
         {
           name: "Housing cost loans",
-          status: "inactive"
+          status: "completed" if data.hclComplete else "incomplete",
+          ref: hclReference,
+          view: "/housingcostloans/housingcostloanspage",
+          edit: "/housingcostloans/housingcostloanspage",
+          start: "/housingcostloans/housingcostnewform"
         },
         {
           name: "Diminishing capital calculation",

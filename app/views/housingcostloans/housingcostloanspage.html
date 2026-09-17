@@ -1,0 +1,81 @@
+{% extends "layouts/main.html" %}
+
+{#
+  Housing cost loans: tabbed page (skeleton)
+  Replaces the legacy "Housing Costs for Loan [ref]" dialog.
+  Tab 3 changes with the loan type chosen on the new form:
+    normal      -> Interest rates   (legacy "Int Rates")
+    fixed-term  -> Fixed term payments (legacy "FT Pymts")
+  Each panel is a placeholder until the real content is added.
+#}
+
+{% set loanRef = data['hcl-ref'] or 'not set' %}
+{% set isFixedTerm = data['hcl-loan-type'] == 'fixed-term' %}
+{% set loanTypeLabel = 'Fixed term loan' if isFixedTerm else 'Normal loan' %}
+
+{% if isFixedTerm %}
+  {% set thirdTab = { id: 'fixed-term-payments', label: 'Fixed term payments' } %}
+{% else %}
+  {% set thirdTab = { id: 'interest-rates', label: 'Interest rates' } %}
+{% endif %}
+
+{% set tabs = [
+  { id: 'periods',        label: 'Periods' },
+  { id: 'details',        label: 'Details' },
+  thirdTab,
+  { id: 'non-dependants', label: 'Non-dependants' },
+  { id: 'shares',         label: 'Shares' },
+  { id: 'payments',       label: 'Payments' },
+  { id: 'other-info',     label: 'Other info' }
+] %}
+
+{% block pageTitle %}
+  Housing costs for loan {{ loanRef }} - OpCalc
+{% endblock %}
+
+{% block beforeContent %}
+  <a href="/housingcostloans/housingcostnewform" class="govuk-back-link">Back</a>
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <span class="govuk-caption-l">{{ loanTypeLabel }}</span>
+    <h1 class="govuk-heading-l">Housing costs for loan {{ loanRef }}</h1>
+
+    <div class="govuk-tabs" data-module="govuk-tabs">
+      <h2 class="govuk-tabs__title">Contents</h2>
+
+      <ul class="govuk-tabs__list">
+        {% for tab in tabs %}
+          <li class="govuk-tabs__list-item{% if loop.first %} govuk-tabs__list-item--selected{% endif %}">
+            <a class="govuk-tabs__tab" href="#{{ tab.id }}">{{ tab.label }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+
+      {% for tab in tabs %}
+        <div class="govuk-tabs__panel{% if not loop.first %} govuk-tabs__panel--hidden{% endif %}" id="{{ tab.id }}">
+          <h2 class="govuk-heading-m">{{ tab.label }}</h2>
+          <div class="govuk-inset-text">
+            Content for the {{ tab.label | lower }} tab will be added here.
+          </div>
+
+          {% if not loop.last %}
+            {% set nextTab = tabs[loop.index] %}
+            <div class="govuk-button-group">
+              <a href="#{{ nextTab.id }}" class="govuk-link">Next: {{ nextTab.label }}</a>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="govuk-button-group">
+      <a class="govuk-link" href="/onboarding/case-overview">Cancel and return to case overview</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

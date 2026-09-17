@@ -1,0 +1,155 @@
+{% extends "layouts/main.html" %}
+
+{#
+  app/views/housingcostloans/housingcostnewform.html
+
+  Housing cost loans: new form.
+  Replaces the legacy "New Form" dialog ("Create new Housing Cost Loans?").
+
+  Start on the case overview opens this page. It posts to
+  /housingcostloans/housingcostnewform-continue in routes.js, which checks both
+  answers and then opens /housingcostloans/housingcostloanspage.
+
+  Stored as:
+    data.hclRef       the loan reference
+    data.hclLoanType  "normal" or "fixed-term"
+
+  The legacy dialog did not ask for the type of loan, but the loan page shows a
+  different third tab for each (Int Rates or FT Pymts), so it is asked here.
+
+  The error summary is plain markup rather than govukErrorSummary, for the
+  same reason the banner on the case overview is: if the macro is not
+  registered the call renders nothing, silently.
+#}
+
+{% set errors = data.hclNewFormErrors if data.hclNewFormErrors else [] %}
+{% set refError = (errors | selectattr("href", "equalto", "#hcl-ref") | first) %}
+{% set typeError = (errors | selectattr("href", "equalto", "#hcl-loan-type") | first) %}
+
+{% block pageTitle %}
+  {{ "Error: " if errors | length }}Create a new housing cost loan – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/onboarding/case-overview"
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      {% if errors | length %}
+        <div class="govuk-error-summary" data-module="govuk-error-summary">
+          <div role="alert">
+            <h2 class="govuk-error-summary__title">There is a problem</h2>
+            <div class="govuk-error-summary__body">
+              <ul class="govuk-list govuk-error-summary__list">
+                {% for error in errors %}
+                  <li><a href="{{ error.href }}">{{ error.message }}</a></li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <span class="govuk-caption-l">Housing cost loans</span>
+      <h1 class="govuk-heading-l">Create a new housing cost loan</h1>
+
+      <form action="/housingcostloans/housingcostnewform-continue" method="post" novalidate>
+
+        <div class="govuk-form-group{{ ' govuk-form-group--error' if refError }}">
+          <label class="govuk-label govuk-label--s" for="hcl-ref">
+            Loan reference
+          </label>
+          <div id="hcl-ref-hint" class="govuk-hint">
+            Enter a reference for this loan
+          </div>
+          {% if refError %}
+            <p id="hcl-ref-error" class="govuk-error-message">
+              <span class="govuk-visually-hidden">Error:</span> {{ refError.message }}
+            </p>
+          {% endif %}
+          <input class="govuk-input govuk-input--width-20{{ ' govuk-input--error' if refError }}"
+                 id="hcl-ref" name="hclRef" type="text" spellcheck="false"
+                 aria-describedby="hcl-ref-hint{{ ' hcl-ref-error' if refError }}"
+                 value="{{ data.hclRef }}">
+        </div>
+
+        <div class="govuk-form-group{{ ' govuk-form-group--error' if typeError }}">
+          <fieldset class="govuk-fieldset" aria-describedby="hcl-loan-type-hint{{ ' hcl-loan-type-error' if typeError }}">
+            <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
+              Type of loan
+            </legend>
+            <div id="hcl-loan-type-hint" class="govuk-hint">
+              This decides which details you are asked for on the next page
+            </div>
+            {% if typeError %}
+              <p id="hcl-loan-type-error" class="govuk-error-message">
+                <span class="govuk-visually-hidden">Error:</span> {{ typeError.message }}
+              </p>
+            {% endif %}
+            <div class="govuk-radios" data-module="govuk-radios">
+              <div class="govuk-radios__item">
+                <input class="govuk-radios__input" id="hcl-loan-type" name="hclLoanType" type="radio" value="normal"{{ " checked" if data.hclLoanType == "normal" }}>
+                <label class="govuk-label govuk-radios__label" for="hcl-loan-type">
+                  Normal loan
+                </label>
+              </div>
+              <div class="govuk-radios__item">
+                <input class="govuk-radios__input" id="hcl-loan-type-2" name="hclLoanType" type="radio" value="fixed-term"{{ " checked" if data.hclLoanType == "fixed-term" }}>
+                <label class="govuk-label govuk-radios__label" for="hcl-loan-type-2">
+                  Fixed term loan
+                </label>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="govuk-button-group">
+          <button type="submit" class="govuk-button" data-module="govuk-button">
+            Continue
+          </button>
+          <a class="govuk-link" href="/onboarding/case-overview">Cancel</a>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}
