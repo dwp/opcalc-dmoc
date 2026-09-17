@@ -192,7 +192,21 @@
       <span class="govuk-caption-l">{{ loanTypeLabel }}</span>
       <h1 class="govuk-heading-l">Housing costs for loan {{ loanRef }}</h1>
 
-      <div class="govuk-tabs" data-module="govuk-tabs">
+      {# Seven tabs only fit on one row with "Fixed term payments" in them if
+         each tab is a little narrower than the GOV.UK default. This only
+         changes the desktop tab row; on mobile the tabs become a list. #}
+      <style>
+        @media (min-width: 40.0625em) {
+          .hcl-tabs .govuk-tabs__list-item {
+            padding-left: 15px;
+            padding-right: 15px;
+            margin-right: 4px;
+            white-space: nowrap;
+          }
+        }
+      </style>
+
+      <div class="govuk-tabs hcl-tabs" data-module="govuk-tabs">
         <h2 class="govuk-tabs__title">Contents</h2>
 
         <ul class="govuk-tabs__list">
