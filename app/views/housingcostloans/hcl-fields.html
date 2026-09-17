@@ -1,0 +1,132 @@
+{#
+  app/views/housingcostloans/hcl-fields.html
+
+  Small building blocks for the housing cost loan tabs, so every date, amount
+  and choice on the seven tabs looks and behaves the same.
+
+  Written as plain markup rather than the govuk macros, so nothing depends on
+  which macros the kit has registered.
+
+  Import at the top of the content block:
+    {% from "housingcostloans/hcl-fields.html" import hclDate, hclText, hclSelect, hclErrorMessage, hclTable %}
+
+  Every macro takes:
+    id      the id of the field, which the error summary links to
+    name    the name the kit stores the answer under
+    label   the visible label
+    value   what to show in the field (for a date: { day, month, year })
+    error   the message to show, or nothing
+#}
+
+{% macro hclErrorMessage(id, error) %}
+  {% if error %}
+    <p id="{{ id }}-error" class="govuk-error-message">
+      <span class="govuk-visually-hidden">Error:</span> {{ error }}
+    </p>
+  {% endif %}
+{% endmacro %}
+
+{# A day, month and year date input. Its id is id + "-day" on the first box,
+   which is what the error summary links to. #}
+{% macro hclDate(id, name, label, value, error, hint) %}
+  <div class="govuk-form-group{{ ' govuk-form-group--error' if error }}">
+    <fieldset class="govuk-fieldset" role="group" aria-describedby="{{ id }}-hint{{ ' ' + id + '-error' if error }}">
+      <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">{{ label }}</legend>
+      <div id="{{ id }}-hint" class="govuk-hint">{{ hint if hint else "For example, 11 4 1988" }}</div>
+      {{ hclErrorMessage(id, error) }}
+      <div class="govuk-date-input" id="{{ id }}">
+        {% for part in [
+          { key: "day", label: "Day", width: 2 },
+          { key: "month", label: "Month", width: 2 },
+          { key: "year", label: "Year", width: 4 }
+        ] %}
+          <div class="govuk-date-input__item">
+            <div class="govuk-form-group">
+              <label class="govuk-label govuk-date-input__label" for="{{ id }}-{{ part.key }}">{{ part.label }}</label>
+              <input class="govuk-input govuk-date-input__input govuk-input--width-{{ part.width }}{{ ' govuk-input--error' if error }}"
+                     id="{{ id }}-{{ part.key }}" name="{{ name }}-{{ part.key }}" type="text" inputmode="numeric"
+                     value="{{ value[part.key] if value }}">
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </fieldset>
+  </div>
+{% endmacro %}
+
+{# A single line text box. prefix and suffix put £ or % beside it. #}
+{% macro hclText(id, name, label, value, error, options) %}
+  {% set opts = options if options else {} %}
+  <div class="govuk-form-group{{ ' govuk-form-group--error' if error }}">
+    <label class="govuk-label{{ ' govuk-label--s' if not opts.plainLabel }}" for="{{ id }}">{{ label }}</label>
+    {% if opts.hint %}<div id="{{ id }}-hint" class="govuk-hint">{{ opts.hint }}</div>{% endif %}
+    {{ hclErrorMessage(id, error) }}
+    {% set input %}
+      <input class="govuk-input {{ opts.widthClass if opts.widthClass else 'govuk-input--width-10' }}{{ ' govuk-input--error' if error }}"
+             id="{{ id }}" name="{{ name }}" type="text"
+             {% if opts.numeric %}inputmode="decimal"{% endif %} spellcheck="false"
+             {% if opts.hint or error %}aria-describedby="{{ (id + '-hint') if opts.hint }}{{ ' ' + id + '-error' if error }}"{% endif %}
+             value="{{ value }}">
+    {% endset %}
+    {% if opts.prefix or opts.suffix %}
+      <div class="govuk-input__wrapper">
+        {% if opts.prefix %}<div class="govuk-input__prefix" aria-hidden="true">{{ opts.prefix }}</div>{% endif %}
+        {{ input | safe }}
+        {% if opts.suffix %}<div class="govuk-input__suffix" aria-hidden="true">{{ opts.suffix }}</div>{% endif %}
+      </div>
+    {% else %}
+      {{ input | safe }}
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{# A drop down list. items is [{ value, text }]. #}
+{% macro hclSelect(id, name, label, items, value, error, hint) %}
+  <div class="govuk-form-group{{ ' govuk-form-group--error' if error }}">
+    <label class="govuk-label govuk-label--s" for="{{ id }}">{{ label }}</label>
+    {% if hint %}<div id="{{ id }}-hint" class="govuk-hint">{{ hint }}</div>{% endif %}
+    {{ hclErrorMessage(id, error) }}
+    <select class="govuk-select{{ ' govuk-select--error' if error }}" id="{{ id }}" name="{{ name }}"
+            {% if hint or error %}aria-describedby="{{ (id + '-hint') if hint }}{{ ' ' + id + '-error' if error }}"{% endif %}>
+      <option value="">Select an option</option>
+      {% for item in items %}
+        <option value="{{ item.value }}"{{ " selected" if item.value == value }}>{{ item.text }}</option>
+      {% endfor %}
+    </select>
+  </div>
+{% endmacro %}
+
+{# A table of added rows with a row level Remove link.
+   columns is [{ text, field, prefix }]. #}
+{% macro hclTable(caption, rows, columns, emptyText, listName, tab) %}
+  {% set list = rows if rows else [] %}
+  <table class="govuk-table">
+    <caption class="govuk-table__caption govuk-table__caption--s">{{ caption }}</caption>
+    <thead class="govuk-table__head">
+      <tr class="govuk-table__row">
+        {% for column in columns %}
+          <th scope="col" class="govuk-table__header">{{ column.text }}</th>
+        {% endfor %}
+        {% if list | length %}
+          <th scope="col" class="govuk-table__header"><span class="govuk-visually-hidden">Actions</span></th>
+        {% endif %}
+      </tr>
+    </thead>
+    <tbody class="govuk-table__body">
+      {% for row in list %}
+        <tr class="govuk-table__row">
+          {% for column in columns %}
+            <td class="govuk-table__cell">{{ column.prefix if column.prefix and row[column.field] }}{{ row[column.field] }}</td>
+          {% endfor %}
+          <td class="govuk-table__cell">
+            <a class="govuk-link" href="/housingcostloans/hcl-remove?list={{ listName }}&row={{ loop.index0 }}&tab={{ tab }}">Remove<span class="govuk-visually-hidden"> row {{ loop.index }}</span></a>
+          </td>
+        </tr>
+      {% else %}
+        <tr class="govuk-table__row">
+          <td class="govuk-table__cell" colspan="{{ columns | length }}">{{ emptyText }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endmacro %}

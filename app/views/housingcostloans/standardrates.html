@@ -1,0 +1,101 @@
+{% extends "layouts/main.html" %}
+
+{#
+  app/views/housingcostloans/standardrates.html
+
+  Standard rates. Replaces the legacy "Standard Rates" window, opened by the
+  SR table button (Interest rates tab) and SIR table button (Fixed term
+  payments tab).
+
+  Which tab to return to comes in the address, for example
+  ?hclRatesReturn=interest-rates, and the kit keeps it in data.
+
+  The legacy table was empty in the screenshot, so this shows the same empty
+  table. Real rates will need adding once Viktoria confirms them.
+#}
+
+{% block pageTitle %}
+  Standard rates – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/housingcostloans/housingcostloanspage#" + (data.hclRatesReturn if data.hclRatesReturn else "periods")
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  {% set returnTab = data.hclRatesReturn if data.hclRatesReturn in ["interest-rates", "fixed-term-payments"] else "periods" %}
+  {% set rates = data.hclStandardRates if data.hclStandardRates else [] %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Housing costs for loan {{ data.hclRef }}</span>
+      <h1 class="govuk-heading-l">Standard rates</h1>
+
+      <table class="govuk-table">
+        <caption class="govuk-table__caption govuk-visually-hidden">Standard rates</caption>
+        <thead class="govuk-table__head">
+          <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">Date</th>
+            <th scope="col" class="govuk-table__header">Rate</th>
+            <th scope="col" class="govuk-table__header">Lower limit</th>
+          </tr>
+        </thead>
+        <tbody class="govuk-table__body">
+          {% for rate in rates %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">{{ rate.date }}</td>
+              <td class="govuk-table__cell">{{ rate.rate }}</td>
+              <td class="govuk-table__cell">{{ rate.lowerLimit }}</td>
+            </tr>
+          {% else %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell" colspan="3">No standard rates recorded</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="govuk-button-group">
+        <a href="/housingcostloans/housingcostloanspage#{{ returnTab }}" role="button" draggable="false" class="govuk-button" data-module="govuk-button">OK</a>
+        <a href="/housingcostloans/housingcostloanshelp#standard-rates" role="button" draggable="false" class="govuk-button govuk-button--secondary" data-module="govuk-button">Help</a>
+      </div>
+
+    </div>
+  </div>
+
+{% endblock %}

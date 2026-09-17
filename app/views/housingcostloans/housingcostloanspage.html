@@ -1,81 +1,629 @@
 {% extends "layouts/main.html" %}
 
 {#
-  Housing cost loans: tabbed page (skeleton)
+  app/views/housingcostloans/housingcostloanspage.html
+
+  Housing cost loans: the tabbed loan page.
   Replaces the legacy "Housing Costs for Loan [ref]" dialog.
-  Tab 3 changes with the loan type chosen on the new form:
-    normal      -> Interest rates   (legacy "Int Rates")
-    fixed-term  -> Fixed term payments (legacy "FT Pymts")
-  Each panel is a placeholder until the real content is added.
+
+  Seven tabs. The third one depends on the type of loan chosen on
+  /housingcostloans/housingcostnewform:
+
+    normal      -> Interest rates        (legacy "Int Rates")
+    fixed-term  -> Fixed term payments   (legacy "FT Pymts")
+
+  Tab addresses, for linking straight to one:
+    #periods  #details  #interest-rates or #fixed-term-payments
+    #non-dependants  #shares  #payments  #other-info
+
+  Every tab is its own form posting to /housingcostloans/hcl-tab in routes.js.
+  The hidden hclTab field says which tab, and the button pressed says what to
+  do (hclAction = add, next or save). routes.js checks it and redirects back
+  here with the right tab on the end of the address.
+
+  Each tab keeps the legacy buttons: Next (Save loan on the last tab), Cancel
+  and Help. Greyed out legacy fields are conditional reveals instead.
+
+  The tab choices (categories, payees, cost types, periods) must match the
+  lists at the top of the housing cost loans section in routes.js.
 #}
 
-{% set loanRef = data['hcl-ref'] or 'not set' %}
-{% set isFixedTerm = data['hcl-loan-type'] == 'fixed-term' %}
-{% set loanTypeLabel = 'Fixed term loan' if isFixedTerm else 'Normal loan' %}
-
-{% if isFixedTerm %}
-  {% set thirdTab = { id: 'fixed-term-payments', label: 'Fixed term payments' } %}
-{% else %}
-  {% set thirdTab = { id: 'interest-rates', label: 'Interest rates' } %}
-{% endif %}
-
-{% set tabs = [
-  { id: 'periods',        label: 'Periods' },
-  { id: 'details',        label: 'Details' },
-  thirdTab,
-  { id: 'non-dependants', label: 'Non-dependants' },
-  { id: 'shares',         label: 'Shares' },
-  { id: 'payments',       label: 'Payments' },
-  { id: 'other-info',     label: 'Other info' }
-] %}
+{# Single expressions, not if blocks: see the note at the top of case-overview.html #}
+{% set isFixedTerm = data.hclLoanType == "fixed-term" %}
+{% set loanRef = data.hclRef if data.hclRef else "not set" %}
+{% set loanTypeLabel = "Fixed term loan" if isFixedTerm else "Normal loan" %}
 
 {% block pageTitle %}
-  Housing costs for loan {{ loanRef }} - OpCalc
+  {{ "Error: " if data.hclErrors }}Housing costs for loan {{ loanRef }} – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
-{% block beforeContent %}
-  <a href="/housingcostloans/housingcostnewform" class="govuk-back-link">Back</a>
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/housingcostloans/housingcostnewform"
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
 {% endblock %}
 
 {% block content %}
-<div class="govuk-grid-row">
-  <div class="govuk-grid-column-full">
 
-    <span class="govuk-caption-l">{{ loanTypeLabel }}</span>
-    <h1 class="govuk-heading-l">Housing costs for loan {{ loanRef }}</h1>
+  {% from "housingcostloans/hcl-fields.html" import hclDate, hclText, hclSelect, hclErrorMessage, hclTable %}
 
-    <div class="govuk-tabs" data-module="govuk-tabs">
-      <h2 class="govuk-tabs__title">Contents</h2>
+  {% set fe = data.hclFieldErrors if data.hclFieldErrors else {} %}
 
-      <ul class="govuk-tabs__list">
-        {% for tab in tabs %}
-          <li class="govuk-tabs__list-item{% if loop.first %} govuk-tabs__list-item--selected{% endif %}">
-            <a class="govuk-tabs__tab" href="#{{ tab.id }}">{{ tab.label }}</a>
-          </li>
-        {% endfor %}
-      </ul>
+  {# The over or underpayment period. Starts as the discrepancy period from the
+     case, the same way the legacy screen came up already filled in. #}
+  {% set periodStart = {
+    day: data["hclPeriodStart-day"] if data["hclPeriodStart-day"] is defined else data["discrepancyFrom-day"],
+    month: data["hclPeriodStart-month"] if data["hclPeriodStart-month"] is defined else data["discrepancyFrom-month"],
+    year: data["hclPeriodStart-year"] if data["hclPeriodStart-year"] is defined else data["discrepancyFrom-year"]
+  } %}
+  {% set periodEnd = {
+    day: data["hclPeriodEnd-day"] if data["hclPeriodEnd-day"] is defined else data["discrepancyTo-day"],
+    month: data["hclPeriodEnd-month"] if data["hclPeriodEnd-month"] is defined else data["discrepancyTo-month"],
+    year: data["hclPeriodEnd-year"] if data["hclPeriodEnd-year"] is defined else data["discrepancyTo-year"]
+  } %}
+  {% set periodStartText = (
+    (("0" + periodStart.day) if (periodStart.day | string | length) == 1 else periodStart.day) + "/" +
+    (("0" + periodStart.month) if (periodStart.month | string | length) == 1 else periodStart.month) + "/" +
+    periodStart.year
+  ) if periodStart.year else "the start of the period" %}
 
-      {% for tab in tabs %}
-        <div class="govuk-tabs__panel{% if not loop.first %} govuk-tabs__panel--hidden{% endif %}" id="{{ tab.id }}">
-          <h2 class="govuk-heading-m">{{ tab.label }}</h2>
-          <div class="govuk-inset-text">
-            Content for the {{ tab.label | lower }} tab will be added here.
+  {# New rows start on the first day of the period, as they did in the legacy
+     screens. Once a caseworker types in a box, their value is kept. #}
+  {% set rowDate = {
+    hclRateStart: { day: data["hclRateStart-day"] if data["hclRateStart-day"] is defined else periodStart.day, month: data["hclRateStart-month"] if data["hclRateStart-month"] is defined else periodStart.month, year: data["hclRateStart-year"] if data["hclRateStart-year"] is defined else periodStart.year },
+    hclFtStart: { day: data["hclFtStart-day"] if data["hclFtStart-day"] is defined else periodStart.day, month: data["hclFtStart-month"] if data["hclFtStart-month"] is defined else periodStart.month, year: data["hclFtStart-year"] if data["hclFtStart-year"] is defined else periodStart.year },
+    hclNdStart: { day: data["hclNdStart-day"] if data["hclNdStart-day"] is defined else periodStart.day, month: data["hclNdStart-month"] if data["hclNdStart-month"] is defined else periodStart.month, year: data["hclNdStart-year"] if data["hclNdStart-year"] is defined else periodStart.year },
+    hclNdEnd: { day: data["hclNdEnd-day"] if data["hclNdEnd-day"] is defined else periodEnd.day, month: data["hclNdEnd-month"] if data["hclNdEnd-month"] is defined else periodEnd.month, year: data["hclNdEnd-year"] if data["hclNdEnd-year"] is defined else periodEnd.year },
+    hclShareStart: { day: data["hclShareStart-day"] if data["hclShareStart-day"] is defined else periodStart.day, month: data["hclShareStart-month"] if data["hclShareStart-month"] is defined else periodStart.month, year: data["hclShareStart-year"] if data["hclShareStart-year"] is defined else periodStart.year },
+    hclShareEnd: { day: data["hclShareEnd-day"] if data["hclShareEnd-day"] is defined else periodEnd.day, month: data["hclShareEnd-month"] if data["hclShareEnd-month"] is defined else periodEnd.month, year: data["hclShareEnd-year"] if data["hclShareEnd-year"] is defined else periodEnd.year },
+    hclPayStart: { day: data["hclPayStart-day"] if data["hclPayStart-day"] is defined else periodStart.day, month: data["hclPayStart-month"] if data["hclPayStart-month"] is defined else periodStart.month, year: data["hclPayStart-year"] if data["hclPayStart-year"] is defined else periodStart.year },
+    hclOtherDate: { day: data["hclOtherDate-day"] if data["hclOtherDate-day"] is defined else periodStart.day, month: data["hclOtherDate-month"] if data["hclOtherDate-month"] is defined else periodStart.month, year: data["hclOtherDate-year"] if data["hclOtherDate-year"] is defined else periodStart.year }
+  } %}
+
+  {# Choices. INVENTED placeholders: check with Viktoria. Keep in step with
+     the lists in routes.js. #}
+  {% set ndCategories = [
+    { value: "working-high", text: "Working 16 hours or more a week" },
+    { value: "working-low", text: "Working less than 16 hours a week" },
+    { value: "not-working", text: "Aged 18 or over and not working" },
+    { value: "on-benefit", text: "Aged 25 or over and getting income support or JSA" },
+    { value: "under-25-benefit", text: "Under 25 and getting income support or JSA" }
+  ] %}
+  {% set payees = [
+    { value: "lender", text: "Lender" },
+    { value: "customer", text: "Customer" }
+  ] %}
+  {% set costTypes = [
+    { value: "ground-rent", text: "Ground rent" },
+    { value: "service-charge", text: "Service charge" },
+    { value: "rent-charge", text: "Rent charge" },
+    { value: "repairs", text: "Repairs and improvements" }
+  ] %}
+  {% set costPeriods = [
+    { value: "weekly", text: "Weekly" },
+    { value: "monthly", text: "Monthly" },
+    { value: "quarterly", text: "Quarterly" },
+    { value: "yearly", text: "Yearly" }
+  ] %}
+
+  {% set thirdTab = { id: "fixed-term-payments", label: "Fixed term payments" } if isFixedTerm
+    else { id: "interest-rates", label: "Interest rates" } %}
+
+  {% set tabs = [
+    { id: "periods", label: "Periods" },
+    { id: "details", label: "Details" },
+    thirdTab,
+    { id: "non-dependants", label: "Non-dependants" },
+    { id: "shares", label: "Shares" },
+    { id: "payments", label: "Payments" },
+    { id: "other-info", label: "Other info" }
+  ] %}
+
+  {# The error summary, shown at the top of whichever tab the problem is on.
+     A macro cannot see values set on this page, so the errors are passed in. #}
+  {% macro tabErrors(tabId, errors) %}
+    {% if errors and errors.tab == tabId %}
+      <div class="govuk-error-summary" data-module="govuk-error-summary">
+        <div role="alert">
+          <h2 class="govuk-error-summary__title">There is a problem</h2>
+          <div class="govuk-error-summary__body">
+            <ul class="govuk-list govuk-error-summary__list">
+              {% for error in errors.list %}
+                <li><a href="{{ error.href }}">{{ error.message }}</a></li>
+              {% endfor %}
+            </ul>
           </div>
-
-          {% if not loop.last %}
-            {% set nextTab = tabs[loop.index] %}
-            <div class="govuk-button-group">
-              <a href="#{{ nextTab.id }}" class="govuk-link">Next: {{ nextTab.label }}</a>
-            </div>
-          {% endif %}
         </div>
-      {% endfor %}
-    </div>
+      </div>
+    {% endif %}
+  {% endmacro %}
 
+  {# The legacy Next Tab, Cancel and Help buttons, at the foot of every tab #}
+  {% macro tabButtons(tabId, isLast) %}
     <div class="govuk-button-group">
-      <a class="govuk-link" href="/onboarding/case-overview">Cancel and return to case overview</a>
+      {% if isLast %}
+        <button type="submit" name="hclAction" value="save" class="govuk-button" data-module="govuk-button">Save loan</button>
+      {% else %}
+        <button type="submit" name="hclAction" value="next" class="govuk-button" data-module="govuk-button">Next</button>
+      {% endif %}
+      <a href="/onboarding/case-overview" role="button" draggable="false" class="govuk-button govuk-button--secondary" data-module="govuk-button">Cancel</a>
+      <a href="/housingcostloans/housingcostloanshelp#{{ tabId }}" role="button" draggable="false" class="govuk-button govuk-button--secondary" data-module="govuk-button">Help</a>
     </div>
+  {% endmacro %}
 
+  {% macro addButton(text) %}
+    <button type="submit" name="hclAction" value="add" class="govuk-button govuk-button--secondary" data-module="govuk-button">{{ text }}</button>
+  {% endmacro %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+
+      <span class="govuk-caption-l">{{ loanTypeLabel }}</span>
+      <h1 class="govuk-heading-l">Housing costs for loan {{ loanRef }}</h1>
+
+      <div class="govuk-tabs" data-module="govuk-tabs">
+        <h2 class="govuk-tabs__title">Contents</h2>
+
+        <ul class="govuk-tabs__list">
+          {% for tab in tabs %}
+            <li class="govuk-tabs__list-item{{ ' govuk-tabs__list-item--selected' if loop.first }}">
+              <a class="govuk-tabs__tab" href="#{{ tab.id }}">{{ tab.label }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+
+        {# ================================================================
+           1. Periods
+           ================================================================ #}
+        <div class="govuk-tabs__panel" id="periods">
+          {{ tabErrors("periods", data.hclErrors) }}
+          <h2 class="govuk-heading-m">Periods</h2>
+
+          <form action="/housingcostloans/hcl-tab" method="post" novalidate>
+            <input type="hidden" name="hclTab" value="periods">
+
+            <h3 class="govuk-heading-s">Over or underpayment period</h3>
+            <div class="govuk-grid-row">
+              <div class="govuk-grid-column-one-half">
+                {{ hclDate("hcl-period-start", "hclPeriodStart", "Start date", periodStart, fe["hcl-period-start-day"]) }}
+              </div>
+              <div class="govuk-grid-column-one-half">
+                {{ hclDate("hcl-period-end", "hclPeriodEnd", "End date", periodEnd, fe["hcl-period-end-day"], "For example, 16 9 2026") }}
+              </div>
+            </div>
+
+            <h3 class="govuk-heading-s">Claim details</h3>
+            {{ hclDate("hcl-first-day", "hclFirstDay", "First day of entitlement",
+              { day: data["hclFirstDay-day"], month: data["hclFirstDay-month"], year: data["hclFirstDay-year"] },
+              fe["hcl-first-day-day"]) }}
+
+            {% set before1995Error = fe["hcl-before-1995"] %}
+            <div class="govuk-form-group{{ ' govuk-form-group--error' if before1995Error }}">
+              <fieldset class="govuk-fieldset"{% if before1995Error %} aria-describedby="hcl-before-1995-error"{% endif %}>
+                <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">Did the loan start before 2 October 1995?</legend>
+                {{ hclErrorMessage("hcl-before-1995", before1995Error) }}
+                <div class="govuk-radios" data-module="govuk-radios">
+                  <div class="govuk-radios__item">
+                    <input class="govuk-radios__input" id="hcl-before-1995" name="hclBefore1995" type="radio" value="yes"
+                           data-aria-controls="conditional-hcl-before-1995"{{ " checked" if data.hclBefore1995 == "yes" }}>
+                    <label class="govuk-label govuk-radios__label" for="hcl-before-1995">Yes</label>
+                  </div>
+                  <div class="govuk-radios__conditional{{ ' govuk-radios__conditional--hidden' if data.hclBefore1995 != 'yes' }}" id="conditional-hcl-before-1995">
+                    {# Only loans from before 2 October 1995 had a 50% stage,
+                       which is why the legacy box was greyed out otherwise.
+                       CHECK with Viktoria. #}
+                    {{ hclDate("hcl-qual-50", "hclQual50", "50% qualifying date",
+                      { day: data["hclQual50-day"], month: data["hclQual50-month"], year: data["hclQual50-year"] },
+                      fe["hcl-qual-50-day"], "The date housing costs were first paid at 50%. Leave empty if it does not apply") }}
+                  </div>
+                  <div class="govuk-radios__item">
+                    <input class="govuk-radios__input" id="hcl-before-1995-2" name="hclBefore1995" type="radio" value="no"{{ " checked" if data.hclBefore1995 == "no" }}>
+                    <label class="govuk-label govuk-radios__label" for="hcl-before-1995-2">No</label>
+                  </div>
+                </div>
+              </fieldset>
+            </div>
+
+            <h3 class="govuk-heading-s">Qualifying dates</h3>
+            {{ hclDate("hcl-qual-100", "hclQual100", "100% qualifying date",
+              { day: data["hclQual100-day"], month: data["hclQual100-month"], year: data["hclQual100-year"] },
+              fe["hcl-qual-100-day"], "The date housing costs were first paid in full. Leave empty if it does not apply") }}
+
+            {{ tabButtons("periods") }}
+          </form>
+        </div>
+
+        {# ================================================================
+           2. Details
+           ================================================================ #}
+        <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="details">
+          {{ tabErrors("details", data.hclErrors) }}
+          <h2 class="govuk-heading-m">Details</h2>
+
+          <p class="govuk-body">These details apply from <strong>{{ periodStartText }}</strong>.</p>
+
+          <form action="/housingcostloans/hcl-tab" method="post" novalidate>
+            <input type="hidden" name="hclTab" value="details">
+
+            <h3 class="govuk-heading-s">Amount borrowed</h3>
+            {{ hclText("hcl-balance", "hclBalance", "Balance outstanding", data.hclBalance, fe["hcl-balance"],
+              { prefix: "£", numeric: true, plainLabel: true }) }}
+            {{ hclText("hcl-miras", "hclMiras", "Amount with MIRAS", data.hclMiras, fe["hcl-miras"],
+              { prefix: "£", numeric: true, plainLabel: true,
+                hint: "MIRAS is Mortgage Interest Relief At Source. Leave empty if none of the loan had it" }) }}
+
+            <p class="govuk-body">
+              <a href="/housingcostloans/loanchanges" role="button" draggable="false" class="govuk-button govuk-button--secondary" data-module="govuk-button">Changes</a>
+            </p>
+
+            <h3 class="govuk-heading-s">Benefit week</h3>
+            {{ hclSelect("hcl-benefit-day", "hclBenefitDay", "Day",
+              [{ value: "Monday", text: "Monday" }, { value: "Tuesday", text: "Tuesday" }, { value: "Wednesday", text: "Wednesday" },
+               { value: "Thursday", text: "Thursday" }, { value: "Friday", text: "Friday" }, { value: "Saturday", text: "Saturday" },
+               { value: "Sunday", text: "Sunday" }],
+              data.hclBenefitDay if data.hclBenefitDay is defined else "Monday", fe["hcl-benefit-day"]) }}
+
+            {% set weekTypeError = fe["hcl-benefit-week-type"] %}
+            {% set weekType = data.hclBenefitWeekType if data.hclBenefitWeekType is defined else "bwe" %}
+            <div class="govuk-form-group{{ ' govuk-form-group--error' if weekTypeError }}">
+              <fieldset class="govuk-fieldset"{% if weekTypeError %} aria-describedby="hcl-benefit-week-type-error"{% endif %}>
+                <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">Does the benefit week end or start on this day?</legend>
+                {{ hclErrorMessage("hcl-benefit-week-type", weekTypeError) }}
+                <div class="govuk-radios govuk-radios--inline" data-module="govuk-radios">
+                  <div class="govuk-radios__item">
+                    <input class="govuk-radios__input" id="hcl-benefit-week-type" name="hclBenefitWeekType" type="radio" value="bwe"{{ " checked" if weekType == "bwe" }}>
+                    <label class="govuk-label govuk-radios__label" for="hcl-benefit-week-type">Benefit week ending (BWE)</label>
+                  </div>
+                  <div class="govuk-radios__item">
+                    <input class="govuk-radios__input" id="hcl-benefit-week-type-2" name="hclBenefitWeekType" type="radio" value="bwc"{{ " checked" if weekType == "bwc" }}>
+                    <label class="govuk-label govuk-radios__label" for="hcl-benefit-week-type-2">Benefit week commencing (BWC)</label>
+                  </div>
+                </div>
+              </fieldset>
+            </div>
+
+            <h3 class="govuk-heading-s">Loan details before the over or underpayment period</h3>
+            <div class="govuk-form-group">
+              <div class="govuk-checkboxes" data-module="govuk-checkboxes">
+                <div class="govuk-checkboxes__item">
+                  <input class="govuk-checkboxes__input" id="hcl-in-payment" name="hclInPayment" type="checkbox" value="yes"
+                         data-aria-controls="conditional-hcl-in-payment"{{ " checked" if data.hclInPayment == "yes" }}>
+                  <label class="govuk-label govuk-checkboxes__label" for="hcl-in-payment">The loan was in payment</label>
+                </div>
+                <div class="govuk-checkboxes__conditional{{ ' govuk-checkboxes__conditional--hidden' if data.hclInPayment != 'yes' }}" id="conditional-hcl-in-payment">
+                  {{ hclText("hcl-weekly-interest", "hclWeeklyInterest", "Weekly interest", data.hclWeeklyInterest, fe["hcl-weekly-interest"],
+                    { prefix: "£", numeric: true, plainLabel: true }) }}
+                  {{ hclText("hcl-addback", "hclAddback", "Addback", data.hclAddback, fe["hcl-addback"],
+                    { prefix: "£", numeric: true, plainLabel: true, hint: "Leave empty if there is no addback" }) }}
+                </div>
+              </div>
+            </div>
+
+            <h3 class="govuk-heading-s">Loan restriction</h3>
+            <div class="govuk-form-group">
+              <div class="govuk-checkboxes" data-module="govuk-checkboxes">
+                <div class="govuk-checkboxes__item">
+                  <input class="govuk-checkboxes__input" id="hcl-restrict" name="hclRestrict" type="checkbox" value="yes"
+                         data-aria-controls="conditional-hcl-restrict"{{ " checked" if data.hclRestrict == "yes" }}>
+                  <label class="govuk-label govuk-checkboxes__label" for="hcl-restrict">Restrict the loan</label>
+                </div>
+                <div class="govuk-checkboxes__conditional{{ ' govuk-checkboxes__conditional--hidden' if data.hclRestrict != 'yes' }}" id="conditional-hcl-restrict">
+                  {{ hclDate("hcl-restrict-start", "hclRestrictStart", "Start date",
+                    { day: data["hclRestrictStart-day"], month: data["hclRestrictStart-month"], year: data["hclRestrictStart-year"] },
+                    fe["hcl-restrict-start-day"]) }}
+                  {{ hclText("hcl-restrict-amount", "hclRestrictAmount", "Amount", data.hclRestrictAmount, fe["hcl-restrict-amount"],
+                    { prefix: "£", numeric: true, plainLabel: true }) }}
+                </div>
+              </div>
+            </div>
+
+            {{ tabButtons("details") }}
+          </form>
+        </div>
+
+        {# ================================================================
+           3. Interest rates (normal loan) or Fixed term payments
+           ================================================================ #}
+        {% if isFixedTerm %}
+        <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="fixed-term-payments">
+          {{ tabErrors("fixed-term-payments", data.hclErrors) }}
+          <h2 class="govuk-heading-m">Fixed term payments</h2>
+
+          <form action="/housingcostloans/hcl-tab" method="post" novalidate>
+            <input type="hidden" name="hclTab" value="fixed-term-payments">
+
+            <h3 class="govuk-heading-s">New weekly payment</h3>
+            {{ hclDate("hcl-ft-start", "hclFtStart", "Start date", rowDate.hclFtStart, fe["hcl-ft-start-day"]) }}
+            {{ hclText("hcl-ft-amount", "hclFtAmount", "Amount", data.hclFtAmount, fe["hcl-ft-amount"],
+              { prefix: "£", numeric: true, plainLabel: true }) }}
+
+            <div class="govuk-button-group">
+              {{ addButton("Add weekly payment") }}
+              <a href="/housingcostloans/standardrates?hclRatesReturn=fixed-term-payments" role="button" draggable="false" class="govuk-button govuk-button--secondary" data-module="govuk-button">SIR table</a>
+            </div>
+
+            {{ hclTable("Weekly payments that apply", data.hclFtPayments,
+              [{ text: "Start date", field: "start" }, { text: "Amount", field: "amount", prefix: "£" }],
+              "No weekly payments added", "hclFtPayments", "fixed-term-payments") }}
+
+            {{ tabButtons("fixed-term-payments") }}
+          </form>
+        </div>
+        {% else %}
+        <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="interest-rates">
+          {{ tabErrors("interest-rates", data.hclErrors) }}
+          <h2 class="govuk-heading-m">Interest rates</h2>
+
+          <form action="/housingcostloans/hcl-tab" method="post" novalidate>
+            <input type="hidden" name="hclTab" value="interest-rates">
+
+            <h3 class="govuk-heading-s">New weekly rate</h3>
+            {{ hclDate("hcl-rate-start", "hclRateStart", "Start date", rowDate.hclRateStart, fe["hcl-rate-start-day"]) }}
+            {{ hclText("hcl-rate-percent", "hclRatePercent", "Percentage rate", data.hclRatePercent, fe["hcl-rate-percent"],
+              { suffix: "%", numeric: true, plainLabel: true, widthClass: "govuk-input--width-5", hint: "Up to 3 decimal places, like 4.875" }) }}
+
+            <div class="govuk-button-group">
+              {{ addButton("Add rate") }}
+              <a href="/housingcostloans/standardrates?hclRatesReturn=interest-rates" role="button" draggable="false" class="govuk-button govuk-button--secondary" data-module="govuk-button">SR table</a>
+            </div>
+
+            {{ hclTable("Lender rates that apply", data.hclRates,
+              [{ text: "Start date", field: "start" }, { text: "Rate", field: "rate" }],
+              "No lender rates added", "hclRates", "interest-rates") }}
+
+            {# The lender list was empty and greyed out in the legacy screen.
+               INVENTED placeholder options: check with Viktoria. #}
+            {{ hclSelect("hcl-lender", "hclLender", "Lender",
+              [{ value: "lender-a", text: "Lender A" }, { value: "lender-b", text: "Lender B" }],
+              data.hclLender, fe["hcl-lender"], "Optional. Choose the lender if it is on the list") }}
+
+            {{ tabButtons("interest-rates") }}
+          </form>
+        </div>
+        {% endif %}
+
+        {# ================================================================
+           4. Non-dependants
+           ================================================================ #}
+        <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="non-dependants">
+          {{ tabErrors("non-dependants", data.hclErrors) }}
+          <h2 class="govuk-heading-m">Non-dependants</h2>
+
+          <form action="/housingcostloans/hcl-tab" method="post" novalidate>
+            <input type="hidden" name="hclTab" value="non-dependants">
+
+            <h3 class="govuk-heading-s">New non-dependant</h3>
+            <div class="govuk-grid-row">
+              <div class="govuk-grid-column-one-half">
+                {{ hclDate("hcl-nd-start", "hclNdStart", "Start date", rowDate.hclNdStart, fe["hcl-nd-start-day"]) }}
+              </div>
+              <div class="govuk-grid-column-one-half">
+                {{ hclDate("hcl-nd-end", "hclNdEnd", "End date", rowDate.hclNdEnd, fe["hcl-nd-end-day"], "For example, 16 9 2026") }}
+              </div>
+            </div>
+
+            {% set categoryError = fe["hcl-nd-category"] %}
+            <div class="govuk-form-group{{ ' govuk-form-group--error' if categoryError }}">
+              <fieldset class="govuk-fieldset"{% if categoryError %} aria-describedby="hcl-nd-category-error"{% endif %}>
+                <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">Category</legend>
+                {{ hclErrorMessage("hcl-nd-category", categoryError) }}
+                <div class="govuk-radios" data-module="govuk-radios">
+                  {% for category in ndCategories %}
+                    {% set inputId = "hcl-nd-category" if loop.first else "hcl-nd-category-" + loop.index %}
+                    <div class="govuk-radios__item">
+                      <input class="govuk-radios__input" id="{{ inputId }}" name="hclNdCategory" type="radio" value="{{ category.value }}"
+                             {% if category.value == "working-high" %}data-aria-controls="conditional-hcl-nd-earnings"{% endif %}
+                             {{ "checked" if data.hclNdCategory == category.value }}>
+                      <label class="govuk-label govuk-radios__label" for="{{ inputId }}">{{ category.text }}</label>
+                    </div>
+                    {% if category.value == "working-high" %}
+                      {# Earnings were greyed out in the legacy screen until a
+                         category that needs them was chosen #}
+                      <div class="govuk-radios__conditional{{ ' govuk-radios__conditional--hidden' if data.hclNdCategory != 'working-high' }}" id="conditional-hcl-nd-earnings">
+                        {{ hclText("hcl-nd-earnings", "hclNdEarnings", "Weekly earnings", data.hclNdEarnings, fe["hcl-nd-earnings"],
+                          { prefix: "£", numeric: true, plainLabel: true }) }}
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </fieldset>
+            </div>
+
+            {{ hclText("hcl-nd-name", "hclNdName", "Person's name", data.hclNdName, fe["hcl-nd-name"],
+              { widthClass: "govuk-input--width-20" }) }}
+
+            {{ addButton("Add non-dependant") }}
+
+            {{ hclTable("Non-dependants that apply", data.hclNonDeps,
+              [{ text: "Name", field: "name" }, { text: "Category", field: "category" },
+               { text: "Earnings", field: "earnings", prefix: "£" },
+               { text: "Start", field: "start" }, { text: "End", field: "end" }],
+              "No non-dependants added", "hclNonDeps", "non-dependants") }}
+
+            {{ tabButtons("non-dependants") }}
+          </form>
+        </div>
+
+        {# ================================================================
+           5. Shares
+           ================================================================ #}
+        <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="shares">
+          {{ tabErrors("shares", data.hclErrors) }}
+          <h2 class="govuk-heading-m">Shares</h2>
+
+          <form action="/housingcostloans/hcl-tab" method="post" novalidate>
+            <input type="hidden" name="hclTab" value="shares">
+
+            <h3 class="govuk-heading-s">New share of loan</h3>
+            <div class="govuk-grid-row">
+              <div class="govuk-grid-column-one-half">
+                {{ hclDate("hcl-share-start", "hclShareStart", "Start date", rowDate.hclShareStart, fe["hcl-share-start-day"]) }}
+              </div>
+              <div class="govuk-grid-column-one-half">
+                {{ hclDate("hcl-share-end", "hclShareEnd", "End date", rowDate.hclShareEnd, fe["hcl-share-end-day"], "For example, 16 9 2026") }}
+              </div>
+            </div>
+
+            {# A share is written as two numbers, like 1 / 2 for half #}
+            {% macro shareInput(idBase, nameBase, legend, hint, topValue, bottomValue, error) %}
+              <div class="govuk-form-group{{ ' govuk-form-group--error' if error }}">
+                <fieldset class="govuk-fieldset" role="group" aria-describedby="{{ idBase }}-hint{{ ' ' + idBase + '-top-error' if error }}">
+                  <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">{{ legend }}</legend>
+                  <div id="{{ idBase }}-hint" class="govuk-hint">{{ hint }}</div>
+                  {{ hclErrorMessage(idBase + "-top", error) }}
+                  <div class="govuk-date-input">
+                    <div class="govuk-date-input__item">
+                      <div class="govuk-form-group">
+                        <label class="govuk-label govuk-date-input__label" for="{{ idBase }}-top">Share</label>
+                        <input class="govuk-input govuk-date-input__input govuk-input--width-2{{ ' govuk-input--error' if error }}" id="{{ idBase }}-top" name="{{ nameBase }}Top" type="text" inputmode="numeric" value="{{ topValue }}">
+                      </div>
+                    </div>
+                    <div class="govuk-date-input__item">
+                      <div class="govuk-form-group">
+                        <label class="govuk-label govuk-date-input__label" for="{{ idBase }}-bottom">Out of</label>
+                        <input class="govuk-input govuk-date-input__input govuk-input--width-2{{ ' govuk-input--error' if error }}" id="{{ idBase }}-bottom" name="{{ nameBase }}Bottom" type="text" inputmode="numeric" value="{{ bottomValue }}">
+                      </div>
+                    </div>
+                  </div>
+                </fieldset>
+              </div>
+            {% endmacro %}
+
+            {{ shareInput("hcl-share-customer", "hclShareCustomer", "Customer's share of the loan",
+              "For example, 1 out of 1 for the whole loan, or 1 out of 2 for half",
+              data.hclShareCustomerTop if data.hclShareCustomerTop is defined else "1",
+              data.hclShareCustomerBottom if data.hclShareCustomerBottom is defined else "1",
+              fe["hcl-share-customer-top"]) }}
+
+            {% set ownersError = fe["hcl-share-all-owners"] %}
+            {% set allOwners = data.hclShareAllOwners if data.hclShareAllOwners is defined else "yes" %}
+            <div class="govuk-form-group{{ ' govuk-form-group--error' if ownersError }}">
+              <fieldset class="govuk-fieldset"{% if ownersError %} aria-describedby="hcl-share-all-owners-error"{% endif %}>
+                <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">Do all the owners live in the property?</legend>
+                {{ hclErrorMessage("hcl-share-all-owners", ownersError) }}
+                <div class="govuk-radios" data-module="govuk-radios">
+                  <div class="govuk-radios__item">
+                    <input class="govuk-radios__input" id="hcl-share-all-owners" name="hclShareAllOwners" type="radio" value="yes"{{ " checked" if allOwners == "yes" }}>
+                    <label class="govuk-label govuk-radios__label" for="hcl-share-all-owners">Yes</label>
+                  </div>
+                  <div class="govuk-radios__item">
+                    <input class="govuk-radios__input" id="hcl-share-all-owners-2" name="hclShareAllOwners" type="radio" value="no"
+                           data-aria-controls="conditional-hcl-share-other"{{ " checked" if allOwners == "no" }}>
+                    <label class="govuk-label govuk-radios__label" for="hcl-share-all-owners-2">No</label>
+                  </div>
+                  <div class="govuk-radios__conditional{{ ' govuk-radios__conditional--hidden' if allOwners != 'no' }}" id="conditional-hcl-share-other">
+                    {{ shareInput("hcl-share-other", "hclShareOther", "Other joint occupiers' share of the loan",
+                      "The share belonging to owners who live in the property, other than the customer",
+                      data.hclShareOtherTop, data.hclShareOtherBottom, fe["hcl-share-other-top"]) }}
+                  </div>
+                </div>
+              </fieldset>
+            </div>
+
+            {{ addButton("Add share") }}
+
+            {{ hclTable("Loan shares that apply", data.hclShares,
+              [{ text: "Start", field: "start" }, { text: "End", field: "end" },
+               { text: "Customer's share", field: "customerShare" },
+               { text: "All owners live there", field: "allOwners" },
+               { text: "Other occupiers' share", field: "otherShare" }],
+              "No loan shares added", "hclShares", "shares") }}
+
+            {{ tabButtons("shares") }}
+          </form>
+        </div>
+
+        {# ================================================================
+           6. Payments
+           ================================================================ #}
+        <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="payments">
+          {{ tabErrors("payments", data.hclErrors) }}
+          <h2 class="govuk-heading-m">Payments</h2>
+
+          <form action="/housingcostloans/hcl-tab" method="post" novalidate>
+            <input type="hidden" name="hclTab" value="payments">
+
+            <h3 class="govuk-heading-s">New weekly payment</h3>
+            {{ hclDate("hcl-pay-start", "hclPayStart", "Start date", rowDate.hclPayStart, fe["hcl-pay-start-day"]) }}
+            {{ hclText("hcl-pay-amount", "hclPayAmount", "Amount", data.hclPayAmount, fe["hcl-pay-amount"],
+              { prefix: "£", numeric: true, plainLabel: true }) }}
+            {{ hclSelect("hcl-pay-payee", "hclPayPayee", "Payee", payees, data.hclPayPayee, fe["hcl-pay-payee"],
+              "Who the payment goes to") }}
+
+            {{ addButton("Add payment") }}
+
+            {{ hclTable("Weekly payments that apply", data.hclPayments,
+              [{ text: "Start date", field: "start" }, { text: "Amount", field: "amount", prefix: "£" },
+               { text: "Payee", field: "payee" }],
+              "No weekly payments added", "hclPayments", "payments") }}
+
+            {{ tabButtons("payments") }}
+          </form>
+        </div>
+
+        {# ================================================================
+           7. Other info
+           ================================================================ #}
+        <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="other-info">
+          {{ tabErrors("other-info", data.hclErrors) }}
+          <h2 class="govuk-heading-m">Other info</h2>
+
+          <form action="/housingcostloans/hcl-tab" method="post" novalidate>
+            <input type="hidden" name="hclTab" value="other-info">
+
+            <h3 class="govuk-heading-s">Other housing costs</h3>
+            {{ hclSelect("hcl-other-type", "hclOtherType", "Cost type", costTypes, data.hclOtherType, fe["hcl-other-type"]) }}
+            {{ hclDate("hcl-other-date", "hclOtherDate", "Date", rowDate.hclOtherDate, fe["hcl-other-date-day"]) }}
+            {{ hclText("hcl-other-amount", "hclOtherAmount", "Amount", data.hclOtherAmount, fe["hcl-other-amount"],
+              { prefix: "£", numeric: true, plainLabel: true }) }}
+            {{ hclSelect("hcl-other-period", "hclOtherPeriod", "Period", costPeriods, data.hclOtherPeriod, fe["hcl-other-period"],
+              "How often the cost is paid") }}
+
+            {{ addButton("Add cost") }}
+
+            {{ hclTable("Other costs that apply", data.hclOtherCosts,
+              [{ text: "Type", field: "type" }, { text: "Date", field: "date" },
+               { text: "Amount", field: "amount", prefix: "£" }, { text: "Period", field: "period" }],
+              "No other costs added", "hclOtherCosts", "other-info") }}
+
+            {{ tabButtons("other-info", true) }}
+          </form>
+        </div>
+
+      </div>
+
+    </div>
   </div>
-</div>
+
 {% endblock %}

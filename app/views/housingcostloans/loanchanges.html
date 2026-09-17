@@ -1,0 +1,71 @@
+{% extends "layouts/main.html" %}
+
+{#
+  app/views/housingcostloans/loanchanges.html
+
+  Opened by the Changes button on the Details tab.
+  PLACEHOLDER: the legacy Changes window was not in the screenshots, so there
+  is nothing to copy yet.
+#}
+
+{% block pageTitle %}
+  Changes to loan details – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/housingcostloans/housingcostloanspage#details"
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Housing costs for loan {{ data.hclRef }}</span>
+      <h1 class="govuk-heading-l">Changes to loan details</h1>
+
+      <div class="govuk-inset-text">
+        This page is waiting for a screenshot of the legacy Changes window.
+      </div>
+
+      <div class="govuk-button-group">
+        <a href="/housingcostloans/housingcostloanspage#details" role="button" draggable="false" class="govuk-button" data-module="govuk-button">Back to details</a>
+      </div>
+
+    </div>
+  </div>
+
+{% endblock %}

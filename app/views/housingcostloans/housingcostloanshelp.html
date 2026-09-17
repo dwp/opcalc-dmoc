@@ -1,0 +1,121 @@
+{% extends "layouts/main.html" %}
+
+{#
+  app/views/housingcostloans/housingcostloanshelp.html
+
+  Opened by the Help button on every housing cost loan tab. Each section has
+  the tab's id, so /housingcostloanshelp#shares jumps to the Shares help.
+
+  INVENTED: this wording explains the fields in plain English. Check it with
+  Viktoria before it goes in front of anyone.
+#}
+
+{% block pageTitle %}
+  Help with housing cost loans – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "javascript:window.history.back()"
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  {% set sections = [
+    { id: "periods", title: "Periods", text: [
+      "The over or underpayment period is the stretch of time being recalculated. It starts as the discrepancy period for the case.",
+      "The first day of entitlement is the first day the customer could get help with housing costs.",
+      "Loans that started before 2 October 1995 are treated differently. For those, you can give the date housing costs were first paid at 50%.",
+      "The 100% qualifying date is the date housing costs were first paid in full."
+    ] },
+    { id: "details", title: "Details", text: [
+      "Balance outstanding is how much of the loan was still owed at the start of the period.",
+      "Amount with MIRAS is the part of the loan that had Mortgage Interest Relief At Source.",
+      "The benefit week is the day the customer's benefit week ends or starts on.",
+      "Tick the loan was in payment if housing costs were already being paid before the period, then give the weekly interest.",
+      "Tick restrict the loan if only part of it can be covered, then give the date and amount of the restriction."
+    ] },
+    { id: "interest-rates", title: "Interest rates", text: [
+      "Add each interest rate the lender charged, with the date it started. Add at least one before moving on.",
+      "SR table shows the standard rates."
+    ] },
+    { id: "fixed-term-payments", title: "Fixed term payments", text: [
+      "Add each weekly payment for the fixed term loan, with the date it started. Add at least one before moving on.",
+      "SIR table shows the standard interest rates."
+    ] },
+    { id: "non-dependants", title: "Non-dependants", text: [
+      "A non-dependant is an adult who lives in the home but is not the customer's partner or child, for example a grown up son or daughter.",
+      "Add each one with their name, the dates they lived there and their category."
+    ] },
+    { id: "shares", title: "Shares", text: [
+      "If the customer owns the loan with other people, give their share as two numbers. 1 out of 2 means half.",
+      "If some owners do not live in the property, give the share of the owners who do."
+    ] },
+    { id: "payments", title: "Payments", text: [
+      "Add each weekly payment, the date it started and who it was paid to. Add at least one before moving on."
+    ] },
+    { id: "other-info", title: "Other info", text: [
+      "Add any other housing costs, like ground rent or service charges, with how often they are paid.",
+      "Save loan finishes the loan and takes you back to the case overview."
+    ] },
+    { id: "standard-rates", title: "Standard rates", text: [
+      "The standard rates table lists the standard rate used from each date, and its lower limit."
+    ] }
+  ] %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Housing cost loans</span>
+      <h1 class="govuk-heading-l">Help with housing cost loans</h1>
+
+      {% for section in sections %}
+        <h2 class="govuk-heading-m" id="{{ section.id }}">{{ section.title }}</h2>
+        {% for line in section.text %}
+          <p class="govuk-body">{{ line }}</p>
+        {% endfor %}
+        <p class="govuk-body">
+          {% if section.id == "standard-rates" %}
+            <a class="govuk-link" href="/housingcostloans/standardrates">Back to standard rates</a>
+          {% else %}
+            <a class="govuk-link" href="/housingcostloans/housingcostloanspage#{{ section.id }}">Back to the {{ section.title | lower }} tab</a>
+          {% endif %}
+        </p>
+      {% endfor %}
+
+    </div>
+  </div>
+
+{% endblock %}

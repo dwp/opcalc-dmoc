@@ -601,7 +601,381 @@ router.post('/housingcostloans/housingcostnewform-continue', function (req, res)
 
   delete data.hclNewFormErrors
 
+  // A new reference is a new loan, so it starts with empty tabs. Going back
+  // and pressing Continue again with the same reference keeps what is there.
+  if (data.hclLoanFor !== ref + '|' + loanType) {
+    Object.keys(data).forEach(function (field) {
+      if (/^hcl/.test(field) && ['hclRef', 'hclLoanType'].indexOf(field) === -1) { delete data[field] }
+    })
+    data.hclLoanFor = ref + '|' + loanType
+  }
+
   res.redirect(HCL_LOAN_PAGE)
+})
+
+// ---------------------------------------------------------------------------
+// Housing cost loans: the tabbed loan page
+// ---------------------------------------------------------------------------
+//
+// Every tab on /housingcostloans/housingcostloanspage is its own form, and
+// every form posts to /housingcostloans/hcl-tab with two hidden fields:
+//
+//   hclTab     which tab it came from, e.g. interest-rates
+//   hclAction  what the button asked for: add, next or save
+//
+// Add puts a new row into that tab's table. Next checks the tab and moves on.
+// Save (on the last tab) marks the loan as done and goes to the case overview.
+//
+// A fragment in a form action is dropped when the form posts, so this route
+// always redirects back to the page with the tab on the end, e.g.
+// /housingcostloans/housingcostloanspage#shares
+//
+// Problems are stored as:
+//   data.hclErrors       { tab, list: [{ href, message }] } for the summary
+//   data.hclFieldErrors  { 'field-id': 'message' } beside each field
+//
+// Everything a caseworker has typed is kept by the kit, so the form still
+// holds it when an error shows. After a row is added its boxes are emptied.
+
+const HCL_TAB_ORDER_NORMAL = ['periods', 'details', 'interest-rates', 'non-dependants', 'shares', 'payments', 'other-info']
+const HCL_TAB_ORDER_FIXED = ['periods', 'details', 'fixed-term-payments', 'non-dependants', 'shares', 'payments', 'other-info']
+
+// Labels for the choices, so the tables show words rather than stored values.
+// INVENTED: the non-dependant categories, payees, cost types and periods are
+// placeholders. The legacy lists were empty in the screenshots. Check them
+// with Viktoria before this goes in front of anyone.
+const HCL_ND_CATEGORIES = {
+  'working-high': 'Working 16 hours or more a week',
+  'working-low': 'Working less than 16 hours a week',
+  'not-working': 'Aged 18 or over and not working',
+  'on-benefit': 'Aged 25 or over and getting income support or JSA',
+  'under-25-benefit': 'Under 25 and getting income support or JSA'
+}
+
+const HCL_PAYEES = { lender: 'Lender', customer: 'Customer' }
+
+const HCL_COST_TYPES = {
+  'ground-rent': 'Ground rent',
+  'service-charge': 'Service charge',
+  'rent-charge': 'Rent charge',
+  'repairs': 'Repairs and improvements'
+}
+
+const HCL_PERIODS = { weekly: 'Weekly', monthly: 'Monthly', quarterly: 'Quarterly', yearly: 'Yearly' }
+
+// One helper so every tab reports problems the same way.
+function hclProblems () {
+  const list = []
+  const fields = {}
+
+  return {
+    list: list,
+    fields: fields,
+    add: function (id, message) {
+      if (!message) { return }
+      list.push({ href: '#' + id, message: message })
+      fields[id] = message
+    }
+  }
+}
+
+// A whole number, for the share boxes (1 / 1).
+function hclCheckShare (value, label) {
+  const text = String(value === undefined ? '' : value).trim()
+  if (!text) { return 'Enter ' + label }
+  if (!/^\d+$/.test(text) || Number(text) < 1) { return capitalise(label) + ' must be a whole number, like 1 or 2' }
+  return null
+}
+
+// A second date that must not be earlier than the first. Only checked once
+// both dates are real.
+function hclCheckOrder (problems, body, fromPrefix, toPrefix, toId, toLabel, fromLabel) {
+  if (checkDate(body, fromPrefix, 'x') || checkDate(body, toPrefix, 'x')) { return }
+  if (dateValue(dateParts(body, toPrefix)) < dateValue(dateParts(body, fromPrefix))) {
+    problems.add(toId, capitalise(toLabel) + ' must be the same as or after ' + fromLabel)
+  }
+}
+
+function hclTicked (value) {
+  return [].concat(value === undefined ? [] : value).indexOf('yes') !== -1
+}
+
+function hclClear (data, names) {
+  names.forEach(function (name) {
+    delete data[name]
+    delete data[name + '-day']
+    delete data[name + '-month']
+    delete data[name + '-year']
+  })
+}
+
+function hclAddRow (data, key, row) {
+  if (!Array.isArray(data[key])) { data[key] = [] }
+  data[key].push(row)
+}
+
+// What Add does on each tab. Each returns the problems it found; when there
+// are none the row has been added.
+const hclAdders = {
+  'interest-rates': function (data, body, p) {
+    p.add('hcl-rate-start-day', checkDate(body, 'hclRateStart', 'the start date'))
+
+    const rate = String(body.hclRatePercent || '').trim()
+    if (!rate) {
+      p.add('hcl-rate-percent', 'Enter the percentage rate')
+    } else if (!/^\d+(\.\d{1,3})?$/.test(rate) || Number(rate) <= 0 || Number(rate) > 100) {
+      p.add('hcl-rate-percent', 'Percentage rate must be a number between 0 and 100, like 4.875')
+    }
+
+    if (p.list.length) { return }
+
+    hclAddRow(data, 'hclRates', { start: dateFrom(body, 'hclRateStart'), rate: Number(rate).toFixed(3) })
+    hclClear(data, ['hclRateStart', 'hclRatePercent'])
+  },
+
+  'fixed-term-payments': function (data, body, p) {
+    p.add('hcl-ft-start-day', checkDate(body, 'hclFtStart', 'the start date'))
+    p.add('hcl-ft-amount', checkAmount(body.hclFtAmount, 'the amount'))
+
+    if (p.list.length) { return }
+
+    hclAddRow(data, 'hclFtPayments', { start: dateFrom(body, 'hclFtStart'), amount: Number(parseAmount(body.hclFtAmount)).toFixed(2) })
+    hclClear(data, ['hclFtStart', 'hclFtAmount'])
+  },
+
+  'non-dependants': function (data, body, p) {
+    p.add('hcl-nd-start-day', checkDate(body, 'hclNdStart', 'the start date'))
+    p.add('hcl-nd-end-day', checkDate(body, 'hclNdEnd', 'the end date'))
+    hclCheckOrder(p, body, 'hclNdStart', 'hclNdEnd', 'hcl-nd-end-day', 'the end date', 'the start date')
+
+    const category = body.hclNdCategory
+    if (!HCL_ND_CATEGORIES[category]) {
+      p.add('hcl-nd-category', 'Select the category')
+    } else if (category === 'working-high') {
+      p.add('hcl-nd-earnings', checkAmount(body.hclNdEarnings, 'the weekly earnings'))
+    }
+
+    if (!String(body.hclNdName || '').trim()) {
+      p.add('hcl-nd-name', "Enter the person's name")
+    }
+
+    if (p.list.length) { return }
+
+    hclAddRow(data, 'hclNonDeps', {
+      name: String(body.hclNdName).trim(),
+      category: HCL_ND_CATEGORIES[category],
+      earnings: category === 'working-high' ? Number(parseAmount(body.hclNdEarnings)).toFixed(2) : '0.00',
+      start: dateFrom(body, 'hclNdStart'),
+      end: dateFrom(body, 'hclNdEnd')
+    })
+    hclClear(data, ['hclNdCategory', 'hclNdEarnings', 'hclNdName'])
+  },
+
+  'shares': function (data, body, p) {
+    p.add('hcl-share-start-day', checkDate(body, 'hclShareStart', 'the start date'))
+    p.add('hcl-share-end-day', checkDate(body, 'hclShareEnd', 'the end date'))
+    hclCheckOrder(p, body, 'hclShareStart', 'hclShareEnd', 'hcl-share-end-day', 'the end date', 'the start date')
+
+    function checkFraction (topName, bottomName, id, label) {
+      const error = hclCheckShare(body[topName], 'the first number of ' + label) ||
+                    hclCheckShare(body[bottomName], 'the second number of ' + label)
+      if (error) { return p.add(id, error) }
+      if (Number(body[topName]) > Number(body[bottomName])) {
+        p.add(id, capitalise(label) + ' cannot be more than the whole loan')
+      }
+    }
+
+    checkFraction('hclShareCustomerTop', 'hclShareCustomerBottom', 'hcl-share-customer-top', "the customer's share")
+
+    const allOwners = body.hclShareAllOwners
+    if (allOwners !== 'yes' && allOwners !== 'no') {
+      p.add('hcl-share-all-owners', 'Select yes if all the owners live in the property')
+    } else if (allOwners === 'no') {
+      checkFraction('hclShareOtherTop', 'hclShareOtherBottom', 'hcl-share-other-top', "the other joint occupiers' share")
+    }
+
+    if (p.list.length) { return }
+
+    hclAddRow(data, 'hclShares', {
+      start: dateFrom(body, 'hclShareStart'),
+      end: dateFrom(body, 'hclShareEnd'),
+      customerShare: body.hclShareCustomerTop + ' / ' + body.hclShareCustomerBottom,
+      allOwners: allOwners === 'yes' ? 'Yes' : 'No',
+      otherShare: allOwners === 'no' ? body.hclShareOtherTop + ' / ' + body.hclShareOtherBottom : ''
+    })
+    hclClear(data, ['hclShareOtherTop', 'hclShareOtherBottom'])
+  },
+
+  'payments': function (data, body, p) {
+    p.add('hcl-pay-start-day', checkDate(body, 'hclPayStart', 'the start date'))
+    p.add('hcl-pay-amount', checkAmount(body.hclPayAmount, 'the amount'))
+    if (!HCL_PAYEES[body.hclPayPayee]) { p.add('hcl-pay-payee', 'Select the payee') }
+
+    if (p.list.length) { return }
+
+    hclAddRow(data, 'hclPayments', {
+      start: dateFrom(body, 'hclPayStart'),
+      amount: Number(parseAmount(body.hclPayAmount)).toFixed(2),
+      payee: HCL_PAYEES[body.hclPayPayee]
+    })
+    hclClear(data, ['hclPayStart', 'hclPayAmount', 'hclPayPayee'])
+  },
+
+  'other-info': function (data, body, p) {
+    if (!HCL_COST_TYPES[body.hclOtherType]) { p.add('hcl-other-type', 'Select the cost type') }
+    p.add('hcl-other-date-day', checkDate(body, 'hclOtherDate', 'the date'))
+    p.add('hcl-other-amount', checkAmount(body.hclOtherAmount, 'the amount'))
+    if (!HCL_PERIODS[body.hclOtherPeriod]) { p.add('hcl-other-period', 'Select how often the cost is paid') }
+
+    if (p.list.length) { return }
+
+    hclAddRow(data, 'hclOtherCosts', {
+      type: HCL_COST_TYPES[body.hclOtherType],
+      date: dateFrom(body, 'hclOtherDate'),
+      amount: Number(parseAmount(body.hclOtherAmount)).toFixed(2),
+      period: HCL_PERIODS[body.hclOtherPeriod]
+    })
+    hclClear(data, ['hclOtherType', 'hclOtherDate', 'hclOtherAmount', 'hclOtherPeriod'])
+  }
+}
+
+// What Next checks on each tab. These follow the messages the legacy status
+// bar showed while Next Tab was greyed out. Tabs not listed here have
+// nothing that must be filled in, so Next always moves on.
+const hclNextChecks = {
+  'periods': function (data, body, p) {
+    p.add('hcl-period-start-day', checkDate(body, 'hclPeriodStart', 'the start date'))
+    p.add('hcl-period-end-day', checkDate(body, 'hclPeriodEnd', 'the end date'))
+    hclCheckOrder(p, body, 'hclPeriodStart', 'hclPeriodEnd', 'hcl-period-end-day', 'the end date', 'the start date')
+    p.add('hcl-first-day-day', checkDate(body, 'hclFirstDay', 'the first day of entitlement'))
+
+    if (body.hclBefore1995 !== 'yes' && body.hclBefore1995 !== 'no') {
+      p.add('hcl-before-1995', 'Select yes if the loan started before 2 October 1995')
+    } else if (body.hclBefore1995 === 'yes' && anyGiven(body, ['hclQual50-day', 'hclQual50-month', 'hclQual50-year'])) {
+      p.add('hcl-qual-50-day', checkDate(body, 'hclQual50', 'the 50% qualifying date'))
+    }
+
+    if (anyGiven(body, ['hclQual100-day', 'hclQual100-month', 'hclQual100-year'])) {
+      p.add('hcl-qual-100-day', checkDate(body, 'hclQual100', 'the 100% qualifying date'))
+    }
+  },
+
+  'details': function (data, body, p) {
+    p.add('hcl-balance', checkAmount(body.hclBalance, 'the balance outstanding'))
+    p.add('hcl-miras', checkOptionalAmount(body.hclMiras, 'the amount with MIRAS'))
+
+    if (!body.hclBenefitDay) { p.add('hcl-benefit-day', 'Select the benefit week day') }
+    if (body.hclBenefitWeekType !== 'bwe' && body.hclBenefitWeekType !== 'bwc') {
+      p.add('hcl-benefit-week-type', 'Select benefit week ending or benefit week commencing')
+    }
+
+    if (body.hclInPayment === 'yes') {
+      p.add('hcl-weekly-interest', checkAmount(body.hclWeeklyInterest, 'the weekly interest'))
+      p.add('hcl-addback', checkOptionalAmount(body.hclAddback, 'the addback'))
+    }
+
+    if (body.hclRestrict === 'yes') {
+      p.add('hcl-restrict-start-day', checkDate(body, 'hclRestrictStart', 'the restriction start date'))
+      p.add('hcl-restrict-amount', checkAmount(body.hclRestrictAmount, 'the restriction amount'))
+    }
+  },
+
+  'interest-rates': function (data, body, p) {
+    if (!(data.hclRates || []).length) {
+      p.add('hcl-rate-start-day', 'Add at least one interest rate before moving on')
+    }
+  },
+
+  'fixed-term-payments': function (data, body, p) {
+    if (!(data.hclFtPayments || []).length) {
+      p.add('hcl-ft-start-day', 'Add at least one weekly payment before moving on')
+    }
+  },
+
+  'payments': function (data, body, p) {
+    if (!(data.hclPayments || []).length) {
+      p.add('hcl-pay-start-day', 'Add at least one payment and select the payee before moving on')
+    }
+  }
+}
+
+router.post('/housingcostloans/hcl-tab', function (req, res) {
+  if (!req.session.data) { req.session.data = {} }
+
+  const data = req.session.data
+  const body = req.body || {}
+  const tab = body.hclTab
+  const action = body.hclAction
+  const order = data.hclLoanType === 'fixed-term' ? HCL_TAB_ORDER_FIXED : HCL_TAB_ORDER_NORMAL
+  const page = HCL_LOAN_PAGE
+  const p = hclProblems()
+
+  // A ticked box can arrive as 'yes' or, because the kit adds a hidden
+  // _unchecked field beside every checkbox, as ['_unchecked', 'yes'].
+  // Stored as a plain 'yes' or '' so the page and the checks below agree.
+  if (tab === 'details') {
+    body.hclInPayment = hclTicked(body.hclInPayment) ? 'yes' : ''
+    body.hclRestrict = hclTicked(body.hclRestrict) ? 'yes' : ''
+    data.hclInPayment = body.hclInPayment
+    data.hclRestrict = body.hclRestrict
+  }
+
+  // Unchecked radios send nothing too. Clearing these stops an old answer
+  // coming back after it was left empty.
+  if (tab === 'periods' && !body.hclBefore1995) { delete data.hclBefore1995 }
+
+  delete data.hclErrors
+  delete data.hclFieldErrors
+
+  if (order.indexOf(tab) === -1) {
+    return res.redirect(page)
+  }
+
+  if (action === 'add' && hclAdders[tab]) {
+    hclAdders[tab](data, body, p)
+  } else if ((action === 'next' || action === 'save') && hclNextChecks[tab]) {
+    hclNextChecks[tab](data, body, p)
+  }
+
+  if (p.list.length) {
+    data.hclErrors = { tab: tab, list: p.list }
+    data.hclFieldErrors = p.fields
+    return res.redirect(page + '#' + tab)
+  }
+
+  if (action === 'next') {
+    const next = order[order.indexOf(tab) + 1] || tab
+    return res.redirect(page + '#' + next)
+  }
+
+  if (action === 'save') {
+    data.hclComplete = 'yes'
+    data.caseBanner = 'hcl'
+    delete data.caseBannerSeen
+    return res.redirect(CASE_OVERVIEW_PAGE)
+  }
+
+  res.redirect(page + '#' + tab)
+})
+
+// Row level Remove links in the tab tables.
+// /housingcostloans/hcl-remove?list=hclRates&row=0&tab=interest-rates
+const HCL_LIST_NAMES = ['hclRates', 'hclFtPayments', 'hclNonDeps', 'hclShares', 'hclPayments', 'hclOtherCosts']
+
+router.get('/housingcostloans/hcl-remove', function (req, res) {
+  const data = req.session.data || {}
+  const list = req.query.list
+  const row = parseInt(req.query.row, 10)
+  const tab = String(req.query.tab || '').replace(/[^a-z-]/g, '')
+
+  if (HCL_LIST_NAMES.indexOf(list) !== -1 && Array.isArray(data[list]) && row >= 0 && row < data[list].length) {
+    data[list].splice(row, 1)
+  }
+
+  // A removed row can leave the loan unfinished again
+  delete data.hclComplete
+
+  res.redirect(HCL_LOAN_PAGE + (tab ? '#' + tab : ''))
 })
 
 // Starts a case from scratch without going through the journey - handy while
@@ -1152,6 +1526,7 @@ router.use(function (req, res, next) {
     if (data.avHoursErrors && segment !== 'avhours') { delete data.avHoursErrors }
     if (data.ba3Errors && segment !== 'ba3entrydetails') { delete data.ba3Errors }
     if (data.hclNewFormErrors && segment !== 'housingcostnewform') { delete data.hclNewFormErrors }
+    if (data.hclErrors && segment !== 'housingcostloanspage') { delete data.hclErrors; delete data.hclFieldErrors }
   }
 
   // The success banner belongs to the visit that follows the action.

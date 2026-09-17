@@ -73,8 +73,7 @@
   (", " + discrepancyPeriod if discrepancyPeriod else "")
 ) if data.a14Complete else "" %}
 
-{# Nothing sets hclComplete yet. It will be set once the loan page has a
-   real finish step, and the row will turn green then. #}
+{# hclComplete is set by Save loan on the last tab of the housing cost loan page. #}
 {% set hclReference = (
   "Loan " + data.hclRef +
   (", fixed term loan" if data.hclLoanType == "fixed-term" else ", normal loan")
@@ -174,6 +173,9 @@
             {% elif data.caseBanner == "created" %}
               <h3 class="govuk-notification-banner__heading">Customer details recorded and case created</h3>
               <p class="govuk-body">Fill out the rest of the relevant forms to complete the calculation.</p>
+            {% elif data.caseBanner == "hcl" %}
+              <h3 class="govuk-notification-banner__heading">Housing cost loan saved</h3>
+              <p class="govuk-body">{{ hclReference if hclReference else "The housing cost loan is complete" }}.</p>
             {% elif data.caseBanner == "printed" %}
               <h3 class="govuk-notification-banner__heading">PDFs sent to print</h3>
             {% elif data.caseBanner == "dcc" %}
