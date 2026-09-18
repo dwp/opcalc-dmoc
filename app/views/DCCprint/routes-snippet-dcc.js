@@ -29,9 +29,9 @@ router.post('/dccisjsa-asset-accumulating', function (req, res) {
   const accumulating = req.session.data['isjsaAccumulatingAsset']
 
   if (accumulating === 'yes') {
-    res.redirect('/dccisjsaassetsnewassetaccumulatingassetyes')
+    res.redirect(url);
   } else {
-    res.redirect('/dccisjsaassetsnewassetaccumulatingassetno')
+    res.redirect(url);
   }
 })
 
@@ -40,7 +40,7 @@ router.post('/dccisjsa-asset-accumulating', function (req, res) {
 // recorded against that asset - a prototype cannot work that out, so it
 // always fires. To skip it, redirect straight to /dccisjsa instead.
 router.post('/dccisjsa-asset-value', function (req, res) {
-  res.redirect('/dccisjsaassetstickshowvaluesalreadyexists')
+  res.redirect(url);
 })
 
 // Already exists warning: Yes replaces the value and returns to the tabs,
@@ -49,8 +49,8 @@ router.post('/dccisjsa-value-replace', function (req, res) {
   const replace = req.session.data['isjsaReplaceValue']
 
   if (replace === 'no') {
-    res.redirect('/dccisjsaassetstickshowvalues')
+    res.redirect(url);
   } else {
-    res.redirect('/dccisjsa#assets')
+    res.redirect(url);
   }
 })

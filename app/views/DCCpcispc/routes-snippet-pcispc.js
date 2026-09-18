@@ -27,9 +27,9 @@ router.post('/dccpcispc-asset-accumulating', function (req, res) {
   const accumulating = req.session.data['pcispcAccumulatingAsset']
 
   if (accumulating === 'yes') {
-    res.redirect('/dccpcispcnewassetaccumulatingassetyes')
+    res.redirect(url);
   } else {
-    res.redirect('/dccpcispcnewassetaccumulatingassetno')
+    res.redirect(url);
   }
 })
 
@@ -38,7 +38,7 @@ router.post('/dccpcispc-asset-accumulating', function (req, res) {
 // recorded against that asset - a prototype cannot work that out, so it
 // always fires. To skip it, redirect straight to /dccpcispc instead.
 router.post('/dccpcispc-asset-value', function (req, res) {
-  res.redirect('/dccpcispcassetvaluesalreadyexist')
+  res.redirect(url);
 })
 
 // Already exists warning: Yes replaces the value and returns to the tabs,
@@ -47,8 +47,8 @@ router.post('/dccpcispc-value-replace', function (req, res) {
   const replace = req.session.data['pcispcReplaceValue']
 
   if (replace === 'no') {
-    res.redirect('/dccpcispcassetsshowvalues')
+    res.redirect(url);
   } else {
-    res.redirect('/dccpcispc#assets')
+    res.redirect(url);
   }
 })

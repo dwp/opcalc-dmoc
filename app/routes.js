@@ -274,7 +274,7 @@ function generateA14 (req, res) {
   // different problem from the banner not showing.
   console.log('Generate A14 forms: banner set, redirecting to ' + CASE_OVERVIEW_PAGE)
 
-  res.redirect(CASE_OVERVIEW_PAGE)
+  res.redirect(url);
 }
 
 // Declared as real routes as well as through postHandlers below, so nothing
@@ -354,7 +354,7 @@ function caseCreated (req, res) {
   data.caseBanner = 'created'
   delete data.caseBannerSeen
 
-  res.redirect(CASE_OVERVIEW_PAGE)
+  res.redirect(url);
 }
 
 // ---------------------------------------------------------------------------
@@ -401,7 +401,7 @@ function addEarning (req, res) {
   // Coming back to the same page, so the list stays.
   data.avKeepPending = true
 
-  res.redirect(data.a14SubPagePath || '/avearnings')
+  res.redirect(url);
 }
 
 // The hours version of the same thing. Hours and minutes are joined into one
@@ -436,7 +436,7 @@ function addHours (req, res) {
 
   data.avKeepPending = true
 
-  res.redirect(data.a14SubPagePath || '/avhours')
+  res.redirect(url);
 }
 
 router.get('/avhours-remove-hours', function (req, res) {
@@ -449,7 +449,7 @@ router.get('/avhours-remove-hours', function (req, res) {
 
   data.avKeepPending = true
 
-  res.redirect(data.a14SubPagePath || '/avhours')
+  res.redirect(url);
 })
 
 router.get('/avearnings-remove-earning', function (req, res) {
@@ -462,7 +462,7 @@ router.get('/avearnings-remove-earning', function (req, res) {
 
   data.avKeepPending = true
 
-  res.redirect(data.a14SubPagePath || '/avearnings')
+  res.redirect(url);
 })
 
 router.post('/avearnings-complete', function (req, res) {
@@ -483,7 +483,7 @@ router.post('/avearnings-complete', function (req, res) {
 
   if (errors.length) {
     data.avErrors = errors
-    return res.redirect('/avearnings#customer')
+    return res.redirect(url);
   }
 
   data.avEarningsComplete = 'yes'
@@ -493,7 +493,7 @@ router.post('/avearnings-complete', function (req, res) {
 
   console.log('Average earnings: calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
 
-  res.redirect(CASE_OVERVIEW_PAGE)
+  res.redirect(url);
 })
 
 // Average hours, the same rule as average earnings.
@@ -515,7 +515,7 @@ router.post('/avhours-complete', function (req, res) {
 
   if (errors.length) {
     data.avHoursErrors = errors
-    return res.redirect('/avhours#customer')
+    res.redirect(url);
   }
 
   data.avHoursComplete = 'yes'
@@ -525,7 +525,7 @@ router.post('/avhours-complete', function (req, res) {
 
   console.log('Average hours: calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
 
-  res.redirect(CASE_OVERVIEW_PAGE)
+  res.redirect(url);
 })
 
 // BA3, the same shape as the QB16: at least one entry before it can be run.
@@ -539,7 +539,7 @@ router.post('/ba3-complete', function (req, res) {
       href: '#entries',
       message: 'Add at least one entry before running the calculation'
     }]
-    return res.redirect('/ba3entrydetails#entries')
+    return res.redirect(url);
   }
 
   data.ba3Complete = 'yes'
@@ -549,7 +549,7 @@ router.post('/ba3-complete', function (req, res) {
 
   console.log('BA3: calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
 
-  res.redirect(CASE_OVERVIEW_PAGE)
+  res.redirect(url);
 })
 
 // ---------------------------------------------------------------------------
@@ -596,7 +596,7 @@ router.post('/housingcostloans/housingcostnewform-continue', function (req, res)
 
   if (errors.length) {
     data.hclNewFormErrors = errors
-    return res.redirect(HCL_NEW_FORM_PAGE)
+   return res.redirect(url);
   }
 
   delete data.hclNewFormErrors
@@ -610,7 +610,7 @@ router.post('/housingcostloans/housingcostnewform-continue', function (req, res)
     data.hclLoanFor = ref + '|' + loanType
   }
 
-  res.redirect(HCL_LOAN_PAGE)
+  res.redirect(url);
 })
 
 // ---------------------------------------------------------------------------
@@ -928,7 +928,7 @@ router.post('/housingcostloans/hcl-tab', function (req, res) {
   delete data.hclFieldErrors
 
   if (order.indexOf(tab) === -1) {
-    return res.redirect(page)
+    return res.redirect(url);
   }
 
   if (action === 'add' && hclAdders[tab]) {
@@ -940,22 +940,22 @@ router.post('/housingcostloans/hcl-tab', function (req, res) {
   if (p.list.length) {
     data.hclErrors = { tab: tab, list: p.list }
     data.hclFieldErrors = p.fields
-    return res.redirect(page + '#' + tab)
+    return res.redirect(url);
   }
 
   if (action === 'next') {
     const next = order[order.indexOf(tab) + 1] || tab
-    return res.redirect(page + '#' + next)
+    return res.redirect(url);
   }
 
   if (action === 'save') {
     data.hclComplete = 'yes'
     data.caseBanner = 'hcl'
     delete data.caseBannerSeen
-    return res.redirect(CASE_OVERVIEW_PAGE)
+    return res.redirect(url);
   }
 
-  res.redirect(page + '#' + tab)
+  res.redirect(url);
 })
 
 // Row level Remove links in the tab tables.
@@ -975,7 +975,7 @@ router.get('/housingcostloans/hcl-remove', function (req, res) {
   // A removed row can leave the loan unfinished again
   delete data.hclComplete
 
-  res.redirect(HCL_LOAN_PAGE + (tab ? '#' + tab : ''))
+  res.redirect(url);
 })
 
 // Starts a case from scratch without going through the journey - handy while
@@ -986,7 +986,7 @@ router.get('/new-case', function (req, res) {
   clearRecords(req.session.data)
   delete req.session.data.caseRecordsFor
 
-  res.redirect(CASE_OVERVIEW_PAGE)
+  res.redirect(url);
 })
 
 router.get('/onboarding/case-overview-confirmation', caseCreated)
@@ -998,8 +998,8 @@ router.post('/onboarding/case-overview-confirmation', caseCreated)
 
 // The old A14 case overview. Everything it showed is on the one overview now.
 // Delete these two lines if you want that page back.
-router.get('/a14caseoverview', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
-router.get('/A14/a14caseoverview', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
+router.get('/a14caseoverview', function (req, res) { res.redirect(url); })
+router.get('/A14/a14caseoverview', function (req, res) { res.redirect(url); })
 
 // Shows what the banner logic currently thinks, without opening anything.
 router.get('/banner-check', function (req, res) {
@@ -1077,7 +1077,7 @@ router.get('/a14-row-edit', function (req, res) {
   const row = (data[key] || [])[index]
 
   if (!row) {
-    return res.redirect(req.query.returnTo || '/opcalctype')
+    return res.redirect(url);
   }
 
   snapshotShared(data)
@@ -1100,10 +1100,10 @@ router.get('/a14-row-edit', function (req, res) {
   if (!row._page) {
     data.a14EditKey = ''
     data.a14EditIndex = ''
-    return res.redirect(req.query.returnTo || '/opcalctype')
+    return res.redirect(url);
   }
 
-  res.redirect(row._page)
+  res.redirect(url);
 })
 
 // Delete a row from one of the A14 tables.
@@ -1120,7 +1120,7 @@ router.get('/a14-row-copy', function (req, res) {
     data[key] = rows.concat([Object.assign({}, rows[index])])
   }
 
-  res.redirect(req.query.returnTo || '/onboarding/case-overview')
+  res.redirect(url);
 })
 
 router.get('/a14-row-delete', function (req, res) {
@@ -1132,7 +1132,7 @@ router.get('/a14-row-delete', function (req, res) {
     data[key] = data[key].filter(function (row, i) { return String(i) !== String(index) })
   }
 
-  res.redirect(req.query.returnTo || '/opcalctype')
+  res.redirect(url);
 })
 
 router.post('/return-to-tab', function (req, res) {
@@ -1269,7 +1269,7 @@ router.post('/return-to-tab', function (req, res) {
   // returnTo would send someone back to whatever tab was visited last.
   delete req.session.data.returnTo
 
-  res.redirect(destination || '/opcalctype')
+ res.redirect(url);
 })
 
 // ===========================================================================
@@ -1602,13 +1602,13 @@ router.use(function (req, res, next) {
     // rather than a choice. Go back and ask instead.
     if (!record || !record.a14) {
       data.benefitError = 'Select which benefit this case is for before opening an A14 form'
-      return res.redirect(SELECT_BENEFIT_PAGE)
+      return res.redirect(url);
     }
 
     // Asked for the wrong form - send them to the right one, at its real
     // address, so the address bar says which form they are on.
     if (record.a14 !== a14Addresses[segment]) {
-      return res.redirect(realAddress(record.a14))
+      return res.redirect(url);
     }
 
     const wanted = a14Views[record.a14]
@@ -1718,7 +1718,7 @@ router.get('/whats-stored', function (req, res) {
 })
 
 // Same page, easier name to remember.
-router.get('/whats-wired', function (req, res) { res.redirect('/whats-stored') })
+router.get('/whats-wired', function (req, res) { res.redirect(url); })
 
 // The benefit sits in the session until it is replaced, which is right for a
 // case but confusing while testing - an old choice looks like a new one that
@@ -1732,7 +1732,7 @@ router.get('/clear-benefit', function (req, res) {
   delete data.initialBenefitWeek
   delete data.benefitWeekType
 
-  res.redirect(SELECT_BENEFIT_PAGE)
+  res.redirect(url);
 })
 
 // The pages either side of the benefit questions. Each is the address the kit
@@ -1816,10 +1816,10 @@ function openA14 (req, res) {
 
   if (!record || !record.a14) {
     req.session.data.benefitError = 'Select which benefit this case is for before opening an A14 form'
-    return res.redirect(SELECT_BENEFIT_PAGE)
+    return res.redirect(url);
   }
 
-  res.redirect(realAddress(record.a14))
+  res.redirect(url);
 }
 
 // ---------------------------------------------------------------------------
@@ -1836,12 +1836,12 @@ function selectBenefitContinue (req, res) {
 
   if (!chosen) {
     data.benefitError = 'Select which benefit this case is for'
-    return res.redirect(SELECT_BENEFIT_PAGE)
+    return res.redirect(url);
   }
 
   if (!benefits[chosen] || !benefits[chosen].available) {
     data.benefitError = 'That benefit is not part of this prototype. Select Employment and Support Allowance, Income Support/Jobseeker’s Allowance, or Income Support/Pension Credit.'
-    return res.redirect(SELECT_BENEFIT_PAGE)
+    return res.redirect(url);
   }
 
   data.benefit = chosen
@@ -1860,7 +1860,7 @@ function selectBenefitContinue (req, res) {
 
   delete data.benefitError
 
-  res.redirect(BENEFIT_DETAILS_PAGE)
+  res.redirect(url);
 }
 
 router.post('/select-benefit-continue', selectBenefitContinue)
@@ -1906,12 +1906,12 @@ function benefitDetailsContinue (req, res) {
 
   if (errors.length) {
     data.benefitDetailsErrors = errors
-    return res.redirect(BENEFIT_DETAILS_PAGE)
+    return res.redirect(url);
   }
 
   delete data.benefitDetailsErrors
 
-  res.redirect(CHECK_ANSWERS_PAGE)
+  res.redirect(url);
 }
 
 router.post('/benefit-details-continue', benefitDetailsContinue)
@@ -1981,7 +1981,7 @@ function newFormContinue (req, res) {
 
   if (errors.length) {
     data.newFormErrors = errors
-    return res.redirect(NEW_FORM_PAGE)
+    return res.redirect(url);
   }
 
   delete data.newFormErrors
@@ -2041,18 +2041,18 @@ router.post('/qb16-complete', function (req, res) {
 
   console.log('QB16: calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
 
-  res.redirect(CASE_OVERVIEW_PAGE)
+  res.redirect(url);
 })
 
 // The old page that stood in for the case overview once a QB16 was filled in.
 // There is one case overview now, and it shows the QB16 row itself, so both
 // addresses go there.
-router.get('/landingpagewithqb16entrydetailsfilledin', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
+router.get('/landingpagewithqb16entrydetailsfilledin', function (req, res) { res.redirect(url); })
 router.post('/landingpagewithqb16entrydetailsfilledin', function (req, res) {
   if (!req.session.data) { req.session.data = {} }
   req.session.data.qb16Complete = 'yes'
   req.session.data.caseBanner = 'qb16'
-  res.redirect(CASE_OVERVIEW_PAGE)
+  res.redirect(url);
 })
 
 // Printing. The selection itself does not need keeping in a prototype - what
@@ -2062,7 +2062,7 @@ router.post('/qb16-print', function (req, res) {
   req.session.data.caseBanner = 'printed'
   delete req.session.data.caseBannerSeen
 
-  res.redirect(CASE_OVERVIEW_PAGE)
+  res.redirect(url);
 })
 
 // Insert standard text. It posts here rather than to /return-to-tab because
@@ -2079,7 +2079,7 @@ router.post('/qb16-standard-text', function (req, res) {
 
   delete data.returnTo
 
-  res.redirect(destination)
+  res.redirect(url);
 })
 
 // The Yes/No branch on the overlapping dates warning.
@@ -2091,9 +2091,9 @@ router.post('/qb16-overlap-answer', function (req, res) {
   const adjustDates = req.body.adjustDates || (req.session.data || {}).adjustDates
 
   if (adjustDates === 'no') {
-    res.redirect('/qb16entrydetails?returnTo=/qb16listofentries%23list-of-entries')
+    res.redirect(url);
   } else {
-    res.redirect('/qb16listofentries#list-of-entries')
+    res.redirect(url);
   }
 })
 
@@ -2106,7 +2106,7 @@ router.get('/qb16-clear-cause', function (req, res) {
   delete data.cause
   delete data.standardText
 
-  res.redirect('/qb16listofentries#list-of-entries')
+  res.redirect(url);
 })
 
 // Deleting a row, confirmed from one of the three QB16 delete pages.
@@ -2128,7 +2128,7 @@ router.post('/qb16-delete-row', function (req, res) {
   delete data.deleteIndex
   delete data.deleteReturnTo
 
-  res.redirect(destination)
+  res.redirect(url);
 })
 
 // ---------------------------------------------------------------------------
@@ -2203,7 +2203,7 @@ function dccAdd (req, res, page, variant, actions) {
 
   delete data.action
 
-  res.redirect(page + '#' + add.tab)
+  res.redirect(url);
 
   // Says the request has been answered. res.redirect returns nothing, so
   // returning it here would read as "not handled" and the caller would carry
@@ -2228,7 +2228,7 @@ router.post('/dccisjsa-action', function (req, res) {
 
   console.log('DCC (IS/JSA): calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
 
-  res.redirect(CASE_OVERVIEW_PAGE)
+  res.redirect(url);
 })
 
 // Asset page: choosing Yes or No to "Is this an accumulating asset?" swaps
@@ -2237,9 +2237,9 @@ router.post('/dccisjsa-asset-accumulating', function (req, res) {
   const accumulating = req.body.isjsaAccumulatingAsset || (req.session.data || {}).isjsaAccumulatingAsset
 
   if (accumulating === 'yes') {
-    res.redirect('/dccisjsaassetsnewassetaccumulatingassetyes')
+    res.redirect(url);
   } else {
-    res.redirect('/dccisjsaassetsnewassetaccumulatingassetno')
+    res.redirect(url);
   }
 })
 
@@ -2255,7 +2255,7 @@ router.post('/dccisjsa-asset-value', function (req, res) {
 
   req.session.data.dccPendingValue = buildRow(req.body)
 
-  res.redirect('/dccisjsaassetstickshowvaluesalreadyexists')
+  res.redirect(url);
 })
 
 // Already exists warning: Yes keeps the value, No goes back to change the date.
@@ -2266,7 +2266,7 @@ router.post('/dccisjsa-value-replace', function (req, res) {
   const replace = req.body.isjsaReplaceValue || data.isjsaReplaceValue
 
   if (replace === 'no') {
-    return res.redirect('/dccisjsaassetstickshowvalues')
+    return res.redirect(url);
   }
 
   if (data.dccPendingValue) {
@@ -2277,14 +2277,14 @@ router.post('/dccisjsa-value-replace', function (req, res) {
   delete data.dccPendingValue
   delete data.isjsaReplaceValue
 
-  res.redirect('/dccisjsa#assets')
+  res.redirect(url);
 })
 
 // The ESA path had its own case overview and its own print page. There is one
 // case overview now and it shows the DCC row itself, so that address goes
 // there rather than showing the same case twice, disagreeing.
-router.get('/dccesacaseoverview', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
-router.post('/dccesacaseoverview', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
+router.get('/dccesacaseoverview', function (req, res) { res.redirect(url); })
+router.post('/dccesacaseoverview', function (req, res) { res.redirect(url); })
 
 // Printing, from any of the print selection pages. The selection itself does
 // not need keeping in a prototype - what matters is that pressing the button
@@ -2295,7 +2295,7 @@ router.post('/case-print', function (req, res) {
   req.session.data.caseBanner = 'printed'
   delete req.session.data.caseBannerSeen
 
-  res.redirect(CASE_OVERVIEW_PAGE)
+  res.redirect(url);
 })
 
 // Looking at a finished DCC. ESA has its own results page; the other two use
@@ -2308,7 +2308,7 @@ const dccViewPages = {
 
 router.get('/dcc-view', function (req, res) {
   const data = req.session.data || {}
-  res.redirect(dccViewPages[data.benefit] || '/dccPDF')
+  res.redirect(url);
 })
 
 // The Diminishing capital calculation button on the case overview. Which DCC
@@ -2329,10 +2329,10 @@ router.get('/dcc', function (req, res) {
 
   if (!page) {
     // No benefit chosen yet, so there is nothing to decide with.
-    return res.redirect(SELECT_BENEFIT_PAGE)
+    return res.redirect(url);
   }
 
-  res.redirect(page)
+  res.redirect(url);
 })
 
 // ---------------------------------------------------------------------------
@@ -2377,7 +2377,7 @@ router.post('/dccpcispc-action', function (req, res) {
 
   console.log('DCC (PC/IS-PC): calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
 
-  res.redirect(CASE_OVERVIEW_PAGE)
+  res.redirect(url);
 })
 
 // Asset page: Yes or No to "Is this an accumulating asset?" swaps which set
@@ -2386,9 +2386,9 @@ router.post('/dccpcispc-asset-accumulating', function (req, res) {
   const accumulating = req.body.pcispcAccumulatingAsset || (req.session.data || {}).pcispcAccumulatingAsset
 
   if (accumulating === 'yes') {
-    res.redirect('/dccpcispcnewassetaccumulatingassetyes')
+    res.redirect(url);
   } else {
-    res.redirect('/dccpcispcnewassetaccumulatingassetno')
+    res.redirect(url);
   }
 })
 
@@ -2400,7 +2400,7 @@ router.post('/dccpcispc-asset-value', function (req, res) {
 
   req.session.data.dccPendingValue = buildRow(req.body)
 
-  res.redirect('/dccpcispcassetvaluesalreadyexist')
+  res.redirect(url);
 })
 
 router.post('/dccpcispc-value-replace', function (req, res) {
@@ -2410,7 +2410,7 @@ router.post('/dccpcispc-value-replace', function (req, res) {
   const replace = req.body.pcispcReplaceValue || data.pcispcReplaceValue
 
   if (replace === 'no') {
-    return res.redirect('/dccpcispcassetsshowvalues')
+    return res.redirect(url);
   }
 
   if (data.dccPendingValue) {
@@ -2421,12 +2421,12 @@ router.post('/dccpcispc-value-replace', function (req, res) {
   delete data.dccPendingValue
   delete data.pcispcReplaceValue
 
-  res.redirect('/dccpcispc#assets')
+  res.redirect(url);
 })
 
 // The PC/ISPC path had its own case overview too. One case overview now.
-router.get('/dccpcispccaseoverview', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
-router.post('/dccpcispccaseoverview', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
+router.get('/dccpcispccaseoverview', function (req, res) { res.redirect(url); })
+router.post('/dccpcispccaseoverview', function (req, res) { res.redirect(url); })
 
 // ===========================================================================
 // DCC - Employment and Support Allowance
@@ -2722,8 +2722,7 @@ router.post('/dccesa-asset-save', function (req, res) {
 
   if (errors.length) {
     data.dccErrors = errors
-    return res.redirect('/dccesanewassetaccumulatingassetno' +
-      (index !== undefined && index !== '' ? '?asset=' + index : ''))
+    return res.redirect(url);
   }
 
   const asset = {
@@ -2755,7 +2754,7 @@ router.post('/dccesa-asset-save', function (req, res) {
 
   delete data.dccErrors
 
-  res.redirect('/dccesa#assets')
+  res.redirect(url);
 })
 
 // Delete an asset, confirmed from /dccesadeleteasset. Its values go with it.
@@ -2769,7 +2768,7 @@ router.post('/dccesa-asset-delete', function (req, res) {
 
   delete data.asset
 
-  res.redirect('/dccesa#assets')
+  res.redirect(url);
 })
 
 // Save a value against an asset. If a value already exists for that date, go
@@ -2782,7 +2781,7 @@ router.post('/dccesa-value-save', function (req, res) {
   const errors = []
 
   if (!asset) {
-    return res.redirect('/dccesa#assets')
+    return res.redirect(url);
   }
 
   function fail (field, href, message) {
@@ -2798,14 +2797,14 @@ router.post('/dccesa-value-save', function (req, res) {
 
   if (errors.length) {
     data.dccErrors = errors
-    return res.redirect('/dccesaassetsshowvalues?asset=' + index + '&returnTo=/dccesa%23assets')
+    return res.redirect(url);
   }
 
   const date = dateFrom(body, 'esaNewValueDate')
   const clash = (asset.values || []).some(function (v) { return v.date === date })
 
   if (clash) {
-    return res.redirect('/dccesaassetvaluesalreadyexist')
+    return res.redirect(url);
   }
 
   asset.values = asset.values || []
@@ -2820,7 +2819,7 @@ router.post('/dccesa-value-save', function (req, res) {
 
   delete data.dccErrors
 
-  res.redirect('/dccesa#assets')
+  res.redirect(url);
 })
 
 // Answer to the duplicate date warning.
@@ -2832,7 +2831,7 @@ router.post('/dccesa-value-replace', function (req, res) {
   const asset = (data.esaAssets || [])[index]
 
   if (req.body.esaReplaceValue === 'no' || !asset) {
-    return res.redirect('/dccesaassetsshowvalues?asset=' + index + '&returnTo=/dccesa%23assets')
+    return res.redirect(url);
   }
 
   const date = data['esaNewValueDate-day'] + '/' +
@@ -2850,7 +2849,7 @@ router.post('/dccesa-value-replace', function (req, res) {
     'esaNewValue'
   ])
 
-  res.redirect('/dccesa#assets')
+  res.redirect(url);
 })
 
 // ---------------------------------------------------------------------------
@@ -2972,7 +2971,7 @@ router.post('/dccesa-action', function (req, res) {
 
     if (errors.length) {
       data.dccErrors = errors
-      return res.redirect('/dccesa#esa-paid')
+      return res.redirect(url);
     }
 
     saveRow(data, 'esaRates', body.editRateIndex, {
@@ -2986,7 +2985,7 @@ router.post('/dccesa-action', function (req, res) {
     clearFields(data, rateFields)
     delete data.editRate
     delete data.dccErrors
-    return res.redirect('/dccesa#esa-paid')
+    return res.redirect(url);
   }
 
   // ----- Income -----
@@ -3019,7 +3018,7 @@ router.post('/dccesa-action', function (req, res) {
 
     if (errors.length) {
       data.dccErrors = errors
-      return res.redirect('/dccesa#income')
+      return res.redirect(url);
     }
 
     saveRow(data, 'esaIncomes', body.editIncomeIndex, {
@@ -3034,7 +3033,7 @@ router.post('/dccesa-action', function (req, res) {
     clearFields(data, incomeFields)
     delete data.editIncome
     delete data.dccErrors
-    return res.redirect('/dccesa#income')
+    return res.redirect(url);
   }
 
   // ----- Tariff income -----
@@ -3058,7 +3057,7 @@ router.post('/dccesa-action', function (req, res) {
 
     if (errors.length) {
       data.dccErrors = errors
-      return res.redirect('/dccesa#tariff-income')
+      return res.redirect(url);
     }
 
     saveRow(data, 'esaTariffs', body.editTariffIndex, {
@@ -3070,7 +3069,7 @@ router.post('/dccesa-action', function (req, res) {
     clearFields(data, tariffFields)
     delete data.editTariff
     delete data.dccErrors
-    return res.redirect('/dccesa#tariff-income')
+    return res.redirect(url);
   }
 
   // ----- Residential care -----
@@ -3123,7 +3122,7 @@ router.post('/dccesa-action', function (req, res) {
 
     if (errors.length) {
       data.dccErrors = errors
-      return res.redirect('/dccesa#res-care')
+      return res.redirect(url);
     }
 
     saveRow(data, 'esaResCare', body.editResCareIndex, {
@@ -3137,7 +3136,7 @@ router.post('/dccesa-action', function (req, res) {
     clearFields(data, resCareFields)
     delete data.editResCare
     delete data.dccErrors
-    return res.redirect('/dccesa#res-care')
+    return res.redirect(url);
   }
 
   // ----- Run the calculation -----
@@ -3145,7 +3144,7 @@ router.post('/dccesa-action', function (req, res) {
 
   if (runErrors.length) {
     data.dccErrors = runErrors
-    return res.redirect('/dccesa')
+    return res.redirect(url);
   }
 
   data.dccComplete = 'yes'
@@ -3155,7 +3154,7 @@ router.post('/dccesa-action', function (req, res) {
 
   console.log('DCC (ESA): calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
 
-  res.redirect(CASE_OVERVIEW_PAGE)
+  res.redirect(url);
 })
 
 // ---------------------------------------------------------------------------
@@ -3176,11 +3175,11 @@ router.get('/dccesa-edit-:key', function (req, res) {
   const config = esaTabs[req.params.key]
   const index = req.query.index
 
-  if (!config) { return res.redirect('/dccesa') }
+  if (!config) { return res.redirect(url); }
 
   const row = (data[config.array] || [])[index]
 
-  if (!row) { return res.redirect('/dccesa#' + config.tab) }
+  if (!row) { return res.redirect(url); }
 
   if (req.params.key === 'rate') {
     data['esaRateDate-day'] = row.dateParts.day
@@ -3221,7 +3220,7 @@ router.get('/dccesa-edit-:key', function (req, res) {
   data[config.marker] = index
   delete data.dccErrors
 
-  res.redirect('/dccesa#' + config.tab)
+  res.redirect(url);
 })
 
 // Cancel an edit - empties the form and forgets which row was being changed.
@@ -3229,7 +3228,7 @@ router.get('/dccesa-cancel-:key', function (req, res) {
   const data = req.session.data
   const config = esaTabs[req.params.key]
 
-  if (!config) { return res.redirect('/dccesa') }
+  if (!config) { return res.redirect(url); }
 
   const fields = {
     rate: rateFields,
@@ -3242,7 +3241,7 @@ router.get('/dccesa-cancel-:key', function (req, res) {
   delete data[config.marker]
   delete data.dccErrors
 
-  res.redirect('/dccesa#' + config.tab)
+  res.redirect(url);
 })
 
 // Delete a row from one of the tabs. The link says which array and which row.
@@ -3257,12 +3256,12 @@ router.get('/dccesa-delete-:key', function (req, res) {
       'esaExclusionFrom-day', 'esaExclusionFrom-month', 'esaExclusionFrom-year',
       'esaExclusionTo-day', 'esaExclusionTo-month', 'esaExclusionTo-year'
     ])
-    return res.redirect('/dccesa#exclusions')
+    return res.redirect(url);
   }
 
   const config = esaTabs[req.params.key]
 
-  if (!config) { return res.redirect('/dccesa') }
+  if (!config) { return res.redirect(url); }
 
   data[config.array] = (data[config.array] || []).filter(function (row, i) {
     return String(i) !== String(index)
@@ -3275,12 +3274,12 @@ router.get('/dccesa-delete-:key', function (req, res) {
 
   delete data.dccErrors
 
-  res.redirect('/dccesa#' + config.tab)
+  res.redirect(url);
 })
 
 // Old asset value page kept working - it posts here before the warning.
 router.post('/dccesa-asset-value', function (req, res) {
-  res.redirect('/dccesaassetvaluesalreadyexist')
+  res.redirect(url);
 })
 
 // ---------------------------------------------------------------------------
@@ -3325,7 +3324,7 @@ router.post('/case-save', function (req, res) {
   data.savedCases = cases
   data.caseSaved = 'yes'
 
-  res.redirect('/opcalctype')
+  res.redirect(url);
 })
 
 // Open a saved case - restores its snapshot over the current session.
@@ -3334,18 +3333,18 @@ router.get('/case-open/:index', function (req, res) {
   const record = cases[req.params.index]
 
   if (!record) {
-    return res.redirect('/openingexistingcase')
+    return res.redirect(url);
   }
 
   req.session.data = Object.assign({}, record.snapshot, { savedCases: cases })
 
-  res.redirect('/opcalctype')
+  res.redirect(url);
 })
 
 // Coming from /deleteacase - a case was picked from the list, so go and
 // confirm it. caseToDelete holds which one.
 router.post('/case-delete-select', function (req, res) {
-  res.redirect('/deletecase')
+  res.redirect(url);
 })
 
 // Coming from /opcalctype - deleting the case that is currently open.
@@ -3353,7 +3352,7 @@ router.post('/case-delete-select', function (req, res) {
 // would show the wrong case and delete the wrong one.
 router.get('/deletecase-open', function (req, res) {
   delete req.session.data.caseToDelete
-  res.redirect('/deletecase')
+  res.redirect(url);
 })
 
 // Delete a case, confirmed from /deletecase.
@@ -3373,7 +3372,7 @@ router.post('/case-delete', function (req, res) {
     data.savedCases = remaining
     data.caseDeleted = 'yes'
     delete data.caseToDelete
-    return res.redirect('/landingpage')
+    return res.redirect(url);
   }
 
   const remaining = cases.filter(function (c) { return c.nino !== data.nino })
@@ -3383,5 +3382,5 @@ router.post('/case-delete', function (req, res) {
     caseDeleted: 'yes'
   }
 
-  res.redirect('/landingpage')
+  res.redirect(url);
 })

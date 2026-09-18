@@ -13,6 +13,6 @@ router.post('/qb16-overlap-answer', function (req, res) {
   if (adjustDates === 'no') {
     res.redirect('/qb16entrydetails')
   } else {
-    res.redirect('/qb16listofentries#list-of-entries')
+    res.redirect(url);
   }
 })

@@ -10,13 +10,13 @@ router.post('/dccesa-action', function (req, res) {
   const action = req.session.data['action']
 
   if (action === 'add-rate') {
-    res.redirect('/dccesa#esa-paid')
+    res.redirect(url);
   } else if (action === 'add-income') {
-    res.redirect('/dccesa#income')
+    res.redirect(url);
   } else if (action === 'add-tariff') {
-    res.redirect('/dccesa#tariff-income')
+    res.redirect(url);
   } else if (action === 'add-rescare') {
-    res.redirect('/dccesa#res-care')
+    res.redirect(url);
   } else {
     res.redirect('/dccesacaseoverview')
   }
@@ -39,7 +39,7 @@ router.post('/dccesa-asset-accumulating', function (req, res) {
 // recorded against that asset - a prototype cannot work that out, so it
 // always fires. To skip it, redirect straight to /dccesa instead.
 router.post('/dccesa-asset-value', function (req, res) {
-  res.redirect('/dccesaassetvaluesalreadyexist')
+  res.redirect(url);
 })
 
 // Already exists warning: Yes replaces the value and returns to the tabs,
@@ -50,6 +50,6 @@ router.post('/dccesa-value-replace', function (req, res) {
   if (replace === 'no') {
     res.redirect('/dccesaassetsshowvalues')
   } else {
-    res.redirect('/dccesa#assets')
+    res.redirect(url);
   }
 })
