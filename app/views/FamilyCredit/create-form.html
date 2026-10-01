@@ -1,0 +1,121 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Start page – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "javascript:window.history.back()"
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">
+        Create new Family Credit Calculations
+      </h1>
+
+  <div class="govuk-form-group">
+  <fieldset class="govuk-fieldset" role="group" aria-describedby="passport-issued-hint">
+    <legend class="govuk-fieldset__legend">
+      Start date
+    </legend>
+    <div id="passport-issued-hint" class="govuk-hint">
+      This defaults to the start of the discrepancy period. It can be later than that date, but not earlier - if it needs to be earlier, cancel and amend the Discrepancy Period From date on the Benefit details tab instead.
+    </div>
+    <div class="govuk-date-input" id="passport-issued">
+      <div class="govuk-date-input__item">
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-date-input__label" for="passport-issued-day">
+            Day
+          </label>
+          <input class="govuk-input govuk-date-input__input govuk-input--width-2" id="passport-issued-day" name="passport-issued-day" type="text" inputmode="numeric">
+        </div>
+      </div>
+      <div class="govuk-date-input__item">
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-date-input__label" for="passport-issued-month">
+            Month
+          </label>
+          <input class="govuk-input govuk-date-input__input govuk-input--width-2" id="passport-issued-month" name="passport-issued-month" type="text" inputmode="numeric">
+        </div>
+      </div>
+      <div class="govuk-date-input__item">
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-date-input__label" for="passport-issued-year">
+            Year
+          </label>
+          <input class="govuk-input govuk-date-input__input govuk-input--width-4" id="passport-issued-year" name="passport-issued-year" type="text" inputmode="numeric">
+        </div>
+      </div>
+    </div>
+  </fieldset>
+</div>
+
+<div class="govuk-form-group">
+  <fieldset class="govuk-fieldset" aria-describedby="contact-hint">
+    <div class="govuk-checkboxes" data-module="govuk-checkboxes">
+      <div class="govuk-checkboxes__item">
+        <input class="govuk-checkboxes__input" id="nationality" name="nationality" type="checkbox" value="british" aria-describedby="nationality-item-hint">
+        <label class="govuk-label govuk-checkboxes__label" for="nationality">
+          Copy latest data
+        </label>
+        <div id="nationality-item-hint" class="govuk-hint govuk-checkboxes__hint">
+          Selected by default - copies all entries from the previous A14 so you do not need to re-enter them
+        </div>
+      </div>
+     
+    </div>
+  </fieldset>
+</div>
+
+<div class="govuk-button-group">
+  <button type="submit" class="govuk-button" data-module="govuk-button">
+    Continue
+  </button>
+  <button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+    Cancel
+  </button>
+</div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

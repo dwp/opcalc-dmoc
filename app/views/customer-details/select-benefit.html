@@ -125,6 +125,9 @@
           items: benefitItems
         }) }}
 
+        {# No href here. A button with an href becomes a plain link and skips
+           the form, so the chosen benefit would never be saved. routes.js
+           decides where to go next after saving it. #}
         {{ govukButton({
           text: "Continue",
           type: "submit",

@@ -52,20 +52,35 @@
 
       <form class="form" action="/customer-details/select-benefit" method="post">
 
-<div class="govuk-form-group">
-  <fieldset class="govuk-fieldset" aria-describedby="corporate-hint">
-  
-    <div class="govuk-checkboxes" data-module="govuk-checkboxes">
-      <div class="govuk-checkboxes__item">
-        <input class="govuk-checkboxes__input" id="corporate" name="corporate" type="checkbox" value="corporate-body">
-        <label class="govuk-label govuk-checkboxes__label" for="corporate">
-          Corporate body
+        <div class="govuk-form-group">
+  <fieldset class="govuk-fieldset" aria-describedby="contact-hint">
+    <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
+      <h1 class="govuk-fieldset__heading">
+        Is it a Corporate Body?
+      </h1>
+    </legend>
+    <div class="govuk-radios" data-module="govuk-radios">
+      <div class="govuk-radios__item">
+        <input class="govuk-radios__input" id="contact" name="contact" type="radio" value="email" data-aria-controls="conditional-contact">
+        <label class="govuk-label govuk-radios__label" for="contact">
+          Yes
         </label>
       </div>
-    </div>
-  </fieldset>
-</div>
-
+      <div class="govuk-radios__conditional govuk-radios__conditional--hidden" id="conditional-contact">
+        <div class="govuk-form-group">
+          <label class="govuk-label" for="contact-by-email">
+            Names
+          </label>
+          <input class="govuk-input" id="contact-by-email" name="contactByEmail" type="email" spellcheck="false" autocomplete="email">
+        </div>
+      </div>
+      <div class="govuk-radios__item">
+        <input class="govuk-radios__input" id="contact-2" name="contact" type="radio" value="phone" data-aria-controls="conditional-contact-2">
+        <label class="govuk-label govuk-radios__label" for="contact-2">
+          No
+        </label>
+      </div>
+      <div class="govuk-radios__conditional govuk-radios__conditional--hidden" id="conditional-contact-2">
         <div class="govuk-form-group">
   <label class="govuk-label" for="full-name">
     Surname
@@ -92,13 +107,6 @@
   </select>
 </div>
 
-<fieldset class="govuk-fieldset">
-  <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
-    <h1 class="govuk-fieldset__heading">
-      Address
-    </h1>
-  </legend>
-  
 <div class="govuk-form-group">
   <fieldset class="govuk-fieldset" aria-describedby="corporate-hint">
   
@@ -112,6 +120,32 @@
     </div>
   </fieldset>
 </div>
+      </div>
+      
+    </div>
+  </fieldset>
+</div>
+
+<!-- <div class="govuk-form-group">
+  <fieldset class="govuk-fieldset" aria-describedby="corporate-hint">
+  
+    <div class="govuk-checkboxes" data-module="govuk-checkboxes">
+      <div class="govuk-checkboxes__item">
+        <input class="govuk-checkboxes__input" id="corporate" name="corporate" type="checkbox" value="corporate-body">
+        <label class="govuk-label govuk-checkboxes__label" for="corporate">
+          Corporate body
+        </label>
+      </div>
+    </div>
+  </fieldset>
+</div> -->
+
+<fieldset class="govuk-fieldset">
+  <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
+    <h1 class="govuk-fieldset__heading">
+      Address
+    </h1>
+  </legend>
 
   <div class="govuk-form-group">
     <label class="govuk-label" for="address-line-1">
@@ -145,9 +179,14 @@
   </div>
 </fieldset>
 
-        {{ govukButton({
-          text: "Continue"
-        }) }}
+       <div class="govuk-button-group">
+  <button type="submit" class="govuk-button" data-module="govuk-button">
+    Continue
+  </button>
+  <button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+    Clear
+  </button>
+</div>
 
       </form>
 

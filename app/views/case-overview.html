@@ -86,7 +86,7 @@
 {% block header %}
   {{ dwpHeader({
     serviceName: "OpCalc",
-    serviceHref: "/onboarding/landing-page",
+    serviceHref: "/",
     container: true
   }) }}
 {% endblock %}
@@ -123,7 +123,7 @@
 {% block content %}
 
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-full">
+    <div class="govuk-grid-column-two-thirds">
 
       {# Set by routes.js when something has just been done, and cleared as
          soon as you navigate away - so it confirms an action rather than

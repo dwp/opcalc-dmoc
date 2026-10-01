@@ -44,28 +44,28 @@ const router = govukPrototypeKit.requests.setupRouter()
 // benefit details page as well as the benefit week sub-page. Clearing a
 // sub-page's fields must not wipe an answer given elsewhere.
 const sharedFields = [
-  'benefitWeekType', 'initialBenefitWeek', 'benefit', 'benefitLabel'
+  'benefitWeekType', 'initialBenefitWeek', 'benefit', 'benefitLabel'
 ]
 
 // Takes a copy of the shared fields before a sub-page opens, so the values
 // the case already holds can be put back after that page posts.
 function snapshotShared (data) {
-  const before = {}
+  const before = {}
 
-  sharedFields.forEach(function (field) {
-    if (data[field] !== undefined) { before[field] = data[field] }
-  })
+  sharedFields.forEach(function (field) {
+    if (data[field] !== undefined) { before[field] = data[field] }
+  })
 
-  data.a14SharedBefore = before
+  data.a14SharedBefore = before
 }
 
 const a14RowTypes = [
-  { match: /nondependant/, key: 'a14NonDependants', label: 'non-dependant' },
-  { match: /benefitweek/, key: 'a14BenefitWeeks', label: 'benefit week' },
-  { match: /exclusion/, key: 'a14Exclusions', label: 'exclusion' },
-  { match: /dependant/, key: 'a14Dependants', label: 'dependant' },
-  { match: /otherincome/, key: 'a14OtherIncome', label: 'other income' },
-  { match: /benefit/, key: 'a14Benefits', label: 'benefit' }
+  { match: /nondependant/, key: 'a14NonDependants', label: 'non-dependant' },
+  { match: /benefitweek/, key: 'a14BenefitWeeks', label: 'benefit week' },
+  { match: /exclusion/, key: 'a14Exclusions', label: 'exclusion' },
+  { match: /dependant/, key: 'a14Dependants', label: 'dependant' },
+  { match: /otherincome/, key: 'a14OtherIncome', label: 'other income' },
+  { match: /benefit/, key: 'a14Benefits', label: 'benefit' }
 ]
 
 // QB16 has its own tables, and its sub-pages are named in a way that would
@@ -77,10 +77,10 @@ const a14RowTypes = [
 // insert standard text page fills in the Cause box rather than adding a line
 // to a table.
 const qb16RowTypes = [
-  { match: /standardtext/, key: null, label: 'standard text' },
-  { match: /newbenefit/, key: 'qb16BenefitWeeks', label: 'benefit week' },
-  { match: /newexclusion/, key: 'qb16Exclusions', label: 'exclusion' },
-  { match: /entrydetails/, key: 'qb16Entries', label: 'entry' }
+  { match: /standardtext/, key: null, label: 'standard text' },
+  { match: /newbenefit/, key: 'qb16BenefitWeeks', label: 'benefit week' },
+  { match: /newexclusion/, key: 'qb16Exclusions', label: 'exclusion' },
+  { match: /entrydetails/, key: 'qb16Entries', label: 'entry' }
 ]
 
 // The DCC sub-pages have the same problem as QB16, and worse: a page called
@@ -91,84 +91,84 @@ const qb16RowTypes = [
 // for the PC/IS and ESA paths as they arrive - dccpcispcassets... files into
 // dccPcispcAssets without another line here.
 function dccRowTypeFor (segment) {
-  const variant = /isjsa/.test(segment)
-    ? 'Isjsa'
-    : (/pcispc/.test(segment) ? 'Pcispc' : (/esa/.test(segment) ? 'Esa' : ''))
+  const variant = /isjsa/.test(segment)
+    ? 'Isjsa'
+    : (/pcispc/.test(segment) ? 'Pcispc' : (/esa/.test(segment) ? 'Esa' : ''))
 
-  if (!variant) { return null }
+  if (!variant) { return null }
 
-  const base = 'dcc' + variant
+  const base = 'dcc' + variant
 
-  // Order matters. An asset value page also has "asset" in its name, so it is
-  // matched first.
-  if (/showvalues|newvalue/.test(segment)) { return { key: base + 'AssetValues', label: 'asset value' } }
-  if (/asset/.test(segment)) { return { key: base + 'Assets', label: 'asset' } }
-  if (/benefitweek|newbenefit/.test(segment)) { return { key: base + 'BenefitWeeks', label: 'benefit week' } }
-  if (/exclusion/.test(segment)) { return { key: base + 'Exclusions', label: 'exclusion' } }
+  // Order matters. An asset value page also has "asset" in its name, so it is
+  // matched first.
+  if (/showvalues|newvalue/.test(segment)) { return { key: base + 'AssetValues', label: 'asset value' } }
+  if (/asset/.test(segment)) { return { key: base + 'Assets', label: 'asset' } }
+  if (/benefitweek|newbenefit/.test(segment)) { return { key: base + 'BenefitWeeks', label: 'benefit week' } }
+  if (/exclusion/.test(segment)) { return { key: base + 'Exclusions', label: 'exclusion' } }
 
-  return null
+  return null
 }
 
 // Average earnings. Its sub-pages have to be matched before anything else:
 // avearningsnewcustomeremployment contains neither dcc nor qb16, so it would
 // otherwise fall through to the A14 list and match nothing at all.
 function avRowTypeFor (segment) {
-  // Average earnings and average hours are the same shape with different
-  // contents, so they share this. The prefix keeps their tables apart.
-  const base = segment.indexOf('avhours') !== -1 ? 'avHours' : 'av'
+  // Average earnings and average hours are the same shape with different
+  // contents, so they share this. The prefix keeps their tables apart.
+  const base = segment.indexOf('avhours') !== -1 ? 'avHours' : 'av'
 
-  if (/customeremployment/.test(segment)) { return { key: base + 'CustomerEmployment', label: 'customer employment' } }
-  if (/partneremployment/.test(segment)) { return { key: base + 'PartnerEmployment', label: 'partner employment' } }
-  if (/customerexclusion/.test(segment)) { return { key: 'avHoursCustomerQualifying', label: 'customer exclusion' } }
-  if (/partnerexclusion/.test(segment)) { return { key: 'avHoursPartnerQualifying', label: 'partner exclusion' } }
-  if (/disregard/.test(segment)) { return { key: 'avDisregards', label: 'disregard' } }
-  if (/benefitweek/.test(segment)) { return { key: 'avBenefitWeeks', label: 'benefit week' } }
-  return null
+  if (/customeremployment/.test(segment)) { return { key: base + 'CustomerEmployment', label: 'customer employment' } }
+  if (/partneremployment/.test(segment)) { return { key: base + 'PartnerEmployment', label: 'partner employment' } }
+  if (/customerexclusion/.test(segment)) { return { key: 'avHoursCustomerQualifying', label: 'customer exclusion' } }
+  if (/partnerexclusion/.test(segment)) { return { key: 'avHoursPartnerQualifying', label: 'partner exclusion' } }
+  if (/disregard/.test(segment)) { return { key: 'avDisregards', label: 'disregard' } }
+  if (/benefitweek/.test(segment)) { return { key: 'avBenefitWeeks', label: 'benefit week' } }
+  return null
 }
 
 // BA3. Its sub-pages contain "benefitweek" and "exclusion", which the A14 list
 // further down would otherwise claim.
 function ba3RowTypeFor (segment) {
-  if (/benefitweek/.test(segment)) { return { key: 'ba3BenefitWeeks', label: 'benefit week' } }
-  if (/exclusion/.test(segment)) { return { key: 'ba3Exclusions', label: 'exclusion' } }
-  if (/entry/.test(segment)) { return { key: 'ba3Entries', label: 'entry' } }
-  return null
+  if (/benefitweek/.test(segment)) { return { key: 'ba3BenefitWeeks', label: 'benefit week' } }
+  if (/exclusion/.test(segment)) { return { key: 'ba3Exclusions', label: 'exclusion' } }
+  if (/entry/.test(segment)) { return { key: 'ba3Entries', label: 'entry' } }
+  return null
 }
 
 function rowTypeFor (segment) {
-  if (segment.indexOf('ba3') !== -1) { return ba3RowTypeFor(segment) }
+  if (segment.indexOf('ba3') !== -1) { return ba3RowTypeFor(segment) }
 
-  if (segment.indexOf('avearnings') !== -1 || segment.indexOf('avhours') !== -1) { return avRowTypeFor(segment) }
+  if (segment.indexOf('avearnings') !== -1 || segment.indexOf('avhours') !== -1) { return avRowTypeFor(segment) }
 
-  if (segment.indexOf('dcc') !== -1) { return dccRowTypeFor(segment) }
+  if (segment.indexOf('dcc') !== -1) { return dccRowTypeFor(segment) }
 
-  if (segment.indexOf('qb16') !== -1) {
-    for (let i = 0; i < qb16RowTypes.length; i++) {
-      if (qb16RowTypes[i].match.test(segment)) {
-        return qb16RowTypes[i].key ? qb16RowTypes[i] : null
-      }
-    }
-    return null
-  }
+  if (segment.indexOf('qb16') !== -1) {
+    for (let i = 0; i < qb16RowTypes.length; i++) {
+      if (qb16RowTypes[i].match.test(segment)) {
+        return qb16RowTypes[i].key ? qb16RowTypes[i] : null
+      }
+    }
+    return null
+  }
 
-  for (let i = 0; i < a14RowTypes.length; i++) {
-    if (a14RowTypes[i].match.test(segment)) { return a14RowTypes[i] }
-  }
-  return null
+  for (let i = 0; i < a14RowTypes.length; i++) {
+    if (a14RowTypes[i].match.test(segment)) { return a14RowTypes[i] }
+  }
+  return null
 }
 
 // A real Date from a posted date input, or null when it is not one. Used to
 // work out how long a BA3 period is.
 function dateFromParts (body, prefix) {
-  const day = parseInt(body[prefix + '-day'], 10)
-  const month = parseInt(body[prefix + '-month'], 10)
-  const year = parseInt(body[prefix + '-year'], 10)
+  const day = parseInt(body[prefix + '-day'], 10)
+  const month = parseInt(body[prefix + '-month'], 10)
+  const year = parseInt(body[prefix + '-year'], 10)
 
-  if (isNaN(day) || isNaN(month) || isNaN(year)) { return null }
+  if (isNaN(day) || isNaN(month) || isNaN(year)) { return null }
 
-  const made = new Date(year, month - 1, day)
+  const made = new Date(year, month - 1, day)
 
-  return made.getDate() === day ? made : null
+  return made.getDate() === day ? made : null
 }
 
 // Turns a posted form into a row.
@@ -178,33 +178,33 @@ function dateFromParts (body, prefix) {
 // having to reassemble it: bwDateOfChange-day/-month/-year also gives
 // bwDateOfChange = "05/05/2003".
 function buildRow (body) {
-  const ignore = ['returnTo', 'rowType', 'rowIndex', 'action', '_csrf']
-  const row = {}
+  const ignore = ['returnTo', 'rowType', 'rowIndex', 'action', '_csrf']
+  const row = {}
 
-  Object.keys(body).forEach(function (field) {
-    if (ignore.indexOf(field) === -1) { row[field] = body[field] }
-  })
+  Object.keys(body).forEach(function (field) {
+    if (ignore.indexOf(field) === -1) { row[field] = body[field] }
+  })
 
-  function pad (value) {
-    const text = String(value === undefined ? '' : value).trim()
-    return text.length === 1 ? '0' + text : text
-  }
+  function pad (value) {
+    const text = String(value === undefined ? '' : value).trim()
+    return text.length === 1 ? '0' + text : text
+  }
 
-  Object.keys(row).forEach(function (field) {
-    const match = field.match(/^(.*)-day$/)
-    if (!match) { return }
+  Object.keys(row).forEach(function (field) {
+    const match = field.match(/^(.*)-day$/)
+    if (!match) { return }
 
-    const prefix = match[1]
-    if (row[prefix + '-month'] === undefined || row[prefix + '-year'] === undefined) { return }
+    const prefix = match[1]
+    if (row[prefix + '-month'] === undefined || row[prefix + '-year'] === undefined) { return }
 
-    const day = pad(row[field])
-    const month = pad(row[prefix + '-month'])
-    const year = String(row[prefix + '-year'] || '').trim()
+    const day = pad(row[field])
+    const month = pad(row[prefix + '-month'])
+    const year = String(row[prefix + '-year'] || '').trim()
 
-    row[prefix] = (day || month || year) ? day + '/' + month + '/' + year : ''
-  })
+    row[prefix] = (day || month || year) ? day + '/' + month + '/' + year : ''
+  })
 
-  return row
+  return row
 }
 
 // ---------------------------------------------------------------------------
@@ -225,22 +225,22 @@ function buildRow (body) {
 // on some page cannot overwrite the case's benefit type.
 //
 const protectedKeys = [
-  'benefit', 'benefitLabel', 'savedCases', 'a14SubPage',
-  'a14BenefitWeeks', 'a14Exclusions', 'a14Benefits',
-  'a14OtherIncome', 'a14Dependants', 'a14NonDependants'
+  'benefit', 'benefitLabel', 'savedCases', 'a14SubPage',
+  'a14BenefitWeeks', 'a14Exclusions', 'a14Benefits',
+  'a14OtherIncome', 'a14Dependants', 'a14NonDependants'
 ]
 
 router.post('/a14-autosave', function (req, res) {
-  const data = req.session.data || {}
-  const body = req.body || {}
+  const data = req.session.data || {}
+  const body = req.body || {}
 
-  Object.keys(body).forEach(function (field) {
-    if (protectedKeys.indexOf(field) > -1) { return }
-    if (field === '_csrf' || field === 'returnTo') { return }
-    data[field] = body[field]
-  })
+  Object.keys(body).forEach(function (field) {
+    if (protectedKeys.indexOf(field) > -1) { return }
+    if (field === '_csrf' || field === 'returnTo') { return }
+    data[field] = body[field]
+  })
 
-  res.end('')
+  res.end('')
 })
 
 // ---------------------------------------------------------------------------
@@ -259,22 +259,22 @@ router.post('/a14-autosave', function (req, res) {
 // a14isjsa.html to /a14caseoverview, a14esa.html to /a14forms - so both
 // addresses are handled rather than asking you to edit three templates.
 function generateA14 (req, res) {
-  // Not "req.session.data || {}". If the session has no data object yet, that
-  // writes the banner onto a throwaway object that is discarded the moment
-  // this function returns - the flag is set, and then it is gone.
-  if (!req.session.data) { req.session.data = {} }
-  const data = req.session.data
+  // Not "req.session.data || {}". If the session has no data object yet, that
+  // writes the banner onto a throwaway object that is discarded the moment
+  // this function returns - the flag is set, and then it is gone.
+  if (!req.session.data) { req.session.data = {} }
+  const data = req.session.data
 
-  data.a14Complete = 'yes'
-  data.caseBanner = 'a14'
-  delete data.caseBannerSeen
+  data.a14Complete = 'yes'
+  data.caseBanner = 'a14'
+  delete data.caseBannerSeen
 
-  // Says so in your terminal. If you press "Generate A14 forms" and this line
-  // does not appear, the button is not reaching routes.js at all - which is a
-  // different problem from the banner not showing.
-  console.log('Generate A14 forms: banner set, redirecting to ' + CASE_OVERVIEW_PAGE)
+  // Says so in your terminal. If you press "Generate A14 forms" and this line
+  // does not appear, the button is not reaching routes.js at all - which is a
+  // different problem from the banner not showing.
+  console.log('Generate A14 forms: banner set, redirecting to ' + CASE_OVERVIEW_PAGE)
 
-  res.redirect(url);
+  res.redirect(CASE_OVERVIEW_PAGE)
 }
 
 // Declared as real routes as well as through postHandlers below, so nothing
@@ -303,58 +303,58 @@ router.post('/A14/a14forms', generateA14)
 // they are what was just entered, and they describe the case rather than the
 // work done on it.
 const RECORD_FIELD_PREFIXES = [
-  'a14', 'qb16', 'esa', 'isjsa', 'pcispc', 'dcc',
-  'av', 'ba3', 'hcl', 'bwDateOfChange', 'benefitPayDay', 'exclusion', 'gross', 'net', 'taxable',
-  'underpaid', 'calculationOptions', 'cause', 'standardText',
-  'personalAllowance', 'partWeek', 'entryForm', 'adjustDates', 'formsToPrint',
-  'a14sToPrint', 'delete', 'edit', 'action', 'assetIndex', 'showValues'
+  'a14', 'qb16', 'esa', 'isjsa', 'pcispc', 'dcc',
+  'av', 'ba3', 'hcl', 'bwDateOfChange', 'benefitPayDay', 'exclusion', 'gross', 'net', 'taxable',
+  'underpaid', 'calculationOptions', 'cause', 'standardText',
+  'personalAllowance', 'partWeek', 'entryForm', 'adjustDates', 'formsToPrint',
+  'a14sToPrint', 'delete', 'edit', 'action', 'assetIndex', 'showValues'
 ]
 
 function clearRecords (data) {
-  Object.keys(data).forEach(function (field) {
-    // Every table of rows, whatever it is called. This catches the ESA arrays
-    // too, which are named esaRates rather than dccEsaRates.
-    if (Array.isArray(data[field])) {
-      delete data[field]
-      return
-    }
+  Object.keys(data).forEach(function (field) {
+    // Every table of rows, whatever it is called. This catches the ESA arrays
+    // too, which are named esaRates rather than dccEsaRates.
+    if (Array.isArray(data[field])) {
+      delete data[field]
+      return
+    }
 
-    if (RECORD_FIELD_PREFIXES.some(function (prefix) { return field.indexOf(prefix) === 0 })) {
-      delete data[field]
-    }
-  })
+    if (RECORD_FIELD_PREFIXES.some(function (prefix) { return field.indexOf(prefix) === 0 })) {
+      delete data[field]
+    }
+  })
 
-  delete data.a14Complete
-  delete data.qb16Complete
-  delete data.dccComplete
-  delete data.avEarningsComplete
-  delete data.avHoursComplete
-  delete data.ba3Complete
-  delete data.caseBannerSeen
+  delete data.a14Complete
+  delete data.qb16Complete
+  delete data.dccComplete
+  delete data.avEarningsComplete
+  delete data.avHoursComplete
+  delete data.ba3Complete
+  delete data.caseBannerSeen
 }
 
 function caseCreated (req, res) {
-  if (!req.session.data) { req.session.data = {} }
+  if (!req.session.data) { req.session.data = {} }
 
-  const data = req.session.data
+  const data = req.session.data
 
-  // A different customer means a different case, so it starts with nothing
-  // recorded against it. Coming back to this address for the same case - the
-  // back button, a bookmark - changes nothing, which is why this compares
-  // rather than clearing every time.
-  const nino = data.nino || ''
+  // A different customer means a different case, so it starts with nothing
+  // recorded against it. Coming back to this address for the same case - the
+  // back button, a bookmark - changes nothing, which is why this compares
+  // rather than clearing every time.
+  const nino = data.nino || ''
 
-  if (data.caseRecordsFor !== nino) {
-    clearRecords(data)
-    data.caseRecordsFor = nino
+  if (data.caseRecordsFor !== nino) {
+    clearRecords(data)
+    data.caseRecordsFor = nino
 
-    console.log('New case' + (nino ? ' for ' + nino : '') + ': previous records cleared')
-  }
+    console.log('New case' + (nino ? ' for ' + nino : '') + ': previous records cleared')
+  }
 
-  data.caseBanner = 'created'
-  delete data.caseBannerSeen
+  data.caseBanner = 'created'
+  delete data.caseBannerSeen
 
-  res.redirect(url);
+  res.redirect(CASE_OVERVIEW_PAGE)
 }
 
 // ---------------------------------------------------------------------------
@@ -372,184 +372,184 @@ function caseCreated (req, res) {
 // own, because a form cannot sit inside another one. So /return-to-tab looks
 // at which button was pressed, and sends the add here.
 function addEarning (req, res) {
-  if (!req.session.data) { req.session.data = {} }
+  if (!req.session.data) { req.session.data = {} }
 
-  const data = req.session.data
-  const body = req.body
+  const data = req.session.data
+  const body = req.body
 
-  const day = (body['avEarningDate-day'] || '').trim()
-  const month = (body['avEarningDate-month'] || '').trim()
-  const year = (body['avEarningDate-year'] || '').trim()
-  const amount = (body.avEarningAmount || '').trim()
+  const day = (body['avEarningDate-day'] || '').trim()
+  const month = (body['avEarningDate-month'] || '').trim()
+  const year = (body['avEarningDate-year'] || '').trim()
+  const amount = (body.avEarningAmount || '').trim()
 
-  if (day && month && year && amount) {
-    data.avPendingEarnings = data.avPendingEarnings || []
-    data.avPendingEarnings.push({
-      date: (day.length === 1 ? '0' + day : day) + '/' +
-            (month.length === 1 ? '0' + month : month) + '/' + year,
-      amount: amount
-    })
-  }
+  if (day && month && year && amount) {
+    data.avPendingEarnings = data.avPendingEarnings || []
+    data.avPendingEarnings.push({
+      date: (day.length === 1 ? '0' + day : day) + '/' +
+            (month.length === 1 ? '0' + month : month) + '/' + year,
+      amount: amount
+    })
+  }
 
-  // Empty the boxes so the next payment starts blank.
-  delete data['avEarningDate-day']
-  delete data['avEarningDate-month']
-  delete data['avEarningDate-year']
-  delete data.avEarningAmount
-  delete data.action
+  // Empty the boxes so the next payment starts blank.
+  delete data['avEarningDate-day']
+  delete data['avEarningDate-month']
+  delete data['avEarningDate-year']
+  delete data.avEarningAmount
+  delete data.action
 
-  // Coming back to the same page, so the list stays.
-  data.avKeepPending = true
+  // Coming back to the same page, so the list stays.
+  data.avKeepPending = true
 
-  res.redirect(url);
+  res.redirect(data.a14SubPagePath || '/avearnings')
 }
 
 // The hours version of the same thing. Hours and minutes are joined into one
 // value, because Hrs:Mins is one column in the table.
 function addHours (req, res) {
-  if (!req.session.data) { req.session.data = {} }
+  if (!req.session.data) { req.session.data = {} }
 
-  const data = req.session.data
-  const body = req.body
+  const data = req.session.data
+  const body = req.body
 
-  const day = (body['avHoursEntryDate-day'] || '').trim()
-  const month = (body['avHoursEntryDate-month'] || '').trim()
-  const year = (body['avHoursEntryDate-year'] || '').trim()
-  const hours = (body.avHoursEntryHours || '').trim()
-  const mins = (body.avHoursEntryMins || '').trim()
+  const day = (body['avHoursEntryDate-day'] || '').trim()
+  const month = (body['avHoursEntryDate-month'] || '').trim()
+  const year = (body['avHoursEntryDate-year'] || '').trim()
+  const hours = (body.avHoursEntryHours || '').trim()
+  const mins = (body.avHoursEntryMins || '').trim()
 
-  if (day && month && year && (hours || mins)) {
-    data.avPendingHours = data.avPendingHours || []
-    data.avPendingHours.push({
-      date: (day.length === 1 ? '0' + day : day) + '/' +
-            (month.length === 1 ? '0' + month : month) + '/' + year,
-      hours: (hours || '0') + ':' + (mins.length === 1 ? '0' + mins : (mins || '00'))
-    })
-  }
+  if (day && month && year && (hours || mins)) {
+    data.avPendingHours = data.avPendingHours || []
+    data.avPendingHours.push({
+      date: (day.length === 1 ? '0' + day : day) + '/' +
+            (month.length === 1 ? '0' + month : month) + '/' + year,
+      hours: (hours || '0') + ':' + (mins.length === 1 ? '0' + mins : (mins || '00'))
+    })
+  }
 
-  delete data['avHoursEntryDate-day']
-  delete data['avHoursEntryDate-month']
-  delete data['avHoursEntryDate-year']
-  delete data.avHoursEntryHours
-  delete data.avHoursEntryMins
-  delete data.action
+  delete data['avHoursEntryDate-day']
+  delete data['avHoursEntryDate-month']
+  delete data['avHoursEntryDate-year']
+  delete data.avHoursEntryHours
+  delete data.avHoursEntryMins
+  delete data.action
 
-  data.avKeepPending = true
+  data.avKeepPending = true
 
-  res.redirect(url);
+  res.redirect(data.a14SubPagePath || '/avhours')
 }
 
 router.get('/avhours-remove-hours', function (req, res) {
-  const data = req.session.data || {}
-  const index = parseInt(req.query.index, 10)
+  const data = req.session.data || {}
+  const index = parseInt(req.query.index, 10)
 
-  if (Array.isArray(data.avPendingHours) && !isNaN(index)) {
-    data.avPendingHours.splice(index, 1)
-  }
+  if (Array.isArray(data.avPendingHours) && !isNaN(index)) {
+    data.avPendingHours.splice(index, 1)
+  }
 
-  data.avKeepPending = true
+  data.avKeepPending = true
 
-  res.redirect(url);
+  res.redirect(data.a14SubPagePath || '/avhours')
 })
 
 router.get('/avearnings-remove-earning', function (req, res) {
-  const data = req.session.data || {}
-  const index = parseInt(req.query.index, 10)
+  const data = req.session.data || {}
+  const index = parseInt(req.query.index, 10)
 
-  if (Array.isArray(data.avPendingEarnings) && !isNaN(index)) {
-    data.avPendingEarnings.splice(index, 1)
-  }
+  if (Array.isArray(data.avPendingEarnings) && !isNaN(index)) {
+    data.avPendingEarnings.splice(index, 1)
+  }
 
-  data.avKeepPending = true
+  data.avKeepPending = true
 
-  res.redirect(url);
+  res.redirect(data.a14SubPagePath || '/avearnings')
 })
 
 router.post('/avearnings-complete', function (req, res) {
-  if (!req.session.data) { req.session.data = {} }
+  if (!req.session.data) { req.session.data = {} }
 
-  const data = req.session.data
-  const errors = []
+  const data = req.session.data
+  const errors = []
 
-  const customer = (data.avCustomerEmployment || []).length
-  const partner = (data.avPartnerEmployment || []).length
+  const customer = (data.avCustomerEmployment || []).length
+  const partner = (data.avPartnerEmployment || []).length
 
-  if (!customer && !partner) {
-    errors.push({
-      href: '#customer',
-      message: 'Add at least one employment for the customer or the partner'
-    })
-  }
+  if (!customer && !partner) {
+    errors.push({
+      href: '#customer',
+      message: 'Add at least one employment for the customer or the partner'
+    })
+  }
 
-  if (errors.length) {
-    data.avErrors = errors
-    return res.redirect(url);
-  }
+  if (errors.length) {
+    data.avErrors = errors
+    return res.redirect('/avearnings#customer')
+  }
 
-  data.avEarningsComplete = 'yes'
-  data.caseBanner = 'avearnings'
-  delete data.caseBannerSeen
-  delete data.avErrors
+  data.avEarningsComplete = 'yes'
+  data.caseBanner = 'avearnings'
+  delete data.caseBannerSeen
+  delete data.avErrors
 
-  console.log('Average earnings: calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
+  console.log('Average earnings: calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
 
-  res.redirect(url);
+  res.redirect(CASE_OVERVIEW_PAGE)
 })
 
 // Average hours, the same rule as average earnings.
 router.post('/avhours-complete', function (req, res) {
-  if (!req.session.data) { req.session.data = {} }
+  if (!req.session.data) { req.session.data = {} }
 
-  const data = req.session.data
-  const errors = []
+  const data = req.session.data
+  const errors = []
 
-  const customer = (data.avHoursCustomerEmployment || []).length
-  const partner = (data.avHoursPartnerEmployment || []).length
+  const customer = (data.avHoursCustomerEmployment || []).length
+  const partner = (data.avHoursPartnerEmployment || []).length
 
-  if (!customer && !partner) {
-    errors.push({
-      href: '#customer',
-      message: 'Add at least one employment for the customer or the partner'
-    })
-  }
+  if (!customer && !partner) {
+    errors.push({
+      href: '#customer',
+      message: 'Add at least one employment for the customer or the partner'
+    })
+  }
 
-  if (errors.length) {
-    data.avHoursErrors = errors
-    res.redirect(url);
-  }
+  if (errors.length) {
+    data.avHoursErrors = errors
+    return res.redirect('/avhours#customer')
+  }
 
-  data.avHoursComplete = 'yes'
-  data.caseBanner = 'avhours'
-  delete data.caseBannerSeen
-  delete data.avHoursErrors
+  data.avHoursComplete = 'yes'
+  data.caseBanner = 'avhours'
+  delete data.caseBannerSeen
+  delete data.avHoursErrors
 
-  console.log('Average hours: calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
+  console.log('Average hours: calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
 
-  res.redirect(url);
+  res.redirect(CASE_OVERVIEW_PAGE)
 })
 
 // BA3, the same shape as the QB16: at least one entry before it can be run.
 router.post('/ba3-complete', function (req, res) {
-  if (!req.session.data) { req.session.data = {} }
+  if (!req.session.data) { req.session.data = {} }
 
-  const data = req.session.data
+  const data = req.session.data
 
-  if (!(data.ba3Entries || []).length) {
-    data.ba3Errors = [{
-      href: '#entries',
-      message: 'Add at least one entry before running the calculation'
-    }]
-    return res.redirect(url);
-  }
+  if (!(data.ba3Entries || []).length) {
+    data.ba3Errors = [{
+      href: '#entries',
+      message: 'Add at least one entry before running the calculation'
+    }]
+    return res.redirect('/ba3entrydetails#entries')
+  }
 
-  data.ba3Complete = 'yes'
-  data.caseBanner = 'ba3'
-  delete data.caseBannerSeen
-  delete data.ba3Errors
+  data.ba3Complete = 'yes'
+  data.caseBanner = 'ba3'
+  delete data.caseBannerSeen
+  delete data.ba3Errors
 
-  console.log('BA3: calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
+  console.log('BA3: calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
 
-  res.redirect(url);
+  res.redirect(CASE_OVERVIEW_PAGE)
 })
 
 // ---------------------------------------------------------------------------
@@ -563,8 +563,8 @@ router.post('/ba3-complete', function (req, res) {
 // was typed; here Continue always works and an error explains what is missing.
 //
 // The type of loan decides the third tab on the loan page:
-//   normal      -> Interest rates
-//   fixed-term  -> Fixed term payments
+//   normal      -> Interest rates
+//   fixed-term  -> Fixed term payments
 //
 // Every field starts with hcl, so a new case clears them along with the other
 // records (see RECORD_FIELD_PREFIXES).
@@ -572,45 +572,45 @@ const HCL_NEW_FORM_PAGE = '/housingcostloans/housingcostnewform'
 const HCL_LOAN_PAGE = '/housingcostloans/housingcostloanspage'
 
 router.post('/housingcostloans/housingcostnewform-continue', function (req, res) {
-  if (!req.session.data) { req.session.data = {} }
+  if (!req.session.data) { req.session.data = {} }
 
-  const data = req.session.data
-  const body = req.body || {}
-  const ref = String(body.hclRef || '').trim()
-  const loanType = body.hclLoanType
-  const errors = []
+  const data = req.session.data
+  const body = req.body || {}
+  const ref = String(body.hclRef || '').trim()
+  const loanType = body.hclLoanType
+  const errors = []
 
-  // Keep the reference check first: the page relies on that order to show
-  // each message beside the right field.
-  if (!ref) {
-    errors.push({ href: '#hcl-ref', message: 'Enter a loan reference' })
-  }
+  // Keep the reference check first: the page relies on that order to show
+  // each message beside the right field.
+  if (!ref) {
+    errors.push({ href: '#hcl-ref', message: 'Enter a loan reference' })
+  }
 
-  if (loanType !== 'normal' && loanType !== 'fixed-term') {
-    errors.push({ href: '#hcl-loan-type', message: 'Select the type of loan' })
-  }
+  if (loanType !== 'normal' && loanType !== 'fixed-term') {
+    errors.push({ href: '#hcl-loan-type', message: 'Select the type of loan' })
+  }
 
-  // Kept either way, so whatever was typed is still there if an error shows
-  data.hclRef = ref
-  data.hclLoanType = loanType
+  // Kept either way, so whatever was typed is still there if an error shows
+  data.hclRef = ref
+  data.hclLoanType = loanType
 
-  if (errors.length) {
-    data.hclNewFormErrors = errors
-   return res.redirect(url);
-  }
+  if (errors.length) {
+    data.hclNewFormErrors = errors
+    return res.redirect(HCL_NEW_FORM_PAGE)
+  }
 
-  delete data.hclNewFormErrors
+  delete data.hclNewFormErrors
 
-  // A new reference is a new loan, so it starts with empty tabs. Going back
-  // and pressing Continue again with the same reference keeps what is there.
-  if (data.hclLoanFor !== ref + '|' + loanType) {
-    Object.keys(data).forEach(function (field) {
-      if (/^hcl/.test(field) && ['hclRef', 'hclLoanType'].indexOf(field) === -1) { delete data[field] }
-    })
-    data.hclLoanFor = ref + '|' + loanType
-  }
+  // A new reference is a new loan, so it starts with empty tabs. Going back
+  // and pressing Continue again with the same reference keeps what is there.
+  if (data.hclLoanFor !== ref + '|' + loanType) {
+    Object.keys(data).forEach(function (field) {
+      if (/^hcl/.test(field) && ['hclRef', 'hclLoanType'].indexOf(field) === -1) { delete data[field] }
+    })
+    data.hclLoanFor = ref + '|' + loanType
+  }
 
-  res.redirect(url);
+  res.redirect(HCL_LOAN_PAGE)
 })
 
 // ---------------------------------------------------------------------------
@@ -620,8 +620,8 @@ router.post('/housingcostloans/housingcostnewform-continue', function (req, res)
 // Every tab on /housingcostloans/housingcostloanspage is its own form, and
 // every form posts to /housingcostloans/hcl-tab with two hidden fields:
 //
-//   hclTab     which tab it came from, e.g. interest-rates
-//   hclAction  what the button asked for: add, next or save
+//   hclTab     which tab it came from, e.g. interest-rates
+//   hclAction  what the button asked for: add, next or save
 //
 // Add puts a new row into that tab's table. Next checks the tab and moves on.
 // Save (on the last tab) marks the loan as done and goes to the case overview.
@@ -631,8 +631,8 @@ router.post('/housingcostloans/housingcostnewform-continue', function (req, res)
 // /housingcostloans/housingcostloanspage#shares
 //
 // Problems are stored as:
-//   data.hclErrors       { tab, list: [{ href, message }] } for the summary
-//   data.hclFieldErrors  { 'field-id': 'message' } beside each field
+//   data.hclErrors       { tab, list: [{ href, message }] } for the summary
+//   data.hclFieldErrors  { 'field-id': 'message' } beside each field
 //
 // Everything a caseworker has typed is kept by the kit, so the form still
 // holds it when an error shows. After a row is added its boxes are emptied.
@@ -645,317 +645,317 @@ const HCL_TAB_ORDER_FIXED = ['periods', 'details', 'fixed-term-payments', 'non-d
 // placeholders. The legacy lists were empty in the screenshots. Check them
 // with Viktoria before this goes in front of anyone.
 const HCL_ND_CATEGORIES = {
-  'working-high': 'Working 16 hours or more a week',
-  'working-low': 'Working less than 16 hours a week',
-  'not-working': 'Aged 18 or over and not working',
-  'on-benefit': 'Aged 25 or over and getting income support or JSA',
-  'under-25-benefit': 'Under 25 and getting income support or JSA'
+  'working-high': 'Working 16 hours or more a week',
+  'working-low': 'Working less than 16 hours a week',
+  'not-working': 'Aged 18 or over and not working',
+  'on-benefit': 'Aged 25 or over and getting income support or JSA',
+  'under-25-benefit': 'Under 25 and getting income support or JSA'
 }
 
 const HCL_PAYEES = { lender: 'Lender', customer: 'Customer' }
 
 const HCL_COST_TYPES = {
-  'ground-rent': 'Ground rent',
-  'service-charge': 'Service charge',
-  'rent-charge': 'Rent charge',
-  'repairs': 'Repairs and improvements'
+  'ground-rent': 'Ground rent',
+  'service-charge': 'Service charge',
+  'rent-charge': 'Rent charge',
+  'repairs': 'Repairs and improvements'
 }
 
 const HCL_PERIODS = { weekly: 'Weekly', monthly: 'Monthly', quarterly: 'Quarterly', yearly: 'Yearly' }
 
 // One helper so every tab reports problems the same way.
 function hclProblems () {
-  const list = []
-  const fields = {}
+  const list = []
+  const fields = {}
 
-  return {
-    list: list,
-    fields: fields,
-    add: function (id, message) {
-      if (!message) { return }
-      list.push({ href: '#' + id, message: message })
-      fields[id] = message
-    }
-  }
+  return {
+    list: list,
+    fields: fields,
+    add: function (id, message) {
+      if (!message) { return }
+      list.push({ href: '#' + id, message: message })
+      fields[id] = message
+    }
+  }
 }
 
 // A whole number, for the share boxes (1 / 1).
 function hclCheckShare (value, label) {
-  const text = String(value === undefined ? '' : value).trim()
-  if (!text) { return 'Enter ' + label }
-  if (!/^\d+$/.test(text) || Number(text) < 1) { return capitalise(label) + ' must be a whole number, like 1 or 2' }
-  return null
+  const text = String(value === undefined ? '' : value).trim()
+  if (!text) { return 'Enter ' + label }
+  if (!/^\d+$/.test(text) || Number(text) < 1) { return capitalise(label) + ' must be a whole number, like 1 or 2' }
+  return null
 }
 
 // A second date that must not be earlier than the first. Only checked once
 // both dates are real.
 function hclCheckOrder (problems, body, fromPrefix, toPrefix, toId, toLabel, fromLabel) {
-  if (checkDate(body, fromPrefix, 'x') || checkDate(body, toPrefix, 'x')) { return }
-  if (dateValue(dateParts(body, toPrefix)) < dateValue(dateParts(body, fromPrefix))) {
-    problems.add(toId, capitalise(toLabel) + ' must be the same as or after ' + fromLabel)
-  }
+  if (checkDate(body, fromPrefix, 'x') || checkDate(body, toPrefix, 'x')) { return }
+  if (dateValue(dateParts(body, toPrefix)) < dateValue(dateParts(body, fromPrefix))) {
+    problems.add(toId, capitalise(toLabel) + ' must be the same as or after ' + fromLabel)
+  }
 }
 
 function hclTicked (value) {
-  return [].concat(value === undefined ? [] : value).indexOf('yes') !== -1
+  return [].concat(value === undefined ? [] : value).indexOf('yes') !== -1
 }
 
 function hclClear (data, names) {
-  names.forEach(function (name) {
-    delete data[name]
-    delete data[name + '-day']
-    delete data[name + '-month']
-    delete data[name + '-year']
-  })
+  names.forEach(function (name) {
+    delete data[name]
+    delete data[name + '-day']
+    delete data[name + '-month']
+    delete data[name + '-year']
+  })
 }
 
 function hclAddRow (data, key, row) {
-  if (!Array.isArray(data[key])) { data[key] = [] }
-  data[key].push(row)
+  if (!Array.isArray(data[key])) { data[key] = [] }
+  data[key].push(row)
 }
 
 // What Add does on each tab. Each returns the problems it found; when there
 // are none the row has been added.
 const hclAdders = {
-  'interest-rates': function (data, body, p) {
-    p.add('hcl-rate-start-day', checkDate(body, 'hclRateStart', 'the start date'))
+  'interest-rates': function (data, body, p) {
+    p.add('hcl-rate-start-day', checkDate(body, 'hclRateStart', 'the start date'))
 
-    const rate = String(body.hclRatePercent || '').trim()
-    if (!rate) {
-      p.add('hcl-rate-percent', 'Enter the percentage rate')
-    } else if (!/^\d+(\.\d{1,3})?$/.test(rate) || Number(rate) <= 0 || Number(rate) > 100) {
-      p.add('hcl-rate-percent', 'Percentage rate must be a number between 0 and 100, like 4.875')
-    }
+    const rate = String(body.hclRatePercent || '').trim()
+    if (!rate) {
+      p.add('hcl-rate-percent', 'Enter the percentage rate')
+    } else if (!/^\d+(\.\d{1,3})?$/.test(rate) || Number(rate) <= 0 || Number(rate) > 100) {
+      p.add('hcl-rate-percent', 'Percentage rate must be a number between 0 and 100, like 4.875')
+    }
 
-    if (p.list.length) { return }
+    if (p.list.length) { return }
 
-    hclAddRow(data, 'hclRates', { start: dateFrom(body, 'hclRateStart'), rate: Number(rate).toFixed(3) })
-    hclClear(data, ['hclRateStart', 'hclRatePercent'])
-  },
+    hclAddRow(data, 'hclRates', { start: dateFrom(body, 'hclRateStart'), rate: Number(rate).toFixed(3) })
+    hclClear(data, ['hclRateStart', 'hclRatePercent'])
+  },
 
-  'fixed-term-payments': function (data, body, p) {
-    p.add('hcl-ft-start-day', checkDate(body, 'hclFtStart', 'the start date'))
-    p.add('hcl-ft-amount', checkAmount(body.hclFtAmount, 'the amount'))
+  'fixed-term-payments': function (data, body, p) {
+    p.add('hcl-ft-start-day', checkDate(body, 'hclFtStart', 'the start date'))
+    p.add('hcl-ft-amount', checkAmount(body.hclFtAmount, 'the amount'))
 
-    if (p.list.length) { return }
+    if (p.list.length) { return }
 
-    hclAddRow(data, 'hclFtPayments', { start: dateFrom(body, 'hclFtStart'), amount: Number(parseAmount(body.hclFtAmount)).toFixed(2) })
-    hclClear(data, ['hclFtStart', 'hclFtAmount'])
-  },
+    hclAddRow(data, 'hclFtPayments', { start: dateFrom(body, 'hclFtStart'), amount: Number(parseAmount(body.hclFtAmount)).toFixed(2) })
+    hclClear(data, ['hclFtStart', 'hclFtAmount'])
+  },
 
-  'non-dependants': function (data, body, p) {
-    p.add('hcl-nd-start-day', checkDate(body, 'hclNdStart', 'the start date'))
-    p.add('hcl-nd-end-day', checkDate(body, 'hclNdEnd', 'the end date'))
-    hclCheckOrder(p, body, 'hclNdStart', 'hclNdEnd', 'hcl-nd-end-day', 'the end date', 'the start date')
+  'non-dependants': function (data, body, p) {
+    p.add('hcl-nd-start-day', checkDate(body, 'hclNdStart', 'the start date'))
+    p.add('hcl-nd-end-day', checkDate(body, 'hclNdEnd', 'the end date'))
+    hclCheckOrder(p, body, 'hclNdStart', 'hclNdEnd', 'hcl-nd-end-day', 'the end date', 'the start date')
 
-    const category = body.hclNdCategory
-    if (!HCL_ND_CATEGORIES[category]) {
-      p.add('hcl-nd-category', 'Select the category')
-    } else if (category === 'working-high') {
-      p.add('hcl-nd-earnings', checkAmount(body.hclNdEarnings, 'the weekly earnings'))
-    }
+    const category = body.hclNdCategory
+    if (!HCL_ND_CATEGORIES[category]) {
+      p.add('hcl-nd-category', 'Select the category')
+    } else if (category === 'working-high') {
+      p.add('hcl-nd-earnings', checkAmount(body.hclNdEarnings, 'the weekly earnings'))
+    }
 
-    if (!String(body.hclNdName || '').trim()) {
-      p.add('hcl-nd-name', "Enter the person's name")
-    }
+    if (!String(body.hclNdName || '').trim()) {
+      p.add('hcl-nd-name', "Enter the person's name")
+    }
 
-    if (p.list.length) { return }
+    if (p.list.length) { return }
 
-    hclAddRow(data, 'hclNonDeps', {
-      name: String(body.hclNdName).trim(),
-      category: HCL_ND_CATEGORIES[category],
-      earnings: category === 'working-high' ? Number(parseAmount(body.hclNdEarnings)).toFixed(2) : '0.00',
-      start: dateFrom(body, 'hclNdStart'),
-      end: dateFrom(body, 'hclNdEnd')
-    })
-    hclClear(data, ['hclNdCategory', 'hclNdEarnings', 'hclNdName'])
-  },
+    hclAddRow(data, 'hclNonDeps', {
+      name: String(body.hclNdName).trim(),
+      category: HCL_ND_CATEGORIES[category],
+      earnings: category === 'working-high' ? Number(parseAmount(body.hclNdEarnings)).toFixed(2) : '0.00',
+      start: dateFrom(body, 'hclNdStart'),
+      end: dateFrom(body, 'hclNdEnd')
+    })
+    hclClear(data, ['hclNdCategory', 'hclNdEarnings', 'hclNdName'])
+  },
 
-  'shares': function (data, body, p) {
-    p.add('hcl-share-start-day', checkDate(body, 'hclShareStart', 'the start date'))
-    p.add('hcl-share-end-day', checkDate(body, 'hclShareEnd', 'the end date'))
-    hclCheckOrder(p, body, 'hclShareStart', 'hclShareEnd', 'hcl-share-end-day', 'the end date', 'the start date')
+  'shares': function (data, body, p) {
+    p.add('hcl-share-start-day', checkDate(body, 'hclShareStart', 'the start date'))
+    p.add('hcl-share-end-day', checkDate(body, 'hclShareEnd', 'the end date'))
+    hclCheckOrder(p, body, 'hclShareStart', 'hclShareEnd', 'hcl-share-end-day', 'the end date', 'the start date')
 
-    function checkFraction (topName, bottomName, id, label) {
-      const error = hclCheckShare(body[topName], 'the first number of ' + label) ||
-                    hclCheckShare(body[bottomName], 'the second number of ' + label)
-      if (error) { return p.add(id, error) }
-      if (Number(body[topName]) > Number(body[bottomName])) {
-        p.add(id, capitalise(label) + ' cannot be more than the whole loan')
-      }
-    }
+    function checkFraction (topName, bottomName, id, label) {
+      const error = hclCheckShare(body[topName], 'the first number of ' + label) ||
+                    hclCheckShare(body[bottomName], 'the second number of ' + label)
+      if (error) { return p.add(id, error) }
+      if (Number(body[topName]) > Number(body[bottomName])) {
+        p.add(id, capitalise(label) + ' cannot be more than the whole loan')
+      }
+    }
 
-    checkFraction('hclShareCustomerTop', 'hclShareCustomerBottom', 'hcl-share-customer-top', "the customer's share")
+    checkFraction('hclShareCustomerTop', 'hclShareCustomerBottom', 'hcl-share-customer-top', "the customer's share")
 
-    const allOwners = body.hclShareAllOwners
-    if (allOwners !== 'yes' && allOwners !== 'no') {
-      p.add('hcl-share-all-owners', 'Select yes if all the owners live in the property')
-    } else if (allOwners === 'no') {
-      checkFraction('hclShareOtherTop', 'hclShareOtherBottom', 'hcl-share-other-top', "the other joint occupiers' share")
-    }
+    const allOwners = body.hclShareAllOwners
+    if (allOwners !== 'yes' && allOwners !== 'no') {
+      p.add('hcl-share-all-owners', 'Select yes if all the owners live in the property')
+    } else if (allOwners === 'no') {
+      checkFraction('hclShareOtherTop', 'hclShareOtherBottom', 'hcl-share-other-top', "the other joint occupiers' share")
+    }
 
-    if (p.list.length) { return }
+    if (p.list.length) { return }
 
-    hclAddRow(data, 'hclShares', {
-      start: dateFrom(body, 'hclShareStart'),
-      end: dateFrom(body, 'hclShareEnd'),
-      customerShare: body.hclShareCustomerTop + ' / ' + body.hclShareCustomerBottom,
-      allOwners: allOwners === 'yes' ? 'Yes' : 'No',
-      otherShare: allOwners === 'no' ? body.hclShareOtherTop + ' / ' + body.hclShareOtherBottom : ''
-    })
-    hclClear(data, ['hclShareOtherTop', 'hclShareOtherBottom'])
-  },
+    hclAddRow(data, 'hclShares', {
+      start: dateFrom(body, 'hclShareStart'),
+      end: dateFrom(body, 'hclShareEnd'),
+      customerShare: body.hclShareCustomerTop + ' / ' + body.hclShareCustomerBottom,
+      allOwners: allOwners === 'yes' ? 'Yes' : 'No',
+      otherShare: allOwners === 'no' ? body.hclShareOtherTop + ' / ' + body.hclShareOtherBottom : ''
+    })
+    hclClear(data, ['hclShareOtherTop', 'hclShareOtherBottom'])
+  },
 
-  'payments': function (data, body, p) {
-    p.add('hcl-pay-start-day', checkDate(body, 'hclPayStart', 'the start date'))
-    p.add('hcl-pay-amount', checkAmount(body.hclPayAmount, 'the amount'))
-    if (!HCL_PAYEES[body.hclPayPayee]) { p.add('hcl-pay-payee', 'Select the payee') }
+  'payments': function (data, body, p) {
+    p.add('hcl-pay-start-day', checkDate(body, 'hclPayStart', 'the start date'))
+    p.add('hcl-pay-amount', checkAmount(body.hclPayAmount, 'the amount'))
+    if (!HCL_PAYEES[body.hclPayPayee]) { p.add('hcl-pay-payee', 'Select the payee') }
 
-    if (p.list.length) { return }
+    if (p.list.length) { return }
 
-    hclAddRow(data, 'hclPayments', {
-      start: dateFrom(body, 'hclPayStart'),
-      amount: Number(parseAmount(body.hclPayAmount)).toFixed(2),
-      payee: HCL_PAYEES[body.hclPayPayee]
-    })
-    hclClear(data, ['hclPayStart', 'hclPayAmount', 'hclPayPayee'])
-  },
+    hclAddRow(data, 'hclPayments', {
+      start: dateFrom(body, 'hclPayStart'),
+      amount: Number(parseAmount(body.hclPayAmount)).toFixed(2),
+      payee: HCL_PAYEES[body.hclPayPayee]
+    })
+    hclClear(data, ['hclPayStart', 'hclPayAmount', 'hclPayPayee'])
+  },
 
-  'other-info': function (data, body, p) {
-    if (!HCL_COST_TYPES[body.hclOtherType]) { p.add('hcl-other-type', 'Select the cost type') }
-    p.add('hcl-other-date-day', checkDate(body, 'hclOtherDate', 'the date'))
-    p.add('hcl-other-amount', checkAmount(body.hclOtherAmount, 'the amount'))
-    if (!HCL_PERIODS[body.hclOtherPeriod]) { p.add('hcl-other-period', 'Select how often the cost is paid') }
+  'other-info': function (data, body, p) {
+    if (!HCL_COST_TYPES[body.hclOtherType]) { p.add('hcl-other-type', 'Select the cost type') }
+    p.add('hcl-other-date-day', checkDate(body, 'hclOtherDate', 'the date'))
+    p.add('hcl-other-amount', checkAmount(body.hclOtherAmount, 'the amount'))
+    if (!HCL_PERIODS[body.hclOtherPeriod]) { p.add('hcl-other-period', 'Select how often the cost is paid') }
 
-    if (p.list.length) { return }
+    if (p.list.length) { return }
 
-    hclAddRow(data, 'hclOtherCosts', {
-      type: HCL_COST_TYPES[body.hclOtherType],
-      date: dateFrom(body, 'hclOtherDate'),
-      amount: Number(parseAmount(body.hclOtherAmount)).toFixed(2),
-      period: HCL_PERIODS[body.hclOtherPeriod]
-    })
-    hclClear(data, ['hclOtherType', 'hclOtherDate', 'hclOtherAmount', 'hclOtherPeriod'])
-  }
+    hclAddRow(data, 'hclOtherCosts', {
+      type: HCL_COST_TYPES[body.hclOtherType],
+      date: dateFrom(body, 'hclOtherDate'),
+      amount: Number(parseAmount(body.hclOtherAmount)).toFixed(2),
+      period: HCL_PERIODS[body.hclOtherPeriod]
+    })
+    hclClear(data, ['hclOtherType', 'hclOtherDate', 'hclOtherAmount', 'hclOtherPeriod'])
+  }
 }
 
 // What Next checks on each tab. These follow the messages the legacy status
 // bar showed while Next Tab was greyed out. Tabs not listed here have
 // nothing that must be filled in, so Next always moves on.
 const hclNextChecks = {
-  'periods': function (data, body, p) {
-    p.add('hcl-period-start-day', checkDate(body, 'hclPeriodStart', 'the start date'))
-    p.add('hcl-period-end-day', checkDate(body, 'hclPeriodEnd', 'the end date'))
-    hclCheckOrder(p, body, 'hclPeriodStart', 'hclPeriodEnd', 'hcl-period-end-day', 'the end date', 'the start date')
-    p.add('hcl-first-day-day', checkDate(body, 'hclFirstDay', 'the first day of entitlement'))
+  'periods': function (data, body, p) {
+    p.add('hcl-period-start-day', checkDate(body, 'hclPeriodStart', 'the start date'))
+    p.add('hcl-period-end-day', checkDate(body, 'hclPeriodEnd', 'the end date'))
+    hclCheckOrder(p, body, 'hclPeriodStart', 'hclPeriodEnd', 'hcl-period-end-day', 'the end date', 'the start date')
+    p.add('hcl-first-day-day', checkDate(body, 'hclFirstDay', 'the first day of entitlement'))
 
-    if (body.hclBefore1995 !== 'yes' && body.hclBefore1995 !== 'no') {
-      p.add('hcl-before-1995', 'Select yes if the loan started before 2 October 1995')
-    } else if (body.hclBefore1995 === 'yes' && anyGiven(body, ['hclQual50-day', 'hclQual50-month', 'hclQual50-year'])) {
-      p.add('hcl-qual-50-day', checkDate(body, 'hclQual50', 'the 50% qualifying date'))
-    }
+    if (body.hclBefore1995 !== 'yes' && body.hclBefore1995 !== 'no') {
+      p.add('hcl-before-1995', 'Select yes if the loan started before 2 October 1995')
+    } else if (body.hclBefore1995 === 'yes' && anyGiven(body, ['hclQual50-day', 'hclQual50-month', 'hclQual50-year'])) {
+      p.add('hcl-qual-50-day', checkDate(body, 'hclQual50', 'the 50% qualifying date'))
+    }
 
-    if (anyGiven(body, ['hclQual100-day', 'hclQual100-month', 'hclQual100-year'])) {
-      p.add('hcl-qual-100-day', checkDate(body, 'hclQual100', 'the 100% qualifying date'))
-    }
-  },
+    if (anyGiven(body, ['hclQual100-day', 'hclQual100-month', 'hclQual100-year'])) {
+      p.add('hcl-qual-100-day', checkDate(body, 'hclQual100', 'the 100% qualifying date'))
+    }
+  },
 
-  'details': function (data, body, p) {
-    p.add('hcl-balance', checkAmount(body.hclBalance, 'the balance outstanding'))
-    p.add('hcl-miras', checkOptionalAmount(body.hclMiras, 'the amount with MIRAS'))
+  'details': function (data, body, p) {
+    p.add('hcl-balance', checkAmount(body.hclBalance, 'the balance outstanding'))
+    p.add('hcl-miras', checkOptionalAmount(body.hclMiras, 'the amount with MIRAS'))
 
-    if (!body.hclBenefitDay) { p.add('hcl-benefit-day', 'Select the benefit week day') }
-    if (body.hclBenefitWeekType !== 'bwe' && body.hclBenefitWeekType !== 'bwc') {
-      p.add('hcl-benefit-week-type', 'Select benefit week ending or benefit week commencing')
-    }
+    if (!body.hclBenefitDay) { p.add('hcl-benefit-day', 'Select the benefit week day') }
+    if (body.hclBenefitWeekType !== 'bwe' && body.hclBenefitWeekType !== 'bwc') {
+      p.add('hcl-benefit-week-type', 'Select benefit week ending or benefit week commencing')
+    }
 
-    if (body.hclInPayment === 'yes') {
-      p.add('hcl-weekly-interest', checkAmount(body.hclWeeklyInterest, 'the weekly interest'))
-      p.add('hcl-addback', checkOptionalAmount(body.hclAddback, 'the addback'))
-    }
+    if (body.hclInPayment === 'yes') {
+      p.add('hcl-weekly-interest', checkAmount(body.hclWeeklyInterest, 'the weekly interest'))
+      p.add('hcl-addback', checkOptionalAmount(body.hclAddback, 'the addback'))
+    }
 
-    if (body.hclRestrict === 'yes') {
-      p.add('hcl-restrict-start-day', checkDate(body, 'hclRestrictStart', 'the restriction start date'))
-      p.add('hcl-restrict-amount', checkAmount(body.hclRestrictAmount, 'the restriction amount'))
-    }
-  },
+    if (body.hclRestrict === 'yes') {
+      p.add('hcl-restrict-start-day', checkDate(body, 'hclRestrictStart', 'the restriction start date'))
+      p.add('hcl-restrict-amount', checkAmount(body.hclRestrictAmount, 'the restriction amount'))
+    }
+  },
 
-  'interest-rates': function (data, body, p) {
-    if (!(data.hclRates || []).length) {
-      p.add('hcl-rate-start-day', 'Add at least one interest rate before moving on')
-    }
-  },
+  'interest-rates': function (data, body, p) {
+    if (!(data.hclRates || []).length) {
+      p.add('hcl-rate-start-day', 'Add at least one interest rate before moving on')
+    }
+  },
 
-  'fixed-term-payments': function (data, body, p) {
-    if (!(data.hclFtPayments || []).length) {
-      p.add('hcl-ft-start-day', 'Add at least one weekly payment before moving on')
-    }
-  },
+  'fixed-term-payments': function (data, body, p) {
+    if (!(data.hclFtPayments || []).length) {
+      p.add('hcl-ft-start-day', 'Add at least one weekly payment before moving on')
+    }
+  },
 
-  'payments': function (data, body, p) {
-    if (!(data.hclPayments || []).length) {
-      p.add('hcl-pay-start-day', 'Add at least one payment and select the payee before moving on')
-    }
-  }
+  'payments': function (data, body, p) {
+    if (!(data.hclPayments || []).length) {
+      p.add('hcl-pay-start-day', 'Add at least one payment and select the payee before moving on')
+    }
+  }
 }
 
 router.post('/housingcostloans/hcl-tab', function (req, res) {
-  if (!req.session.data) { req.session.data = {} }
+  if (!req.session.data) { req.session.data = {} }
 
-  const data = req.session.data
-  const body = req.body || {}
-  const tab = body.hclTab
-  const action = body.hclAction
-  const order = data.hclLoanType === 'fixed-term' ? HCL_TAB_ORDER_FIXED : HCL_TAB_ORDER_NORMAL
-  const page = HCL_LOAN_PAGE
-  const p = hclProblems()
+  const data = req.session.data
+  const body = req.body || {}
+  const tab = body.hclTab
+  const action = body.hclAction
+  const order = data.hclLoanType === 'fixed-term' ? HCL_TAB_ORDER_FIXED : HCL_TAB_ORDER_NORMAL
+  const page = HCL_LOAN_PAGE
+  const p = hclProblems()
 
-  // A ticked box can arrive as 'yes' or, because the kit adds a hidden
-  // _unchecked field beside every checkbox, as ['_unchecked', 'yes'].
-  // Stored as a plain 'yes' or '' so the page and the checks below agree.
-  if (tab === 'details') {
-    body.hclInPayment = hclTicked(body.hclInPayment) ? 'yes' : ''
-    body.hclRestrict = hclTicked(body.hclRestrict) ? 'yes' : ''
-    data.hclInPayment = body.hclInPayment
-    data.hclRestrict = body.hclRestrict
-  }
+  // A ticked box can arrive as 'yes' or, because the kit adds a hidden
+  // _unchecked field beside every checkbox, as ['_unchecked', 'yes'].
+  // Stored as a plain 'yes' or '' so the page and the checks below agree.
+  if (tab === 'details') {
+    body.hclInPayment = hclTicked(body.hclInPayment) ? 'yes' : ''
+    body.hclRestrict = hclTicked(body.hclRestrict) ? 'yes' : ''
+    data.hclInPayment = body.hclInPayment
+    data.hclRestrict = body.hclRestrict
+  }
 
-  // Unchecked radios send nothing too. Clearing these stops an old answer
-  // coming back after it was left empty.
-  if (tab === 'periods' && !body.hclBefore1995) { delete data.hclBefore1995 }
+  // Unchecked radios send nothing too. Clearing these stops an old answer
+  // coming back after it was left empty.
+  if (tab === 'periods' && !body.hclBefore1995) { delete data.hclBefore1995 }
 
-  delete data.hclErrors
-  delete data.hclFieldErrors
+  delete data.hclErrors
+  delete data.hclFieldErrors
 
-  if (order.indexOf(tab) === -1) {
-    return res.redirect(url);
-  }
+  if (order.indexOf(tab) === -1) {
+    return res.redirect(page)
+  }
 
-  if (action === 'add' && hclAdders[tab]) {
-    hclAdders[tab](data, body, p)
-  } else if ((action === 'next' || action === 'save') && hclNextChecks[tab]) {
-    hclNextChecks[tab](data, body, p)
-  }
+  if (action === 'add' && hclAdders[tab]) {
+    hclAdders[tab](data, body, p)
+  } else if ((action === 'next' || action === 'save') && hclNextChecks[tab]) {
+    hclNextChecks[tab](data, body, p)
+  }
 
-  if (p.list.length) {
-    data.hclErrors = { tab: tab, list: p.list }
-    data.hclFieldErrors = p.fields
-    return res.redirect(url);
-  }
+  if (p.list.length) {
+    data.hclErrors = { tab: tab, list: p.list }
+    data.hclFieldErrors = p.fields
+    return res.redirect(page + '#' + tab)
+  }
 
-  if (action === 'next') {
-    const next = order[order.indexOf(tab) + 1] || tab
-    return res.redirect(url);
-  }
+  if (action === 'next') {
+    const next = order[order.indexOf(tab) + 1] || tab
+    return res.redirect(page + '#' + next)
+  }
 
-  if (action === 'save') {
-    data.hclComplete = 'yes'
-    data.caseBanner = 'hcl'
-    delete data.caseBannerSeen
-    return res.redirect(url);
-  }
+  if (action === 'save') {
+    data.hclComplete = 'yes'
+    data.caseBanner = 'hcl'
+    delete data.caseBannerSeen
+    return res.redirect(CASE_OVERVIEW_PAGE)
+  }
 
-  res.redirect(url);
+  res.redirect(page + '#' + tab)
 })
 
 // Row level Remove links in the tab tables.
@@ -963,30 +963,30 @@ router.post('/housingcostloans/hcl-tab', function (req, res) {
 const HCL_LIST_NAMES = ['hclRates', 'hclFtPayments', 'hclNonDeps', 'hclShares', 'hclPayments', 'hclOtherCosts']
 
 router.get('/housingcostloans/hcl-remove', function (req, res) {
-  const data = req.session.data || {}
-  const list = req.query.list
-  const row = parseInt(req.query.row, 10)
-  const tab = String(req.query.tab || '').replace(/[^a-z-]/g, '')
+  const data = req.session.data || {}
+  const list = req.query.list
+  const row = parseInt(req.query.row, 10)
+  const tab = String(req.query.tab || '').replace(/[^a-z-]/g, '')
 
-  if (HCL_LIST_NAMES.indexOf(list) !== -1 && Array.isArray(data[list]) && row >= 0 && row < data[list].length) {
-    data[list].splice(row, 1)
-  }
+  if (HCL_LIST_NAMES.indexOf(list) !== -1 && Array.isArray(data[list]) && row >= 0 && row < data[list].length) {
+    data[list].splice(row, 1)
+  }
 
-  // A removed row can leave the loan unfinished again
-  delete data.hclComplete
+  // A removed row can leave the loan unfinished again
+  delete data.hclComplete
 
-  res.redirect(url);
+  res.redirect(HCL_LOAN_PAGE + (tab ? '#' + tab : ''))
 })
 
 // Starts a case from scratch without going through the journey - handy while
 // testing, and safe: it only clears the records, not the customer.
 router.get('/new-case', function (req, res) {
-  if (!req.session.data) { req.session.data = {} }
+  if (!req.session.data) { req.session.data = {} }
 
-  clearRecords(req.session.data)
-  delete req.session.data.caseRecordsFor
+  clearRecords(req.session.data)
+  delete req.session.data.caseRecordsFor
 
-  res.redirect(url);
+  res.redirect(CASE_OVERVIEW_PAGE)
 })
 
 router.get('/onboarding/case-overview-confirmation', caseCreated)
@@ -998,30 +998,30 @@ router.post('/onboarding/case-overview-confirmation', caseCreated)
 
 // The old A14 case overview. Everything it showed is on the one overview now.
 // Delete these two lines if you want that page back.
-router.get('/a14caseoverview', function (req, res) { res.redirect(url); })
-router.get('/A14/a14caseoverview', function (req, res) { res.redirect(url); })
+router.get('/a14caseoverview', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
+router.get('/A14/a14caseoverview', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
 
 // Shows what the banner logic currently thinks, without opening anything.
 router.get('/banner-check', function (req, res) {
-  const data = (req.session && req.session.data) || {}
+  const data = (req.session && req.session.data) || {}
 
-  res.send('<!DOCTYPE html><html><head><title>Banner check</title></head>' +
-    '<body style="font-family:sans-serif;padding:2rem;max-width:40rem">' +
-    '<h1>Banner check</h1>' +
-    '<p>caseBanner is <strong>' + (data.caseBanner || 'not set') + '</strong></p>' +
-    '<p>a14Complete is <strong>' + (data.a14Complete || 'not set') + '</strong></p>' +
-    '<p>The overview page is <strong>' + CASE_OVERVIEW_PAGE + '</strong></p>' +
-    '<hr>' +
-    '<p>Press "Generate A14 forms" on any A14 page, then come straight back ' +
-    'here without clicking anything else.</p>' +
-    '<ul>' +
-    '<li>Both set: the routing works, so the banner is not rendering - check ' +
-    'that govukNotificationBanner is available on your other pages.</li>' +
-    '<li>Neither set: the button is not reaching routes.js. Check the form ' +
-    'action on that A14 page.</li>' +
-    '</ul>' +
-    '<p><a href="' + CASE_OVERVIEW_PAGE + '">Go to the case overview</a></p>' +
-    '</body></html>')
+  res.send('<!DOCTYPE html><html><head><title>Banner check</title></head>' +
+    '<body style="font-family:sans-serif;padding:2rem;max-width:40rem">' +
+    '<h1>Banner check</h1>' +
+    '<p>caseBanner is <strong>' + (data.caseBanner || 'not set') + '</strong></p>' +
+    '<p>a14Complete is <strong>' + (data.a14Complete || 'not set') + '</strong></p>' +
+    '<p>The overview page is <strong>' + CASE_OVERVIEW_PAGE + '</strong></p>' +
+    '<hr>' +
+    '<p>Press "Generate A14 forms" on any A14 page, then come straight back ' +
+    'here without clicking anything else.</p>' +
+    '<ul>' +
+    '<li>Both set: the routing works, so the banner is not rendering - check ' +
+    'that govukNotificationBanner is available on your other pages.</li>' +
+    '<li>Neither set: the button is not reaching routes.js. Check the form ' +
+    'action on that A14 page.</li>' +
+    '</ul>' +
+    '<p><a href="' + CASE_OVERVIEW_PAGE + '">Go to the case overview</a></p>' +
+    '</body></html>')
 })
 
 // Lists what has actually been stored in each A14 table, and the field names
@@ -1029,81 +1029,81 @@ router.get('/banner-check', function (req, res) {
 // sub-page - it is the quickest way to confirm a table column is reading the
 // right field, without opening any templates.
 router.get('/a14-fields', function (req, res) {
-  const data = (req.session && req.session.data) || {}
+  const data = (req.session && req.session.data) || {}
 
-  // Every table in the case, not just the A14 ones. There are fifteen of them
-  // now across A14, QB16 and the three DCC paths, so this finds them rather
-  // than listing them: anything in the session that is an array of objects.
-  const keys = Object.keys(data).filter(function (key) {
-    return Array.isArray(data[key]) && data[key].length &&
-      typeof data[key][0] === 'object' && data[key][0] !== null
-  }).sort()
+  // Every table in the case, not just the A14 ones. There are fifteen of them
+  // now across A14, QB16 and the three DCC paths, so this finds them rather
+  // than listing them: anything in the session that is an array of objects.
+  const keys = Object.keys(data).filter(function (key) {
+    return Array.isArray(data[key]) && data[key].length &&
+      typeof data[key][0] === 'object' && data[key][0] !== null
+  }).sort()
 
-  const sections = keys.length
-    ? keys.map(function (key) {
-      const rows = data[key]
-      const fields = Object.keys(rows[0])
+  const sections = keys.length
+    ? keys.map(function (key) {
+      const rows = data[key]
+      const fields = Object.keys(rows[0])
 
-      return '<h2 class="govuk-heading-m"><code>data.' + key + '</code></h2>' +
-        '<p class="govuk-body">' + rows.length + (rows.length === 1 ? ' row' : ' rows') + '</p>' +
-        '<table class="govuk-table"><thead class="govuk-table__head"><tr class="govuk-table__row">' +
-        '<th scope="col" class="govuk-table__header">Field name</th>' +
-        '<th scope="col" class="govuk-table__header">Value in the first row</th></tr></thead>' +
-        '<tbody class="govuk-table__body">' +
-        fields.map(function (field) {
-          return '<tr class="govuk-table__row">' +
-            '<td class="govuk-table__cell"><code>' + field + '</code></td>' +
-            '<td class="govuk-table__cell">' + String(rows[0][field]) + '</td></tr>'
-        }).join('') +
-        '</tbody></table>'
-    }).join('')
-    : '<p class="govuk-body">Nothing saved yet. Add an entry from any sub-page, then come back.</p>'
+      return '<h2 class="govuk-heading-m"><code>data.' + key + '</code></h2>' +
+        '<p class="govuk-body">' + rows.length + (rows.length === 1 ? ' row' : ' rows') + '</p>' +
+        '<table class="govuk-table"><thead class="govuk-table__head"><tr class="govuk-table__row">' +
+        '<th scope="col" class="govuk-table__header">Field name</th>' +
+        '<th scope="col" class="govuk-table__header">Value in the first row</th></tr></thead>' +
+        '<tbody class="govuk-table__body">' +
+        fields.map(function (field) {
+          return '<tr class="govuk-table__row">' +
+            '<td class="govuk-table__cell"><code>' + field + '</code></td>' +
+            '<td class="govuk-table__cell">' + String(rows[0][field]) + '</td></tr>'
+        }).join('') +
+        '</tbody></table>'
+    }).join('')
+    : '<p class="govuk-body">Nothing saved yet. Add an entry from any sub-page, then come back.</p>'
 
-  res.send('<!DOCTYPE html><html><head><title>What is stored</title>' +
-    '<link rel="stylesheet" href="/govuk/govuk/govuk-frontend.min.css"></head>' +
-    '<body class="govuk-template__body"><div class="govuk-width-container">' +
-    '<main class="govuk-main-wrapper">' +
-    '<h1 class="govuk-heading-l">What is stored against this case</h1>' +
-    '<p class="govuk-body">Every table, with the field names each row carries. ' +
-    'If a column on a page comes out blank, the name it is looking for is not in this list.</p>' +
-    sections +
-    '</main></div></body></html>')
+  res.send('<!DOCTYPE html><html><head><title>What is stored</title>' +
+    '<link rel="stylesheet" href="/govuk/govuk/govuk-frontend.min.css"></head>' +
+    '<body class="govuk-template__body"><div class="govuk-width-container">' +
+    '<main class="govuk-main-wrapper">' +
+    '<h1 class="govuk-heading-l">What is stored against this case</h1>' +
+    '<p class="govuk-body">Every table, with the field names each row carries. ' +
+    'If a column on a page comes out blank, the name it is looking for is not in this list.</p>' +
+    sections +
+    '</main></div></body></html>')
 })
 
 router.get('/a14-row-edit', function (req, res) {
-  const data = req.session.data || {}
-  const key = req.query.key
-  const index = req.query.index
-  const row = (data[key] || [])[index]
+  const data = req.session.data || {}
+  const key = req.query.key
+  const index = req.query.index
+  const row = (data[key] || [])[index]
 
-  if (!row) {
-    return res.redirect(url);
-  }
+  if (!row) {
+    return res.redirect(req.query.returnTo || '/opcalctype')
+  }
 
-  snapshotShared(data)
+  snapshotShared(data)
 
-  Object.keys(row).forEach(function (field) {
-    if (field.charAt(0) !== '_') { data[field] = row[field] }
-  })
+  Object.keys(row).forEach(function (field) {
+    if (field.charAt(0) !== '_') { data[field] = row[field] }
+  })
 
-  // An employment carries its payments with it, so editing one puts the list
-  // back the way it was rather than starting empty and losing them on save.
-  data.avPendingEarnings = Array.isArray(row.earnings) ? row.earnings.slice() : []
-  data.avPendingHours = Array.isArray(row.hours) ? row.hours.slice() : []
+  // An employment carries its payments with it, so editing one puts the list
+  // back the way it was rather than starting empty and losing them on save.
+  data.avPendingEarnings = Array.isArray(row.earnings) ? row.earnings.slice() : []
+  data.avPendingHours = Array.isArray(row.hours) ? row.hours.slice() : []
 
-  data.a14EditKey = key
-  data.a14EditIndex = index
-  data.returnTo = row._returnTo || req.query.returnTo || ''
+  data.a14EditKey = key
+  data.a14EditIndex = index
+  data.returnTo = row._returnTo || req.query.returnTo || ''
 
-  // Rows saved before Edit existed have no _page, so there is nothing to
-  // reopen. Say so rather than bouncing somewhere unexpected.
-  if (!row._page) {
-    data.a14EditKey = ''
-    data.a14EditIndex = ''
-    return res.redirect(url);
-  }
+  // Rows saved before Edit existed have no _page, so there is nothing to
+  // reopen. Say so rather than bouncing somewhere unexpected.
+  if (!row._page) {
+    data.a14EditKey = ''
+    data.a14EditIndex = ''
+    return res.redirect(req.query.returnTo || '/opcalctype')
+  }
 
-  res.redirect(url);
+  res.redirect(row._page)
 })
 
 // Delete a row from one of the A14 tables.
@@ -1111,165 +1111,165 @@ router.get('/a14-row-edit', function (req, res) {
 // opened and changed - which is what Copy is for on the BA3 entries table:
 // most entries differ from the one before by a date and an amount.
 router.get('/a14-row-copy', function (req, res) {
-  const data = req.session.data || {}
-  const key = req.query.key
-  const index = parseInt(req.query.index, 10)
-  const rows = data[key]
+  const data = req.session.data || {}
+  const key = req.query.key
+  const index = parseInt(req.query.index, 10)
+  const rows = data[key]
 
-  if (Array.isArray(rows) && !isNaN(index) && rows[index]) {
-    data[key] = rows.concat([Object.assign({}, rows[index])])
-  }
+  if (Array.isArray(rows) && !isNaN(index) && rows[index]) {
+    data[key] = rows.concat([Object.assign({}, rows[index])])
+  }
 
-  res.redirect(url);
+  res.redirect(req.query.returnTo || '/onboarding/case-overview')
 })
 
 router.get('/a14-row-delete', function (req, res) {
-  const data = req.session.data || {}
-  const key = req.query.key
-  const index = req.query.index
+  const data = req.session.data || {}
+  const key = req.query.key
+  const index = req.query.index
 
-  if (key && data[key]) {
-    data[key] = data[key].filter(function (row, i) { return String(i) !== String(index) })
-  }
+  if (key && data[key]) {
+    data[key] = data[key].filter(function (row, i) { return String(i) !== String(index) })
+  }
 
-  res.redirect(url);
+  res.redirect(req.query.returnTo || '/opcalctype')
 })
 
 router.post('/return-to-tab', function (req, res) {
-  // The employment pages have two submit buttons. Adding a payment is not
-  // saving the employment, so it never gets as far as the table.
-  if (req.body.action === 'add-earning') { return addEarning(req, res) }
-  if (req.body.action === 'add-hours') { return addHours(req, res) }
+  // The employment pages have two submit buttons. Adding a payment is not
+  // saving the employment, so it never gets as far as the table.
+  if (req.body.action === 'add-earning') { return addEarning(req, res) }
+  if (req.body.action === 'add-hours') { return addHours(req, res) }
 
-  const data = req.session.data
-  const destination = req.body.returnTo || data.returnTo
+  const data = req.session.data
+  const destination = req.body.returnTo || data.returnTo
 
-  // Save the answers into the table they belong to, rather than dropping them
-  // on the way back to the tab.
-  const rowType = rowTypeFor(data.a14SubPage || '')
+  // Save the answers into the table they belong to, rather than dropping them
+  // on the way back to the tab.
+  const rowType = rowTypeFor(data.a14SubPage || '')
 
-  if (rowType) {
-    const row = buildRow(req.body)
+  if (rowType) {
+    const row = buildRow(req.body)
 
-    // An empty submit - Cancel, or a form with nothing filled in - should not
-    // add a blank line to the table.
-    const hasSomething = Object.keys(row).some(function (field) {
-      return String(row[field] === undefined ? '' : row[field]).trim() !== ''
-    })
+    // An empty submit - Cancel, or a form with nothing filled in - should not
+    // add a blank line to the table.
+    const hasSomething = Object.keys(row).some(function (field) {
+      return String(row[field] === undefined ? '' : row[field]).trim() !== ''
+    })
 
-    // The payments built up on an employment page travel with the employment.
-    if (rowType.key === 'avCustomerEmployment' || rowType.key === 'avPartnerEmployment') {
-      const payments = data.avPendingEarnings || []
+    // The payments built up on an employment page travel with the employment.
+    if (rowType.key === 'avCustomerEmployment' || rowType.key === 'avPartnerEmployment') {
+      const payments = data.avPendingEarnings || []
 
-      row.earnings = payments
-      row.earningsCount = payments.length
-        ? payments.length + (payments.length === 1 ? ' payment' : ' payments')
-        : ''
+      row.earnings = payments
+      row.earningsCount = payments.length
+        ? payments.length + (payments.length === 1 ? ' payment' : ' payments')
+        : ''
 
-      delete data.avPendingEarnings
-    }
+      delete data.avPendingEarnings
+    }
 
-    if (rowType.key === 'avHoursCustomerEmployment' || rowType.key === 'avHoursPartnerEmployment') {
-      const entries = data.avPendingHours || []
+    if (rowType.key === 'avHoursCustomerEmployment' || rowType.key === 'avHoursPartnerEmployment') {
+      const entries = data.avPendingHours || []
 
-      row.hours = entries
-      row.hoursCount = entries.length
-        ? entries.length + (entries.length === 1 ? ' entry' : ' entries')
-        : ''
+      row.hours = entries
+      row.hoursCount = entries.length
+        ? entries.length + (entries.length === 1 ? ' entry' : ' entries')
+        : ''
 
-      delete data.avPendingHours
-    }
+      delete data.avPendingHours
+    }
 
-    // A BA3 entry carries two things the old dialog worked out for you: how
-    // long the period is, and the difference between the two amounts. Both
-    // are arithmetic on what was just typed, so they can be settled here and
-    // shown in the table rather than left as empty columns.
-    if (rowType.key === 'ba3Entries') {
-      const from = dateFromParts(req.body, 'ba3From')
-      const to = dateFromParts(req.body, 'ba3To')
+    // A BA3 entry carries two things the old dialog worked out for you: how
+    // long the period is, and the difference between the two amounts. Both
+    // are arithmetic on what was just typed, so they can be settled here and
+    // shown in the table rather than left as empty columns.
+    if (rowType.key === 'ba3Entries') {
+      const from = dateFromParts(req.body, 'ba3From')
+      const to = dateFromParts(req.body, 'ba3To')
 
-      if (from && to && to >= from) {
-        // Inclusive of both ends, which is how a benefit period is counted.
-        const days = Math.round((to - from) / 86400000) + 1
-        row.period = Math.floor(days / 7) + ' wks ' + (days % 7) + ' dys'
-      } else {
-        row.period = ''
-      }
+      if (from && to && to >= from) {
+        // Inclusive of both ends, which is how a benefit period is counted.
+        const days = Math.round((to - from) / 86400000) + 1
+        row.period = Math.floor(days / 7) + ' wks ' + (days % 7) + ' dys'
+      } else {
+        row.period = ''
+      }
 
-      const incorrect = parseFloat(String(req.body.ba3AmountB2C2 || '').replace(/[£,\s]/g, ''))
-      const correct = parseFloat(String(req.body.ba3AmountDue || '').replace(/[£,\s]/g, ''))
+      const incorrect = parseFloat(String(req.body.ba3AmountB2C2 || '').replace(/[£,\s]/g, ''))
+      const correct = parseFloat(String(req.body.ba3AmountDue || '').replace(/[£,\s]/g, ''))
 
-      // Paid less due. Positive is an overpayment, which is what a BA3 is
-      // usually recording; the other way round is a credit, and says so
-      // rather than showing a minus sign the eye slides past.
-      if (!isNaN(incorrect) && !isNaN(correct)) {
-        const excess = incorrect - correct
+      // Paid less due. Positive is an overpayment, which is what a BA3 is
+      // usually recording; the other way round is a credit, and says so
+      // rather than showing a minus sign the eye slides past.
+      if (!isNaN(incorrect) && !isNaN(correct)) {
+        const excess = incorrect - correct
 
-        row.excess = excess < 0
-          ? '£' + Math.abs(excess).toFixed(2) + ' credit'
-          : '£' + excess.toFixed(2)
-      } else {
-        row.excess = ''
-      }
+        row.excess = excess < 0
+          ? '£' + Math.abs(excess).toFixed(2) + ' credit'
+          : '£' + excess.toFixed(2)
+      } else {
+        row.excess = ''
+      }
 
-      row.usesA14 = req.body.ba3UseA14 ? 'Yes' : 'No'
-    }
+      row.usesA14 = req.body.ba3UseA14 ? 'Yes' : 'No'
+    }
 
-    // The disregard is chosen from a list, or typed in when Other is picked.
-    // The table shows one column either way, so it is settled here rather
-    // than leaving the page to work out which of the two to read.
-    if (rowType.key === 'avDisregards') {
-      row.avDisregardAmount = row.avDisregardChoice === 'other'
-        ? (row.avDisregardOther || '')
-        : (row.avDisregardChoice || '')
-    }
+    // The disregard is chosen from a list, or typed in when Other is picked.
+    // The table shows one column either way, so it is settled here rather
+    // than leaving the page to work out which of the two to read.
+    if (rowType.key === 'avDisregards') {
+      row.avDisregardAmount = row.avDisregardChoice === 'other'
+        ? (row.avDisregardOther || '')
+        : (row.avDisregardChoice || '')
+    }
 
-    if (hasSomething) {
-      data[rowType.key] = data[rowType.key] || []
+    if (hasSomething) {
+      data[rowType.key] = data[rowType.key] || []
 
-      // Where this entry was made, so Edit can reopen the same sub-page on the
-      // same tab. Underscored so it cannot collide with a real field name.
-      row._page = data.a14SubPagePath || ''
-      row._returnTo = destination || ''
+      // Where this entry was made, so Edit can reopen the same sub-page on the
+      // same tab. Underscored so it cannot collide with a real field name.
+      row._page = data.a14SubPagePath || ''
+      row._returnTo = destination || ''
 
-      // Set by an Edit link. When it is there the entry replaces the row it
-      // came from rather than adding a second copy.
-      const editing = data.a14EditKey === rowType.key &&
-                      data.a14EditIndex !== undefined && data.a14EditIndex !== ''
+      // Set by an Edit link. When it is there the entry replaces the row it
+      // came from rather than adding a second copy.
+      const editing = data.a14EditKey === rowType.key &&
+                      data.a14EditIndex !== undefined && data.a14EditIndex !== ''
 
-      if (editing) {
-        data[rowType.key][data.a14EditIndex] = row
-      } else {
-        data[rowType.key].push(row)
-      }
-    }
+      if (editing) {
+        data[rowType.key][data.a14EditIndex] = row
+      } else {
+        data[rowType.key].push(row)
+      }
+    }
 
-    // benefitWeekType is on the benefit details page as well as the benefit
-    // week sub-page. Without this, adding a benefit week would silently
-    // change the case's BWE/BWC answer to whatever the sub-page said.
-    const before = data.a14SharedBefore || {}
+    // benefitWeekType is on the benefit details page as well as the benefit
+    // week sub-page. Without this, adding a benefit week would silently
+    // change the case's BWE/BWC answer to whatever the sub-page said.
+    const before = data.a14SharedBefore || {}
 
-    sharedFields.forEach(function (field) {
-      if (before[field] !== undefined) {
-        data[field] = before[field]
-      } else if (Object.keys(before).length) {
-        delete data[field]
-      }
-    })
+    sharedFields.forEach(function (field) {
+      if (before[field] !== undefined) {
+        data[field] = before[field]
+      } else if (Object.keys(before).length) {
+        delete data[field]
+      }
+    })
 
-    delete data.a14SharedBefore
-    delete data.a14SubPage
-    delete data.a14SubPagePath
-    delete data.a14EditKey
-    delete data.a14EditIndex
-  }
+    delete data.a14SharedBefore
+    delete data.a14SubPage
+    delete data.a14SubPagePath
+    delete data.a14EditKey
+    delete data.a14EditIndex
+  }
 
 
-  // Clear it once used. Otherwise a sub-page opened later without its own
-  // returnTo would send someone back to whatever tab was visited last.
-  delete req.session.data.returnTo
+  // Clear it once used. Otherwise a sub-page opened later without its own
+  // returnTo would send someone back to whatever tab was visited last.
+  delete req.session.data.returnTo
 
- res.redirect(url);
+  res.redirect(destination || '/opcalctype')
 })
 
 // ===========================================================================
@@ -1290,26 +1290,26 @@ router.post('/return-to-tab', function (req, res) {
 // benefitWeek and weekType come from the inset text on each A14 form, and are
 // set as the starting point on the benefit details page.
 const benefits = {
-  AA: { label: 'Attendance Allowance (AA)', a14: null, available: false },
-  BA: { label: 'Bereavement Allowance (BA)', a14: null, available: false },
-  DLA: { label: 'Disability Living Allowance (DLA)', a14: null, available: false },
-  ESA: { label: 'Employment and Support Allowance (ESA)', a14: '/a14esa', available: true, benefitWeek: 'Thursday', weekType: 'BWE' },
-  IB: { label: 'Incapacity Benefit (IB)', a14: null, available: false },
-  IS: { label: 'Income Support (IS)', a14: '/a14isjsa', available: false, benefitWeek: 'Monday', weekType: 'BWC' },
-  'IS-JSA': { label: 'Income Support/Jobseeker’s Allowance (IS/JSA)', a14: '/a14isjsa', available: true, benefitWeek: 'Monday', weekType: 'BWC' },
-  'IS-PC': { label: 'Income Support/Pension Credit (IS/PC)', a14: '/a14', available: true, benefitWeek: 'Tuesday', weekType: 'BWC' },
-  IVB: { label: 'Invalidity Benefit (IVB)', a14: null, available: false },
-  'IVB-IB': { label: 'Invalidity/Incapacity Benefit (IVB/IB)', a14: null, available: false },
-  JSA: { label: 'Jobseeker’s Allowance (JSA)', a14: '/a14isjsa', available: false, benefitWeek: 'Monday', weekType: 'BWC' },
-  MA: { label: 'Maternity Allowance (MA)', a14: null, available: false },
-  PIB: { label: 'Passported Incapacity Benefit (PIB)', a14: null, available: false },
-  PC: { label: 'Pension Credit (PC)', a14: '/a14', available: false, benefitWeek: 'Tuesday', weekType: 'BWC' },
-  RP: { label: 'Retirement Pension (RP)', a14: null, available: false },
-  SDA: { label: 'Severe Disablement Allowance (SDA)', a14: null, available: false },
-  SB: { label: 'Sickness Benefit (SB)', a14: null, available: false },
-  WMA: { label: 'Widowed Mother’s Allowance (WMA)', a14: null, available: false },
-  WPA: { label: 'Widowed Parent’s Allowance (WPA)', a14: null, available: false },
-  WP: { label: 'Widow’s Pension (WP)', a14: null, available: false }
+  AA: { label: 'Attendance Allowance (AA)', a14: null, available: false },
+  BA: { label: 'Bereavement Allowance (BA)', a14: null, available: false },
+  DLA: { label: 'Disability Living Allowance (DLA)', a14: null, available: false },
+  ESA: { label: 'Employment and Support Allowance (ESA)', a14: '/a14esa', available: true, benefitWeek: 'Thursday', weekType: 'BWE' },
+  IB: { label: 'Incapacity Benefit (IB)', a14: null, available: false },
+  IS: { label: 'Income Support (IS)', a14: '/a14isjsa', available: false, benefitWeek: 'Monday', weekType: 'BWC' },
+  'IS-JSA': { label: 'Income Support/Jobseeker’s Allowance (IS/JSA)', a14: '/a14isjsa', available: true, benefitWeek: 'Monday', weekType: 'BWC' },
+  'IS-PC': { label: 'Income Support/Pension Credit (IS/PC)', a14: '/a14', available: true, benefitWeek: 'Tuesday', weekType: 'BWC' },
+  IVB: { label: 'Invalidity Benefit (IVB)', a14: null, available: false },
+  'IVB-IB': { label: 'Invalidity/Incapacity Benefit (IVB/IB)', a14: null, available: false },
+  JSA: { label: 'Jobseeker’s Allowance (JSA)', a14: '/a14isjsa', available: false, benefitWeek: 'Monday', weekType: 'BWC' },
+  MA: { label: 'Maternity Allowance (MA)', a14: null, available: false },
+  PIB: { label: 'Passported Incapacity Benefit (PIB)', a14: null, available: false },
+  PC: { label: 'Pension Credit (PC)', a14: '/a14', available: false, benefitWeek: 'Tuesday', weekType: 'BWC' },
+  RP: { label: 'Retirement Pension (RP)', a14: null, available: false },
+  SDA: { label: 'Severe Disablement Allowance (SDA)', a14: null, available: false },
+  SB: { label: 'Sickness Benefit (SB)', a14: null, available: false },
+  WMA: { label: 'Widowed Mother’s Allowance (WMA)', a14: null, available: false },
+  WPA: { label: 'Widowed Parent’s Allowance (WPA)', a14: null, available: false },
+  WP: { label: 'Widow’s Pension (WP)', a14: null, available: false }
 }
 
 // ---------------------------------------------------------------------------
@@ -1341,41 +1341,41 @@ const viewsByName = {}
 const duplicateViews = []
 
 function indexViews (dir) {
-  let entries
+  let entries
 
-  try {
-    entries = fs.readdirSync(dir, { withFileTypes: true })
-  } catch (e) {
-    return
-  }
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true })
+  } catch (e) {
+    return
+  }
 
-  entries.forEach(function (entry) {
-    const full = path.join(dir, entry.name)
+  entries.forEach(function (entry) {
+    const full = path.join(dir, entry.name)
 
-    if (entry.isDirectory()) {
-      if (entry.name.startsWith('.') || entry.name === 'node_modules') { return }
-      return indexViews(full)
-    }
+    if (entry.isDirectory()) {
+      if (entry.name.startsWith('.') || entry.name === 'node_modules') { return }
+      return indexViews(full)
+    }
 
-    if (!entry.name.toLowerCase().endsWith('.html')) { return }
+    if (!entry.name.toLowerCase().endsWith('.html')) { return }
 
-    const key = entry.name.toLowerCase()
-    // Forward slashes even on Windows - this becomes a template path.
-    const relative = path.relative(VIEWS_ROOT, full).split(path.sep).join('/')
+    const key = entry.name.toLowerCase()
+    // Forward slashes even on Windows - this becomes a template path.
+    const relative = path.relative(VIEWS_ROOT, full).split(path.sep).join('/')
 
-    if (viewsByName[key]) {
-      duplicateViews.push(key + ': ' + viewsByName[key] + ' and ' + relative)
-    } else {
-      viewsByName[key] = relative
-    }
-  })
+    if (viewsByName[key]) {
+      duplicateViews.push(key + ': ' + viewsByName[key] + ' and ' + relative)
+    } else {
+      viewsByName[key] = relative
+    }
+  })
 }
 
 indexViews(VIEWS_ROOT)
 
 // The template path for a file, wherever it turned out to be.
 function viewFor (fileName) {
-  return viewsByName[fileName.toLowerCase()] || null
+  return viewsByName[fileName.toLowerCase()] || null
 }
 
 // Every page whose Continue is a link pretending to be a submit button.
@@ -1387,39 +1387,39 @@ function viewFor (fileName) {
 const brokenButtons = []
 
 Object.keys(viewsByName).forEach(function (name) {
-  let text
+  let text
 
-  try {
-    text = fs.readFileSync(path.join(VIEWS_ROOT, viewsByName[name]), 'utf8')
-  } catch (e) {
-    return
-  }
+  try {
+    text = fs.readFileSync(path.join(VIEWS_ROOT, viewsByName[name]), 'utf8')
+  } catch (e) {
+    return
+  }
 
-  const calls = text.match(/govukButton\(\{[\s\S]*?\}\)/g) || []
+  const calls = text.match(/govukButton\(\{[\s\S]*?\}\)/g) || []
 
-  calls.forEach(function (call) {
-    if (/\bhref\s*:/.test(call) && /type\s*:\s*["']submit["']/.test(call)) {
-      const label = (call.match(/text\s*:\s*["']([^"']+)["']/) || [])[1] || 'a button'
-      brokenButtons.push({ view: viewsByName[name], label: label })
-    }
-  })
+  calls.forEach(function (call) {
+    if (/\bhref\s*:/.test(call) && /type\s*:\s*["']submit["']/.test(call)) {
+      const label = (call.match(/text\s*:\s*["']([^"']+)["']/) || [])[1] || 'a button'
+      brokenButtons.push({ view: viewsByName[name], label: label })
+    }
+  })
 })
 
 // The first of these filenames that exists. Pages in this prototype are
 // spelled both ways - selectbenefit.html and select-benefit.html - so asking
 // for one name only is another way to miss the file that is actually there.
 function anyView (names) {
-  for (let i = 0; i < names.length; i++) {
-    const view = viewFor(names[i])
-    if (view) { return view }
-  }
-  return null
+  for (let i = 0; i < names.length; i++) {
+    const view = viewFor(names[i])
+    if (view) { return view }
+  }
+  return null
 }
 
 const a14Views = {
-  '/a14': anyView(['a14.html']),
-  '/a14isjsa': anyView(['a14isjsa.html', 'a14-isjsa.html', 'a14isjsa.html']),
-  '/a14esa': anyView(['a14esa.html', 'a14-esa.html'])
+  '/a14': anyView(['a14.html']),
+  '/a14isjsa': anyView(['a14isjsa.html', 'a14-isjsa.html', 'a14isjsa.html']),
+  '/a14esa': anyView(['a14esa.html', 'a14-esa.html'])
 }
 
 // ---------------------------------------------------------------------------
@@ -1442,18 +1442,18 @@ const a14Views = {
 // /A14/newform - those are pages in their own right, not the form itself.
 //
 const a14Addresses = {
-  a14: '/a14',
-  a14isjsa: '/a14isjsa',
-  a14esa: '/a14esa'
+  a14: '/a14',
+  a14isjsa: '/a14isjsa',
+  a14esa: '/a14esa'
 }
 
 // The last part of a path, without any .html, lower case - so "/A14/a14.html"
 // and "/a14" both come out as "a14". macOS treats file paths as case
 // insensitive, so links in the prototype use both /A14/ and /a14/.
 function lastSegment (path) {
-  const parts = String(path || '').split('/').filter(Boolean)
-  const last = parts.length ? parts[parts.length - 1] : ''
-  return last.replace(/\.html$/i, '').toLowerCase()
+  const parts = String(path || '').split('/').filter(Boolean)
+  const last = parts.length ? parts[parts.length - 1] : ''
+  return last.replace(/\.html$/i, '').toLowerCase()
 }
 
 // Pages that should work from any address, so moving the file between folders
@@ -1461,21 +1461,21 @@ function lastSegment (path) {
 // root rather than in /A14 is exactly the case that broke this: every link
 // saying /A14/newform stopped resolving the moment it moved.
 const BENEFIT_DETAILS_FILES = [
-  'benefits-details.html', 'benefit-details.html',
-  'benefitsdetails.html', 'benefitdetails.html'
+  'benefits-details.html', 'benefit-details.html',
+  'benefitsdetails.html', 'benefitdetails.html'
 ]
 
 const SELECT_BENEFIT_FILES = ['select-benefit.html', 'selectbenefit.html']
 
 const portablePages = {
-  newform: anyView(['newform.html', 'new-form.html']),
-  'new-form': anyView(['newform.html', 'new-form.html']),
-  selectbenefit: anyView(SELECT_BENEFIT_FILES),
-  'select-benefit': anyView(SELECT_BENEFIT_FILES),
-  benefitsdetails: anyView(BENEFIT_DETAILS_FILES),
-  benefitdetails: anyView(BENEFIT_DETAILS_FILES),
-  'benefit-details': anyView(BENEFIT_DETAILS_FILES),
-  'benefits-details': anyView(BENEFIT_DETAILS_FILES)
+  newform: anyView(['newform.html', 'new-form.html']),
+  'new-form': anyView(['newform.html', 'new-form.html']),
+  selectbenefit: anyView(SELECT_BENEFIT_FILES),
+  'select-benefit': anyView(SELECT_BENEFIT_FILES),
+  benefitsdetails: anyView(BENEFIT_DETAILS_FILES),
+  benefitdetails: anyView(BENEFIT_DETAILS_FILES),
+  'benefit-details': anyView(BENEFIT_DETAILS_FILES),
+  'benefits-details': anyView(BENEFIT_DETAILS_FILES)
 }
 
 // Every QB16 page, wherever you put the folder. This is why nothing in those
@@ -1483,9 +1483,9 @@ const portablePages = {
 // qb16listofentries.html no matter where it is, so moving QB16entrydetails
 // somewhere else breaks nothing.
 Object.keys(viewsByName).forEach(function (name) {
-  if (/^(qb16|viewqb16|dcc|av|ba3)/i.test(name)) {
-    portablePages[name.replace(/\.html$/i, '')] = viewsByName[name]
-  }
+  if (/^(qb16|viewqb16|dcc|av|ba3)/i.test(name)) {
+    portablePages[name.replace(/\.html$/i, '')] = viewsByName[name]
+  }
 })
 
 // The A14 pages that are not one of the three forms - a14forms,
@@ -1498,138 +1498,138 @@ Object.keys(viewsByName).forEach(function (name) {
 const A14_FORM_FILES = ['a14.html', 'a14esa.html', 'a14isjsa.html', 'a14-tables.html']
 
 Object.keys(viewsByName).forEach(function (name) {
-  if (/^a14/i.test(name) && A14_FORM_FILES.indexOf(name) === -1) {
-    portablePages[name.replace(/\.html$/i, '')] = viewsByName[name]
-  }
+  if (/^a14/i.test(name) && A14_FORM_FILES.indexOf(name) === -1) {
+    portablePages[name.replace(/\.html$/i, '')] = viewsByName[name]
+  }
 })
 
 // One place that answers every request for a page whose location should not
 // matter. Because it works off the last part of the address, lower cased and
 // without any .html, all of these reach the same file:
 //
-//   /newform   /NewForm   /A14/newform   /a14/newform.html
+//   /newform   /NewForm   /A14/newform   /a14/newform.html
 //
 // Registered before anything else so it answers first. Express matches in
 // declaration order, and a route declared earlier would win - that is what
 // made /a14esa keep serving the ESA form whichever benefit was chosen.
 router.use(function (req, res, next) {
-  if (req.method !== 'GET') { return next() }
+  if (req.method !== 'GET') { return next() }
 
-  const segment = lastSegment(req.path)
-  const data = (req.session && req.session.data) || {}
+  const segment = lastSegment(req.path)
+  const data = (req.session && req.session.data) || {}
 
-  // Errors on the average earnings page belong to the visit that follows the
-  // attempt, the same as the banner below. Left alone they would still be
-  // there days later.
-  if (!/\.[a-z0-9]+$/i.test(req.path)) {
-    if (data.avErrors && segment !== 'avearnings') { delete data.avErrors }
-    if (data.avHoursErrors && segment !== 'avhours') { delete data.avHoursErrors }
-    if (data.ba3Errors && segment !== 'ba3entrydetails') { delete data.ba3Errors }
-    if (data.hclNewFormErrors && segment !== 'housingcostnewform') { delete data.hclNewFormErrors }
-    if (data.hclErrors && segment !== 'housingcostloanspage') { delete data.hclErrors; delete data.hclFieldErrors }
-  }
+  // Errors on the average earnings page belong to the visit that follows the
+  // attempt, the same as the banner below. Left alone they would still be
+  // there days later.
+  if (!/\.[a-z0-9]+$/i.test(req.path)) {
+    if (data.avErrors && segment !== 'avearnings') { delete data.avErrors }
+    if (data.avHoursErrors && segment !== 'avhours') { delete data.avHoursErrors }
+    if (data.ba3Errors && segment !== 'ba3entrydetails') { delete data.ba3Errors }
+    if (data.hclNewFormErrors && segment !== 'housingcostnewform') { delete data.hclNewFormErrors }
+    if (data.hclErrors && segment !== 'housingcostloanspage') { delete data.hclErrors; delete data.hclFieldErrors }
+  }
 
-  // The success banner belongs to the visit that follows the action.
-  //
-  // The previous version cleared it on any request that was not the overview,
-  // which included the browser's own requests for stylesheets, scripts and
-  // favicons. Depending on the order those arrive in, the banner could be gone
-  // before the page it belongs to had rendered.
-  //
-  // So: requests for a file are ignored entirely, the overview keeps the
-  // banner for exactly one visit, and going anywhere else clears it.
-  if (data.caseBanner && !/\.[a-z0-9]+$/i.test(req.path)) {
-    if (segment === lastSegment(CASE_OVERVIEW_PAGE)) {
-      if (data.caseBannerSeen) {
-        delete data.caseBanner
-        delete data.caseBannerSeen
-      } else {
-        data.caseBannerSeen = 'yes'
-      }
-    } else {
-      delete data.caseBanner
-      delete data.caseBannerSeen
-    }
-  }
+  // The success banner belongs to the visit that follows the action.
+  //
+  // The previous version cleared it on any request that was not the overview,
+  // which included the browser's own requests for stylesheets, scripts and
+  // favicons. Depending on the order those arrive in, the banner could be gone
+  // before the page it belongs to had rendered.
+  //
+  // So: requests for a file are ignored entirely, the overview keeps the
+  // banner for exactly one visit, and going anywhere else clears it.
+  if (data.caseBanner && !/\.[a-z0-9]+$/i.test(req.path)) {
+    if (segment === lastSegment(CASE_OVERVIEW_PAGE)) {
+      if (data.caseBannerSeen) {
+        delete data.caseBanner
+        delete data.caseBannerSeen
+      } else {
+        data.caseBannerSeen = 'yes'
+      }
+    } else {
+      delete data.caseBanner
+      delete data.caseBannerSeen
+    }
+  }
 
-  // Opening a "New something" sub-page. Remember which one, so that when it
-  // posts to /return-to-tab the answers go into the right table - and where it
-  // lives, so an Edit link can reopen this same page later.
-  const openedType = rowTypeFor(segment)
+  // Opening a "New something" sub-page. Remember which one, so that when it
+  // posts to /return-to-tab the answers go into the right table - and where it
+  // lives, so an Edit link can reopen this same page later.
+  const openedType = rowTypeFor(segment)
 
-  if (openedType) {
-    data.a14SubPage = segment
-    data.a14SubPagePath = req.path
+  if (openedType) {
+    data.a14SubPage = segment
+    data.a14SubPagePath = req.path
 
-    // Arriving without edit markers means this is a fresh "New", so clear the
-    // fields the last entry left behind and start with an empty form.
-    // Anything another page also relies on is left alone.
-    if (!data.a14EditKey) {
-      // Opening a New employment starts with no payments, rather than the
-      // ones added to the employment before it.
-      //
-      // Adding or removing a payment comes straight back to this same page, so
-      // that counts as still being on it rather than opening it again - which
-      // is what avKeepPending says. Without it every Add wiped the list it
-      // had just been added to.
-      if (data.avKeepPending) {
-        delete data.avKeepPending
-      } else {
-        delete data.avPendingEarnings
-        delete data.avPendingHours
-      }
+    // Arriving without edit markers means this is a fresh "New", so clear the
+    // fields the last entry left behind and start with an empty form.
+    // Anything another page also relies on is left alone.
+    if (!data.a14EditKey) {
+      // Opening a New employment starts with no payments, rather than the
+      // ones added to the employment before it.
+      //
+      // Adding or removing a payment comes straight back to this same page, so
+      // that counts as still being on it rather than opening it again - which
+      // is what avKeepPending says. Without it every Add wiped the list it
+      // had just been added to.
+      if (data.avKeepPending) {
+        delete data.avKeepPending
+      } else {
+        delete data.avPendingEarnings
+        delete data.avPendingHours
+      }
 
-      snapshotShared(data)
+      snapshotShared(data)
 
-      const previous = (data[openedType.key] || [])[0]
+      const previous = (data[openedType.key] || [])[0]
 
-      if (previous) {
-        Object.keys(previous).forEach(function (field) {
-          if (field.charAt(0) === '_') { return }
-          if (sharedFields.indexOf(field) > -1) { return }
-          delete data[field]
-        })
-      }
-    }
-  }
+      if (previous) {
+        Object.keys(previous).forEach(function (field) {
+          if (field.charAt(0) === '_') { return }
+          if (sharedFields.indexOf(field) > -1) { return }
+          delete data[field]
+        })
+      }
+    }
+  }
 
-  // ----- An A14 form: open the one the benefit says, not the one linked -----
-  if (a14Addresses[segment]) {
-    const record = benefits[data.benefit]
+  // ----- An A14 form: open the one the benefit says, not the one linked -----
+  if (a14Addresses[segment]) {
+    const record = benefits[data.benefit]
 
-    // Nothing stored. Showing a form anyway is what made this look broken -
-    // one of the three appears and there is no way to tell it was a fallback
-    // rather than a choice. Go back and ask instead.
-    if (!record || !record.a14) {
-      data.benefitError = 'Select which benefit this case is for before opening an A14 form'
-      return res.redirect(url);
-    }
+    // Nothing stored. Showing a form anyway is what made this look broken -
+    // one of the three appears and there is no way to tell it was a fallback
+    // rather than a choice. Go back and ask instead.
+    if (!record || !record.a14) {
+      data.benefitError = 'Select which benefit this case is for before opening an A14 form'
+      return res.redirect(SELECT_BENEFIT_PAGE)
+    }
 
-    // Asked for the wrong form - send them to the right one, at its real
-    // address, so the address bar says which form they are on.
-    if (record.a14 !== a14Addresses[segment]) {
-      return res.redirect(url);
-    }
+    // Asked for the wrong form - send them to the right one, at its real
+    // address, so the address bar says which form they are on.
+    if (record.a14 !== a14Addresses[segment]) {
+      return res.redirect(realAddress(record.a14))
+    }
 
-    const wanted = a14Views[record.a14]
+    const wanted = a14Views[record.a14]
 
-    if (!wanted) { return next() }
+    if (!wanted) { return next() }
 
-    return res.render(wanted, function (err, html) {
-      if (err) { return next() }
-      res.send(html)
-    })
-  }
+    return res.render(wanted, function (err, html) {
+      if (err) { return next() }
+      res.send(html)
+    })
+  }
 
-  // ----- A page that should work from anywhere -----
-  if (portablePages[segment]) {
-    return res.render(portablePages[segment], function (err, html) {
-      if (err) { return next() }
-      res.send(html)
-    })
-  }
+  // ----- A page that should work from anywhere -----
+  if (portablePages[segment]) {
+    return res.render(portablePages[segment], function (err, html) {
+      if (err) { return next() }
+      res.send(html)
+    })
+  }
 
-  next()
+  next()
 })
 
 // ---------------------------------------------------------------------------
@@ -1639,108 +1639,108 @@ router.use(function (req, res, next) {
 // A plain page, built here rather than from a template so it cannot fail for
 // the same reason anything else might. Two things it settles in one look:
 //
-//   - if it 404s, app/routes.js is not loading at all, and none of the
-//     branching in this file is running. Check the terminal for an error, and
-//     check there is only one routes.js.
-//   - if it loads and Benefit is empty, the page asking the question is not
-//     posting, so there is nothing for the fork to read.
+//   - if it 404s, app/routes.js is not loading at all, and none of the
+//     branching in this file is running. Check the terminal for an error, and
+//     check there is only one routes.js.
+//   - if it loads and Benefit is empty, the page asking the question is not
+//     posting, so there is nothing for the fork to read.
 //
 router.get('/whats-stored', function (req, res) {
-  const data = (req.session && req.session.data) || {}
-  const record = benefits[data.benefit]
+  const data = (req.session && req.session.data) || {}
+  const record = benefits[data.benefit]
 
-  function row (label, value) {
-    return '<tr class="govuk-table__row">' +
-      '<th scope="row" class="govuk-table__header">' + label + '</th>' +
-      '<td class="govuk-table__cell">' + (value || '<em>not set</em>') + '</td></tr>'
-  }
+  function row (label, value) {
+    return '<tr class="govuk-table__row">' +
+      '<th scope="row" class="govuk-table__header">' + label + '</th>' +
+      '<td class="govuk-table__cell">' + (value || '<em>not set</em>') + '</td></tr>'
+  }
 
-  res.send('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">' +
-    '<title>What is stored - OpCalc</title>' +
-    '<link rel="stylesheet" href="/govuk/govuk-frontend.min.css"></head>' +
-    '<body class="govuk-template__body"><div class="govuk-width-container">' +
-    '<main class="govuk-main-wrapper">' +
-    '<h1 class="govuk-heading-l">What is stored against this case</h1>' +
-    '<p class="govuk-body">app/routes.js is loading. If this page shows at all, the branching code is running.</p>' +
-    '<table class="govuk-table"><tbody class="govuk-table__body">' +
-    row('Benefit code', data.benefit) +
-    row('Benefit name', data.benefitLabel) +
-    row('A14 form it opens', record && record.a14 ? realAddress(record.a14) : null) +
-    row('Initial benefit week', data.initialBenefitWeek) +
-    row('Benefit week type', data.benefitWeekType) +
-    '</tbody></table>' +
-    (data.benefit
-      ? '<p class="govuk-body">The benefit is stored. Any link to an A14 form should now open <strong>' +
-        (record && record.a14 ? record.a14 : 'nothing - this benefit has no form') + '</strong>.</p>'
-      : '<p class="govuk-body">Nothing is stored. The page asking which benefit is not posting its answer - ' +
-        'its Continue is most likely a link rather than a submit button.</p>') +
-    '<p class="govuk-body"><a class="govuk-link" href="' + SELECT_BENEFIT_PAGE + '">Choose a benefit</a>' +
-    ' &nbsp; <a class="govuk-link" href="/clear-benefit">Clear the benefit and start again</a></p>' +
+  res.send('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">' +
+    '<title>What is stored - OpCalc</title>' +
+    '<link rel="stylesheet" href="/govuk/govuk-frontend.min.css"></head>' +
+    '<body class="govuk-template__body"><div class="govuk-width-container">' +
+    '<main class="govuk-main-wrapper">' +
+    '<h1 class="govuk-heading-l">What is stored against this case</h1>' +
+    '<p class="govuk-body">app/routes.js is loading. If this page shows at all, the branching code is running.</p>' +
+    '<table class="govuk-table"><tbody class="govuk-table__body">' +
+    row('Benefit code', data.benefit) +
+    row('Benefit name', data.benefitLabel) +
+    row('A14 form it opens', record && record.a14 ? realAddress(record.a14) : null) +
+    row('Initial benefit week', data.initialBenefitWeek) +
+    row('Benefit week type', data.benefitWeekType) +
+    '</tbody></table>' +
+    (data.benefit
+      ? '<p class="govuk-body">The benefit is stored. Any link to an A14 form should now open <strong>' +
+        (record && record.a14 ? record.a14 : 'nothing - this benefit has no form') + '</strong>.</p>'
+      : '<p class="govuk-body">Nothing is stored. The page asking which benefit is not posting its answer - ' +
+        'its Continue is most likely a link rather than a submit button.</p>') +
+    '<p class="govuk-body"><a class="govuk-link" href="' + SELECT_BENEFIT_PAGE + '">Choose a benefit</a>' +
+    ' &nbsp; <a class="govuk-link" href="/clear-benefit">Clear the benefit and start again</a></p>' +
 
-    // Where the journey resolved to. Screenshot this rather than describing it.
-    '<h2 class="govuk-heading-m">Where the journey points</h2>' +
-    '<table class="govuk-table"><tbody class="govuk-table__body">' +
-    row('Select benefit', SELECT_BENEFIT_PAGE) +
-    row('Benefit details', BENEFIT_DETAILS_PAGE) +
-    row('Check your answers', CHECK_ANSWERS_PAGE) +
-    row('New A14 form', NEW_FORM_PAGE) +
-    '</tbody></table>' +
+    // Where the journey resolved to. Screenshot this rather than describing it.
+    '<h2 class="govuk-heading-m">Where the journey points</h2>' +
+    '<table class="govuk-table"><tbody class="govuk-table__body">' +
+    row('Select benefit', SELECT_BENEFIT_PAGE) +
+    row('Benefit details', BENEFIT_DETAILS_PAGE) +
+    row('Check your answers', CHECK_ANSWERS_PAGE) +
+    row('New A14 form', NEW_FORM_PAGE) +
+    '</tbody></table>' +
 
-    '<h2 class="govuk-heading-m">A14 forms found</h2>' +
-    '<table class="govuk-table"><tbody class="govuk-table__body">' +
-    Object.keys(a14Views).map(function (address) {
-      return row(address, a14Views[address] ||
-        '<strong class="govuk-tag govuk-tag--red">NOT FOUND</strong> - no file of that name under app/views')
-    }).join('') +
-    '</tbody></table>' +
+    '<h2 class="govuk-heading-m">A14 forms found</h2>' +
+    '<table class="govuk-table"><tbody class="govuk-table__body">' +
+    Object.keys(a14Views).map(function (address) {
+      return row(address, a14Views[address] ||
+        '<strong class="govuk-tag govuk-tag--red">NOT FOUND</strong> - no file of that name under app/views')
+    }).join('') +
+    '</tbody></table>' +
 
-    // The recurring bug, listed for the whole prototype rather than found one
-    // screen at a time.
-    '<h2 class="govuk-heading-m">Buttons that will not submit</h2>' +
-    (brokenButtons.length
-      ? '<p class="govuk-body">These are govukButton calls carrying both an href and type: "submit". ' +
-        'govukButton renders a link when href is present, so each of these detaches from its form and ' +
-        'silently does nothing.</p>' +
-        '<table class="govuk-table"><tbody class="govuk-table__body">' +
-        brokenButtons.map(function (b) { return row(b.view, b.label) }).join('') +
-        '</tbody></table>'
-      : '<p class="govuk-body">None found. Every submit button on every page is a real button.</p>') +
+    // The recurring bug, listed for the whole prototype rather than found one
+    // screen at a time.
+    '<h2 class="govuk-heading-m">Buttons that will not submit</h2>' +
+    (brokenButtons.length
+      ? '<p class="govuk-body">These are govukButton calls carrying both an href and type: "submit". ' +
+        'govukButton renders a link when href is present, so each of these detaches from its form and ' +
+        'silently does nothing.</p>' +
+        '<table class="govuk-table"><tbody class="govuk-table__body">' +
+        brokenButtons.map(function (b) { return row(b.view, b.label) }).join('') +
+        '</tbody></table>'
+      : '<p class="govuk-body">None found. Every submit button on every page is a real button.</p>') +
 
-    '<h2 class="govuk-heading-m">Every page found</h2>' +
-    '<p class="govuk-body">' + Object.keys(viewsByName).length + ' files under app/views.</p>' +
-    '<table class="govuk-table"><tbody class="govuk-table__body">' +
-    Object.keys(viewsByName).sort().map(function (name) {
-      return row(viewsByName[name], '/' + viewsByName[name].replace(/\.html$/i, ''))
-    }).join('') +
-    '</tbody></table>' +
+    '<h2 class="govuk-heading-m">Every page found</h2>' +
+    '<p class="govuk-body">' + Object.keys(viewsByName).length + ' files under app/views.</p>' +
+    '<table class="govuk-table"><tbody class="govuk-table__body">' +
+    Object.keys(viewsByName).sort().map(function (name) {
+      return row(viewsByName[name], '/' + viewsByName[name].replace(/\.html$/i, ''))
+    }).join('') +
+    '</tbody></table>' +
 
-    '</main></div></body></html>')
+    '</main></div></body></html>')
 })
 
 // Same page, easier name to remember.
-router.get('/whats-wired', function (req, res) { res.redirect(url); })
+router.get('/whats-wired', function (req, res) { res.redirect('/whats-stored') })
 
 // The benefit sits in the session until it is replaced, which is right for a
 // case but confusing while testing - an old choice looks like a new one that
 // did not take. This clears it without wiping the rest of the case.
 router.get('/clear-benefit', function (req, res) {
-  const data = req.session.data || {}
+  const data = req.session.data || {}
 
-  delete data.benefit
-  delete data.benefitLabel
-  delete data.benefitError
-  delete data.initialBenefitWeek
-  delete data.benefitWeekType
+  delete data.benefit
+  delete data.benefitLabel
+  delete data.benefitError
+  delete data.initialBenefitWeek
+  delete data.benefitWeekType
 
-  res.redirect(url);
+  res.redirect(SELECT_BENEFIT_PAGE)
 })
 
 // The pages either side of the benefit questions. Each is the address the kit
 // actually serves the file at, worked out from where the file turned out to
 // be - so a redirect lands on the real page rather than on a path I guessed.
 function addressOf (names, fallback) {
-  const view = anyView(names)
-  return view ? '/' + view.replace(/\.html$/i, '') : fallback
+  const view = anyView(names)
+  return view ? '/' + view.replace(/\.html$/i, '') : fallback
 }
 
 // ---------------------------------------------------------------------------
@@ -1758,11 +1758,11 @@ function addressOf (names, fallback) {
 // Whichever is used, the startup message in your terminal says which.
 //
 const ADDRESSES = {
-  selectBenefit: '',
-  benefitDetails: '',
-  checkAnswers: '',
-  newForm: '',
-  caseOverview: ''
+  selectBenefit: '',
+  benefitDetails: '',
+  checkAnswers: '',
+  newForm: '',
+  caseOverview: ''
 }
 
 const SELECT_BENEFIT_PAGE = ADDRESSES.selectBenefit || addressOf(SELECT_BENEFIT_FILES, '/select-benefit')
@@ -1776,24 +1776,24 @@ const CASE_OVERVIEW_PAGE = ADDRESSES.caseOverview || addressOf(['case-overview.h
 console.log('')
 console.log('OpCalc - benefit journey')
 function how (override, files) {
-  if (override) { return '  (set by hand in ADDRESSES)' }
-  return anyView(files) ? '' : '  <- NOT FOUND, this is a guess. Set it in ADDRESSES near the top of this file.'
+  if (override) { return '  (set by hand in ADDRESSES)' }
+  return anyView(files) ? '' : '  <- NOT FOUND, this is a guess. Set it in ADDRESSES near the top of this file.'
 }
 
-console.log('  select benefit   ' + SELECT_BENEFIT_PAGE + how(ADDRESSES.selectBenefit, SELECT_BENEFIT_FILES))
-console.log('  benefit details  ' + BENEFIT_DETAILS_PAGE + how(ADDRESSES.benefitDetails, BENEFIT_DETAILS_FILES))
-console.log('  check answers    ' + CHECK_ANSWERS_PAGE + how(ADDRESSES.checkAnswers, ['check-your-answers.html', 'checkyouranswers.html']))
-console.log('  new A14 form     ' + NEW_FORM_PAGE + how(ADDRESSES.newForm, ['newform.html', 'new-form.html']))
-console.log('  case overview    ' + CASE_OVERVIEW_PAGE + how(ADDRESSES.caseOverview, ['case-overview.html', 'caseoverview.html']))
-console.log('  A14 forms:')
+console.log('  select benefit   ' + SELECT_BENEFIT_PAGE + how(ADDRESSES.selectBenefit, SELECT_BENEFIT_FILES))
+console.log('  benefit details  ' + BENEFIT_DETAILS_PAGE + how(ADDRESSES.benefitDetails, BENEFIT_DETAILS_FILES))
+console.log('  check answers    ' + CHECK_ANSWERS_PAGE + how(ADDRESSES.checkAnswers, ['check-your-answers.html', 'checkyouranswers.html']))
+console.log('  new A14 form     ' + NEW_FORM_PAGE + how(ADDRESSES.newForm, ['newform.html', 'new-form.html']))
+console.log('  case overview    ' + CASE_OVERVIEW_PAGE + how(ADDRESSES.caseOverview, ['case-overview.html', 'caseoverview.html']))
+console.log('  A14 forms:')
 
 Object.keys(a14Views).forEach(function (address) {
-  console.log('    ' + address.padEnd(12) + (a14Views[address] || 'NOT FOUND - check the filename'))
+  console.log('    ' + address.padEnd(12) + (a14Views[address] || 'NOT FOUND - check the filename'))
 })
 
 if (duplicateViews.length) {
-  console.log('  Two files share a name, so the first is used:')
-  duplicateViews.forEach(function (line) { console.log('    ' + line) })
+  console.log('  Two files share a name, so the first is used:')
+  duplicateViews.forEach(function (line) { console.log('    ' + line) })
 }
 
 console.log('')
@@ -1807,19 +1807,19 @@ console.log('')
 // The address a form really lives at, worked out from where the file is -
 // so the IS/PC form in A14pcispc lands on /A14pcispc/a14 rather than /a14.
 function realAddress (canonical) {
-  const view = a14Views[canonical]
-  return view ? '/' + view.replace(/\.html$/i, '') : canonical
+  const view = a14Views[canonical]
+  return view ? '/' + view.replace(/\.html$/i, '') : canonical
 }
 
 function openA14 (req, res) {
-  const record = benefits[req.session.data.benefit]
+  const record = benefits[req.session.data.benefit]
 
-  if (!record || !record.a14) {
-    req.session.data.benefitError = 'Select which benefit this case is for before opening an A14 form'
-    return res.redirect(url);
-  }
+  if (!record || !record.a14) {
+    req.session.data.benefitError = 'Select which benefit this case is for before opening an A14 form'
+    return res.redirect(SELECT_BENEFIT_PAGE)
+  }
 
-  res.redirect(url);
+  res.redirect(realAddress(record.a14))
 }
 
 // ---------------------------------------------------------------------------
@@ -1831,36 +1831,36 @@ function openA14 (req, res) {
 // page is not the only thing holding it.
 //
 function selectBenefitContinue (req, res) {
-  const data = req.session.data
-  const chosen = req.body.benefit
+  const data = req.session.data
+  const chosen = req.body.benefit
 
-  if (!chosen) {
-    data.benefitError = 'Select which benefit this case is for'
-    return res.redirect(url);
-  }
+  if (!chosen) {
+    data.benefitError = 'Select which benefit this case is for'
+    return res.redirect(SELECT_BENEFIT_PAGE)
+  }
 
-  if (!benefits[chosen] || !benefits[chosen].available) {
-    data.benefitError = 'That benefit is not part of this prototype. Select Employment and Support Allowance, Income Support/Jobseeker’s Allowance, or Income Support/Pension Credit.'
-    return res.redirect(url);
-  }
+  if (!benefits[chosen] || !benefits[chosen].available) {
+    data.benefitError = 'That benefit is not part of this prototype. Select Employment and Support Allowance, Income Support/Jobseeker’s Allowance, or Income Support/Pension Credit.'
+    return res.redirect(SELECT_BENEFIT_PAGE)
+  }
 
-  data.benefit = chosen
-  data.benefitLabel = benefits[chosen].label
+  data.benefit = chosen
+  data.benefitLabel = benefits[chosen].label
 
-  // The benefit sets the benefit week, so offer it as the starting point on
-  // the next page rather than making someone look it up. Only when it has not
-  // already been set, so going back and changing the benefit does not throw
-  // away a deliberate choice.
-  if (!data.initialBenefitWeek) {
-    data.initialBenefitWeek = benefits[chosen].benefitWeek
-  }
-  if (!data.benefitWeekType) {
-    data.benefitWeekType = benefits[chosen].weekType
-  }
+  // The benefit sets the benefit week, so offer it as the starting point on
+  // the next page rather than making someone look it up. Only when it has not
+  // already been set, so going back and changing the benefit does not throw
+  // away a deliberate choice.
+  if (!data.initialBenefitWeek) {
+    data.initialBenefitWeek = benefits[chosen].benefitWeek
+  }
+  if (!data.benefitWeekType) {
+    data.benefitWeekType = benefits[chosen].weekType
+  }
 
-  delete data.benefitError
+  delete data.benefitError
 
-  res.redirect(url);
+  res.redirect('/customer-details/benefit-details')
 }
 
 router.post('/select-benefit-continue', selectBenefitContinue)
@@ -1870,48 +1870,48 @@ router.post('/select-benefit-continue', selectBenefitContinue)
 // ---------------------------------------------------------------------------
 
 function benefitDetailsContinue (req, res) {
-  const data = req.session.data
-  const body = req.body
-  const errors = []
+  const data = req.session.data
+  const body = req.body
+  const errors = []
 
-  function fail (field, href, message) {
-    if (message) {
-      errors.push({ field: field, href: href, message: message })
-    }
-  }
+  function fail (field, href, message) {
+    if (message) {
+      errors.push({ field: field, href: href, message: message })
+    }
+  }
 
-  fail('discrepancy-from', '#discrepancy-from-day',
-    checkDate(body, 'discrepancyFrom', 'the date the discrepancy period started'))
-  fail('discrepancy-to', '#discrepancy-to-day',
-    checkDate(body, 'discrepancyTo', 'the date the discrepancy period ended'))
+  fail('discrepancy-from', '#discrepancy-from-day',
+    checkDate(body, 'discrepancyFrom', 'the date the discrepancy period started'))
+  fail('discrepancy-to', '#discrepancy-to-day',
+    checkDate(body, 'discrepancyTo', 'the date the discrepancy period ended'))
 
-  // Only worth comparing once both are real dates.
-  if (!errors.length) {
-    const from = dateValue(dateParts(body, 'discrepancyFrom'))
-    const to = dateValue(dateParts(body, 'discrepancyTo'))
+  // Only worth comparing once both are real dates.
+  if (!errors.length) {
+    const from = dateValue(dateParts(body, 'discrepancyFrom'))
+    const to = dateValue(dateParts(body, 'discrepancyTo'))
 
-    if (from && to && to < from) {
-      fail('discrepancy-to', '#discrepancy-to-day',
-        'The date the discrepancy period ended must be the same as or after the date it started')
-    }
-  }
+    if (from && to && to < from) {
+      fail('discrepancy-to', '#discrepancy-to-day',
+        'The date the discrepancy period ended must be the same as or after the date it started')
+    }
+  }
 
-  if (!body.initialBenefitWeek) {
-    fail('initial-benefit-week', '#initial-benefit-week', 'Select an initial benefit week')
-  }
+  if (!body.initialBenefitWeek) {
+    fail('initial-benefit-week', '#initial-benefit-week', 'Select an initial benefit week')
+  }
 
-  if (!body.benefitWeekType) {
-    fail('benefit-week-type', '#benefit-week-type', 'Select a benefit week type')
-  }
+  if (!body.benefitWeekType) {
+    fail('benefit-week-type', '#benefit-week-type', 'Select a benefit week type')
+  }
 
-  if (errors.length) {
-    data.benefitDetailsErrors = errors
-    return res.redirect(url);
-  }
+  if (errors.length) {
+    data.benefitDetailsErrors = errors
+    return res.redirect(BENEFIT_DETAILS_PAGE)
+  }
 
-  delete data.benefitDetailsErrors
+  delete data.benefitDetailsErrors
 
-  res.redirect(url);
+  res.redirect(CHECK_ANSWERS_PAGE)
 }
 
 router.post('/benefit-details-continue', benefitDetailsContinue)
@@ -1927,8 +1927,8 @@ router.post('/benefit-details-continue', benefitDetailsContinue)
 // Two addresses for the same thing, because the Continue button on that page
 // may be either a submit inside a form or a plain link:
 //
-//   a submit button -> <form action="/newform" method="post">
-//   a link          -> href="/newform-continue"
+//   a submit button -> <form action="/newform" method="post">
+//   a link          -> href="/newform-continue"
 //
 // Use whichever matches the page. Both end up in openA14.
 //
@@ -1944,49 +1944,49 @@ router.post('/benefit-details-continue', benefitDetailsContinue)
 // rejected when it is genuinely impossible - not a real date, or outside the
 // discrepancy period.
 function newFormContinue (req, res) {
-  const data = req.session.data || {}
-  const body = req.body || {}
-  const errors = []
+  const data = req.session.data || {}
+  const body = req.body || {}
+  const errors = []
 
-  function fail (href, message) {
-    if (message) { errors.push({ href: href, message: message }) }
-  }
+  function fail (href, message) {
+    if (message) { errors.push({ href: href, message: message }) }
+  }
 
-  const given = anyGiven(body, ['a14StartDate-day', 'a14StartDate-month', 'a14StartDate-year'])
+  const given = anyGiven(body, ['a14StartDate-day', 'a14StartDate-month', 'a14StartDate-year'])
 
-  if (given) {
-    fail('#a14-start-date-day', checkDate(body, 'a14StartDate', 'the start date'))
+  if (given) {
+    fail('#a14-start-date-day', checkDate(body, 'a14StartDate', 'the start date'))
 
-    // The hint on the page states the rule: the form can start later than the
-    // discrepancy period but never earlier, and there is nothing to calculate
-    // after the period ends.
-    if (!errors.length) {
-      const start = dateValue(dateParts(body, 'a14StartDate'))
-      const from = dateValue(dateParts(data, 'discrepancyFrom'))
-      const to = dateValue(dateParts(data, 'discrepancyTo'))
+    // The hint on the page states the rule: the form can start later than the
+    // discrepancy period but never earlier, and there is nothing to calculate
+    // after the period ends.
+    if (!errors.length) {
+      const start = dateValue(dateParts(body, 'a14StartDate'))
+      const from = dateValue(dateParts(data, 'discrepancyFrom'))
+      const to = dateValue(dateParts(data, 'discrepancyTo'))
 
-      if (from && start < from) {
-        fail('#a14-start-date-day',
-          'The start date cannot be earlier than ' + dateFrom(data, 'discrepancyFrom') +
-          ', the start of the discrepancy period. Cancel and amend that date instead.')
-      }
+      if (from && start < from) {
+        fail('#a14-start-date-day',
+          'The start date cannot be earlier than ' + dateFrom(data, 'discrepancyFrom') +
+          ', the start of the discrepancy period. Cancel and amend that date instead.')
+      }
 
-      if (to && start > to) {
-        fail('#a14-start-date-day',
-          'The start date cannot be later than ' + dateFrom(data, 'discrepancyTo') +
-          ', the end of the discrepancy period')
-      }
-    }
-  }
+      if (to && start > to) {
+        fail('#a14-start-date-day',
+          'The start date cannot be later than ' + dateFrom(data, 'discrepancyTo') +
+          ', the end of the discrepancy period')
+      }
+    }
+  }
 
-  if (errors.length) {
-    data.newFormErrors = errors
-    return res.redirect(url);
-  }
+  if (errors.length) {
+    data.newFormErrors = errors
+    return res.redirect(NEW_FORM_PAGE)
+  }
 
-  delete data.newFormErrors
+  delete data.newFormErrors
 
-  openA14(req, res)
+  openA14(req, res)
 }
 
 router.post('/newform', newFormContinue)
@@ -1998,24 +1998,24 @@ router.post('/newform-continue', openA14)
 // written for one of those is wrong in the other. Matching on the last part of
 // the address means it no longer matters where the file sits.
 const postHandlers = {
-  a14caseoverview: generateA14,
-  a14forms: generateA14,
-  newform: newFormContinue,
-  'new-form': newFormContinue,
-  'newform-continue': openA14,
-  'select-benefit-continue': selectBenefitContinue,
-  'benefit-details-continue': benefitDetailsContinue,
-  'benefits-details-continue': benefitDetailsContinue
+  a14caseoverview: generateA14,
+  a14forms: generateA14,
+  newform: newFormContinue,
+  'new-form': newFormContinue,
+  'newform-continue': openA14,
+  'select-benefit-continue': selectBenefitContinue,
+  'benefit-details-continue': benefitDetailsContinue,
+  'benefits-details-continue': benefitDetailsContinue
 }
 
 router.use(function (req, res, next) {
-  if (req.method !== 'POST') { return next() }
+  if (req.method !== 'POST') { return next() }
 
-  const handler = postHandlers[lastSegment(req.path)]
+  const handler = postHandlers[lastSegment(req.path)]
 
-  if (!handler) { return next() }
+  if (!handler) { return next() }
 
-  handler(req, res)
+  handler(req, res)
 })
 
 // ---------------------------------------------------------------------------
@@ -2024,7 +2024,7 @@ router.use(function (req, res, next) {
 
 // Overlapping dates warning.
 // Yes - dates get adjusted, so the entry is accepted.
-// No  - go back to the entry so the dates can be changed.
+// No  - go back to the entry so the dates can be changed.
 // ---------------------------------------------------------------------------
 // QB16 entry details
 // ---------------------------------------------------------------------------
@@ -2032,81 +2032,81 @@ router.use(function (req, res, next) {
 // Finishing the QB16. Same shape as generating the A14 forms: mark it done,
 // set the banner, and go back to the one case overview.
 router.post('/qb16-complete', function (req, res) {
-  if (!req.session.data) { req.session.data = {} }
-  const data = req.session.data
+  if (!req.session.data) { req.session.data = {} }
+  const data = req.session.data
 
-  data.qb16Complete = 'yes'
-  data.caseBanner = 'qb16'
-  delete data.caseBannerSeen
+  data.qb16Complete = 'yes'
+  data.caseBanner = 'qb16'
+  delete data.caseBannerSeen
 
-  console.log('QB16: calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
+  console.log('QB16: calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
 
-  res.redirect(url);
+  res.redirect(CASE_OVERVIEW_PAGE)
 })
 
 // The old page that stood in for the case overview once a QB16 was filled in.
 // There is one case overview now, and it shows the QB16 row itself, so both
 // addresses go there.
-router.get('/landingpagewithqb16entrydetailsfilledin', function (req, res) { res.redirect(url); })
+router.get('/landingpagewithqb16entrydetailsfilledin', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
 router.post('/landingpagewithqb16entrydetailsfilledin', function (req, res) {
-  if (!req.session.data) { req.session.data = {} }
-  req.session.data.qb16Complete = 'yes'
-  req.session.data.caseBanner = 'qb16'
-  res.redirect(url);
+  if (!req.session.data) { req.session.data = {} }
+  req.session.data.qb16Complete = 'yes'
+  req.session.data.caseBanner = 'qb16'
+  res.redirect(CASE_OVERVIEW_PAGE)
 })
 
 // Printing. The selection itself does not need keeping in a prototype - what
 // matters is that pressing the button confirms something happened.
 router.post('/qb16-print', function (req, res) {
-  if (!req.session.data) { req.session.data = {} }
-  req.session.data.caseBanner = 'printed'
-  delete req.session.data.caseBannerSeen
+  if (!req.session.data) { req.session.data = {} }
+  req.session.data.caseBanner = 'printed'
+  delete req.session.data.caseBannerSeen
 
-  res.redirect(url);
+  res.redirect(CASE_OVERVIEW_PAGE)
 })
 
 // Insert standard text. It posts here rather than to /return-to-tab because
 // it is not a row - it fills in the Cause box on the list of entries.
 router.post('/qb16-standard-text', function (req, res) {
-  const data = req.session.data || {}
-  const destination = req.body.returnTo || data.returnTo || '/qb16listofentries#list-of-entries'
+  const data = req.session.data || {}
+  const destination = req.body.returnTo || data.returnTo || '/qb16listofentries#list-of-entries'
 
-  // Whatever was chosen goes into the Cause box, replacing anything typed
-  // there before - which is what "insert standard text" means here.
-  if (req.body.standardText) {
-    data.cause = req.body.standardText
-  }
+  // Whatever was chosen goes into the Cause box, replacing anything typed
+  // there before - which is what "insert standard text" means here.
+  if (req.body.standardText) {
+    data.cause = req.body.standardText
+  }
 
-  delete data.returnTo
+  delete data.returnTo
 
-  res.redirect(url);
+  res.redirect(destination)
 })
 
 // The Yes/No branch on the overlapping dates warning.
 //
-//   Yes -> the dates get adjusted, so the entry is accepted and you go back
-//          to the list of entries
-//   No  -> you go back to the entry to change the dates yourself
+//   Yes -> the dates get adjusted, so the entry is accepted and you go back
+//          to the list of entries
+//   No  -> you go back to the entry to change the dates yourself
 router.post('/qb16-overlap-answer', function (req, res) {
-  const adjustDates = req.body.adjustDates || (req.session.data || {}).adjustDates
+  const adjustDates = req.body.adjustDates || (req.session.data || {}).adjustDates
 
-  if (adjustDates === 'no') {
-    res.redirect(url);
-  } else {
-    res.redirect(url);
-  }
+  if (adjustDates === 'no') {
+    res.redirect('/qb16entrydetails?returnTo=/qb16listofentries%23list-of-entries')
+  } else {
+    res.redirect('/qb16listofentries#list-of-entries')
+  }
 })
 
 // Clear the cause box on the QB16 list of entries, so standard text that was
 // inserted can be removed and started again. Both fields go, because the
 // textarea shows whichever of the two is set.
 router.get('/qb16-clear-cause', function (req, res) {
-  const data = req.session.data || {}
+  const data = req.session.data || {}
 
-  delete data.cause
-  delete data.standardText
+  delete data.cause
+  delete data.standardText
 
-  res.redirect(url);
+  res.redirect('/qb16listofentries#list-of-entries')
 })
 
 // Deleting a row, confirmed from one of the three QB16 delete pages.
@@ -2115,20 +2115,20 @@ router.get('/qb16-clear-cause', function (req, res) {
 // Kit stores into the session for us - so by the time Yes is pressed, the
 // table and the row number are already here.
 router.post('/qb16-delete-row', function (req, res) {
-  const data = req.session.data || {}
-  const key = data.deleteKey
-  const index = parseInt(data.deleteIndex, 10)
-  const destination = data.deleteReturnTo || '/qb16listofentries'
+  const data = req.session.data || {}
+  const key = data.deleteKey
+  const index = parseInt(data.deleteIndex, 10)
+  const destination = data.deleteReturnTo || '/qb16listofentries'
 
-  if (key && Array.isArray(data[key]) && !isNaN(index)) {
-    data[key].splice(index, 1)
-  }
+  if (key && Array.isArray(data[key]) && !isNaN(index)) {
+    data[key].splice(index, 1)
+  }
 
-  delete data.deleteKey
-  delete data.deleteIndex
-  delete data.deleteReturnTo
+  delete data.deleteKey
+  delete data.deleteIndex
+  delete data.deleteReturnTo
 
-  res.redirect(url);
+  res.redirect(destination)
 })
 
 // ---------------------------------------------------------------------------
@@ -2154,93 +2154,93 @@ router.post('/qb16-delete-row', function (req, res) {
 // A date input's three boxes are matched by their prefix, so listing
 // pcispcRateDate covers -day, -month and -year.
 const dccAddActions = {
-  'add-rate': { key: 'Rates', tab: 'isjsa-paid', fields: ['isjsaRateDate', 'isjsaRateAmount', 'isjsaRateTaxable', 'isjsaRatePersonalAllowance'] },
-  'add-income': { key: 'Income', tab: 'income', fields: ['isjsaIncomeDate', 'isjsaIncomeAmount', 'isjsaIncomePaymentPeriod', 'isjsaIncomeDisregard', 'isjsaIncomeDescription'] },
-  'add-tariff': { key: 'Tariff', tab: 'tariff-income', fields: ['isjsaTariffDate', 'isjsaTariffAmount'] },
-  'add-rescare': { key: 'ResCare', tab: 'res-care-pens', fields: ['isjsaResCareFrom', 'isjsaResCareTo', 'isjsaResCareType'] }
+  'add-rate': { key: 'Rates', tab: 'isjsa-paid', fields: ['isjsaRateDate', 'isjsaRateAmount', 'isjsaRateTaxable', 'isjsaRatePersonalAllowance'] },
+  'add-income': { key: 'Income', tab: 'income', fields: ['isjsaIncomeDate', 'isjsaIncomeAmount', 'isjsaIncomePaymentPeriod', 'isjsaIncomeDisregard', 'isjsaIncomeDescription'] },
+  'add-tariff': { key: 'Tariff', tab: 'tariff-income', fields: ['isjsaTariffDate', 'isjsaTariffAmount'] },
+  'add-rescare': { key: 'ResCare', tab: 'res-care-pens', fields: ['isjsaResCareFrom', 'isjsaResCareTo', 'isjsaResCareType'] }
 }
 
 // True when a posted field belongs to this Add - an exact match, or one of the
 // three boxes of a date input.
 function belongsTo (field, names) {
-  return names.some(function (name) {
-    return field === name || field.indexOf(name + '-') === 0
-  })
+  return names.some(function (name) {
+    return field === name || field.indexOf(name + '-') === 0
+  })
 }
 
 function dccAdd (req, res, page, variant, actions) {
-  if (!req.session.data) { req.session.data = {} }
+  if (!req.session.data) { req.session.data = {} }
 
-  const data = req.session.data
-  const action = req.body.action || data.action
-  const add = (actions || dccAddActions)[action]
+  const data = req.session.data
+  const action = req.body.action || data.action
+  const add = (actions || dccAddActions)[action]
 
-  if (!add) { return false }
+  if (!add) { return false }
 
-  const key = 'dcc' + variant + add.key
-  const row = {}
+  const key = 'dcc' + variant + add.key
+  const row = {}
 
-  Object.keys(req.body).forEach(function (field) {
-    if (belongsTo(field, add.fields)) { row[field] = req.body[field] }
-  })
+  Object.keys(req.body).forEach(function (field) {
+    if (belongsTo(field, add.fields)) { row[field] = req.body[field] }
+  })
 
-  const filled = Object.keys(row).some(function (field) {
-    return String(row[field] === undefined ? '' : row[field]).trim() !== ''
-  })
+  const filled = Object.keys(row).some(function (field) {
+    return String(row[field] === undefined ? '' : row[field]).trim() !== ''
+  })
 
-  if (filled) {
-    // Dates arrive as three fields. buildRow also joins each set into one
-    // dd/mm/yyyy value, so the table can show a date without reassembling it.
-    data[key] = data[key] || []
-    data[key].push(buildRow(row))
-  }
+  if (filled) {
+    // Dates arrive as three fields. buildRow also joins each set into one
+    // dd/mm/yyyy value, so the table can show a date without reassembling it.
+    data[key] = data[key] || []
+    data[key].push(buildRow(row))
+  }
 
-  // Empty the boxes that were just used, so the next entry starts blank
-  // rather than repeating the last one.
-  Object.keys(data).forEach(function (field) {
-    if (belongsTo(field, add.fields)) { delete data[field] }
-  })
+  // Empty the boxes that were just used, so the next entry starts blank
+  // rather than repeating the last one.
+  Object.keys(data).forEach(function (field) {
+    if (belongsTo(field, add.fields)) { delete data[field] }
+  })
 
-  delete data.action
+  delete data.action
 
-  res.redirect(url);
+  res.redirect(page + '#' + add.tab)
 
-  // Says the request has been answered. res.redirect returns nothing, so
-  // returning it here would read as "not handled" and the caller would carry
-  // on into Run the calculation - marking the DCC done every time an Add was
-  // pressed, and answering the same request twice.
-  return true
+  // Says the request has been answered. res.redirect returns nothing, so
+  // returning it here would read as "not handled" and the caller would carry
+  // on into Run the calculation - marking the DCC done every time an Add was
+  // pressed, and answering the same request twice.
+  return true
 }
 
 router.post('/dccisjsa-action', function (req, res) {
-  const added = dccAdd(req, res, '/dccisjsa', 'Isjsa')
-  if (added) { return }
+  const added = dccAdd(req, res, '/dccisjsa', 'Isjsa')
+  if (added) { return }
 
-  // Run the calculation. Same shape as the A14 forms and the QB16: mark it
-  // done, set the banner, and go back to the one case overview.
-  if (!req.session.data) { req.session.data = {} }
-  const data = req.session.data
+  // Run the calculation. Same shape as the A14 forms and the QB16: mark it
+  // done, set the banner, and go back to the one case overview.
+  if (!req.session.data) { req.session.data = {} }
+  const data = req.session.data
 
-  data.dccComplete = 'yes'
-  data.caseBanner = 'dcc'
-  delete data.caseBannerSeen
-  delete data.action
+  data.dccComplete = 'yes'
+  data.caseBanner = 'dcc'
+  delete data.caseBannerSeen
+  delete data.action
 
-  console.log('DCC (IS/JSA): calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
+  console.log('DCC (IS/JSA): calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
 
-  res.redirect(url);
+  res.redirect(CASE_OVERVIEW_PAGE)
 })
 
 // Asset page: choosing Yes or No to "Is this an accumulating asset?" swaps
 // which set of fields you get.
 router.post('/dccisjsa-asset-accumulating', function (req, res) {
-  const accumulating = req.body.isjsaAccumulatingAsset || (req.session.data || {}).isjsaAccumulatingAsset
+  const accumulating = req.body.isjsaAccumulatingAsset || (req.session.data || {}).isjsaAccumulatingAsset
 
-  if (accumulating === 'yes') {
-    res.redirect(url);
-  } else {
-    res.redirect(url);
-  }
+  if (accumulating === 'yes') {
+    res.redirect('/dccisjsaassetsnewassetaccumulatingassetyes')
+  } else {
+    res.redirect('/dccisjsaassetsnewassetaccumulatingassetno')
+  }
 })
 
 // Asset value page. In the real system the "already exists" warning only fires
@@ -2251,88 +2251,88 @@ router.post('/dccisjsa-asset-accumulating', function (req, res) {
 // chance to change the date instead. It is only written to the table if the
 // answer is yes.
 router.post('/dccisjsa-asset-value', function (req, res) {
-  if (!req.session.data) { req.session.data = {} }
+  if (!req.session.data) { req.session.data = {} }
 
-  req.session.data.dccPendingValue = buildRow(req.body)
+  req.session.data.dccPendingValue = buildRow(req.body)
 
-  res.redirect(url);
+  res.redirect('/dccisjsaassetstickshowvaluesalreadyexists')
 })
 
 // Already exists warning: Yes keeps the value, No goes back to change the date.
 router.post('/dccisjsa-value-replace', function (req, res) {
-  if (!req.session.data) { req.session.data = {} }
+  if (!req.session.data) { req.session.data = {} }
 
-  const data = req.session.data
-  const replace = req.body.isjsaReplaceValue || data.isjsaReplaceValue
+  const data = req.session.data
+  const replace = req.body.isjsaReplaceValue || data.isjsaReplaceValue
 
-  if (replace === 'no') {
-    return res.redirect(url);
-  }
+  if (replace === 'no') {
+    return res.redirect('/dccisjsaassetstickshowvalues')
+  }
 
-  if (data.dccPendingValue) {
-    data.dccIsjsaAssetValues = data.dccIsjsaAssetValues || []
-    data.dccIsjsaAssetValues.push(data.dccPendingValue)
-  }
+  if (data.dccPendingValue) {
+    data.dccIsjsaAssetValues = data.dccIsjsaAssetValues || []
+    data.dccIsjsaAssetValues.push(data.dccPendingValue)
+  }
 
-  delete data.dccPendingValue
-  delete data.isjsaReplaceValue
+  delete data.dccPendingValue
+  delete data.isjsaReplaceValue
 
-  res.redirect(url);
+  res.redirect('/dccisjsa#assets')
 })
 
 // The ESA path had its own case overview and its own print page. There is one
 // case overview now and it shows the DCC row itself, so that address goes
 // there rather than showing the same case twice, disagreeing.
-router.get('/dccesacaseoverview', function (req, res) { res.redirect(url); })
-router.post('/dccesacaseoverview', function (req, res) { res.redirect(url); })
+router.get('/dccesacaseoverview', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
+router.post('/dccesacaseoverview', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
 
 // Printing, from any of the print selection pages. The selection itself does
 // not need keeping in a prototype - what matters is that pressing the button
 // confirms something happened.
 router.post('/case-print', function (req, res) {
-  if (!req.session.data) { req.session.data = {} }
+  if (!req.session.data) { req.session.data = {} }
 
-  req.session.data.caseBanner = 'printed'
-  delete req.session.data.caseBannerSeen
+  req.session.data.caseBanner = 'printed'
+  delete req.session.data.caseBannerSeen
 
-  res.redirect(url);
+  res.redirect(CASE_OVERVIEW_PAGE)
 })
 
 // Looking at a finished DCC. ESA has its own results page; the other two use
 // the printed view until they get one.
 const dccViewPages = {
-  ESA: '/dccesaviewcaseoverview',
-  'IS-PC': '/dccpcispcviewcaseoverview',
-  PC: '/dccpcispcviewcaseoverview'
+  ESA: '/dccesaviewcaseoverview',
+  'IS-PC': '/dccpcispcviewcaseoverview',
+  PC: '/dccpcispcviewcaseoverview'
 }
 
 router.get('/dcc-view', function (req, res) {
-  const data = req.session.data || {}
-  res.redirect(url);
+  const data = req.session.data || {}
+  res.redirect(dccViewPages[data.benefit] || '/dccPDF')
 })
 
 // The Diminishing capital calculation button on the case overview. Which DCC
 // page you get depends on the benefit chosen for the case, the same way the
 // A14 forms fork.
 const dccPages = {
-  'IS-JSA': '/dccisjsa',
-  IS: '/dccisjsa',
-  JSA: '/dccisjsa',
-  'IS-PC': '/dccpcispc',
-  PC: '/dccpcispc',
-  ESA: '/dccesa'
+  'IS-JSA': '/dccisjsa',
+  IS: '/dccisjsa',
+  JSA: '/dccisjsa',
+  'IS-PC': '/dccpcispc',
+  PC: '/dccpcispc',
+  ESA: '/dccesa'
 }
 
 router.get('/dcc', function (req, res) {
-  const data = req.session.data || {}
-  const page = dccPages[data.benefit]
+  const data = req.session.data || {}
+  const page = dccPages[data.benefit]
 
-  if (!page) {
-    // No benefit chosen yet, so there is nothing to decide with.
-    return res.redirect(url);
-  }
+  if (!page) {
+    // No benefit chosen yet, so there is nothing to decide with.
+    return res.redirect(SELECT_BENEFIT_PAGE)
+  }
 
-  res.redirect(url);
+  res.redirect(page)
 })
 
 // ---------------------------------------------------------------------------
@@ -2346,87 +2346,87 @@ router.get('/dcc', function (req, res) {
 // tariff tab - so this path gets its own map rather than sharing the IS/JSA
 // one.
 const dccPcispcAddActions = {
-  'add-rate': {
-    key: 'Rates',
-    tab: 'amount-paid',
-    fields: ['pcispcRateDate', 'pcispcSavingsCredit', 'pcispcClientGroup', 'pcispcApplicableAmount',
-      'pcispcIncomeFromCapital', 'pcispcOtherQualifying', 'pcispcNonQualifying']
-  },
-  'add-income': {
-    key: 'Income',
-    tab: 'income',
-    fields: ['pcispcIncomeStart', 'pcispcIncomeEnd', 'pcispcIncomeAmount', 'pcispcIncomePaymentPeriod',
-      'pcispcIncomeDisregard', 'pcispcIncomeDescription', 'pcispcIncomeType']
-  },
-  'add-rescare': { key: 'ResCare', tab: 'res-care', fields: ['pcispcResCareFrom', 'pcispcResCareTo'] }
+  'add-rate': {
+    key: 'Rates',
+    tab: 'amount-paid',
+    fields: ['pcispcRateDate', 'pcispcSavingsCredit', 'pcispcClientGroup', 'pcispcApplicableAmount',
+      'pcispcIncomeFromCapital', 'pcispcOtherQualifying', 'pcispcNonQualifying']
+  },
+  'add-income': {
+    key: 'Income',
+    tab: 'income',
+    fields: ['pcispcIncomeStart', 'pcispcIncomeEnd', 'pcispcIncomeAmount', 'pcispcIncomePaymentPeriod',
+      'pcispcIncomeDisregard', 'pcispcIncomeDescription', 'pcispcIncomeType']
+  },
+  'add-rescare': { key: 'ResCare', tab: 'res-care', fields: ['pcispcResCareFrom', 'pcispcResCareTo'] }
 }
 
 router.post('/dccpcispc-action', function (req, res) {
-  const added = dccAdd(req, res, '/dccpcispc', 'Pcispc', dccPcispcAddActions)
-  if (added) { return }
+  const added = dccAdd(req, res, '/dccpcispc', 'Pcispc', dccPcispcAddActions)
+  if (added) { return }
 
-  // Run the calculation. Same shape as every other path: mark it done, set
-  // the banner, and go back to the one case overview.
-  if (!req.session.data) { req.session.data = {} }
-  const data = req.session.data
+  // Run the calculation. Same shape as every other path: mark it done, set
+  // the banner, and go back to the one case overview.
+  if (!req.session.data) { req.session.data = {} }
+  const data = req.session.data
 
-  data.dccComplete = 'yes'
-  data.caseBanner = 'dcc'
-  delete data.caseBannerSeen
-  delete data.action
+  data.dccComplete = 'yes'
+  data.caseBanner = 'dcc'
+  delete data.caseBannerSeen
+  delete data.action
 
-  console.log('DCC (PC/IS-PC): calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
+  console.log('DCC (PC/IS-PC): calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
 
-  res.redirect(url);
+  res.redirect(CASE_OVERVIEW_PAGE)
 })
 
 // Asset page: Yes or No to "Is this an accumulating asset?" swaps which set
 // of fields you get.
 router.post('/dccpcispc-asset-accumulating', function (req, res) {
-  const accumulating = req.body.pcispcAccumulatingAsset || (req.session.data || {}).pcispcAccumulatingAsset
+  const accumulating = req.body.pcispcAccumulatingAsset || (req.session.data || {}).pcispcAccumulatingAsset
 
-  if (accumulating === 'yes') {
-    res.redirect(url);
-  } else {
-    res.redirect(url);
-  }
+  if (accumulating === 'yes') {
+    res.redirect('/dccpcispcnewassetaccumulatingassetyes')
+  } else {
+    res.redirect('/dccpcispcnewassetaccumulatingassetno')
+  }
 })
 
 // Asset value, through the "already exists" warning. The value is held rather
 // than saved, because the next screen offers the chance to change the date
 // instead - it is only written to the table if the answer is yes.
 router.post('/dccpcispc-asset-value', function (req, res) {
-  if (!req.session.data) { req.session.data = {} }
+  if (!req.session.data) { req.session.data = {} }
 
-  req.session.data.dccPendingValue = buildRow(req.body)
+  req.session.data.dccPendingValue = buildRow(req.body)
 
-  res.redirect(url);
+  res.redirect('/dccpcispcassetvaluesalreadyexist')
 })
 
 router.post('/dccpcispc-value-replace', function (req, res) {
-  if (!req.session.data) { req.session.data = {} }
+  if (!req.session.data) { req.session.data = {} }
 
-  const data = req.session.data
-  const replace = req.body.pcispcReplaceValue || data.pcispcReplaceValue
+  const data = req.session.data
+  const replace = req.body.pcispcReplaceValue || data.pcispcReplaceValue
 
-  if (replace === 'no') {
-    return res.redirect(url);
-  }
+  if (replace === 'no') {
+    return res.redirect('/dccpcispcassetsshowvalues')
+  }
 
-  if (data.dccPendingValue) {
-    data.dccPcispcAssetValues = data.dccPcispcAssetValues || []
-    data.dccPcispcAssetValues.push(data.dccPendingValue)
-  }
+  if (data.dccPendingValue) {
+    data.dccPcispcAssetValues = data.dccPcispcAssetValues || []
+    data.dccPcispcAssetValues.push(data.dccPendingValue)
+  }
 
-  delete data.dccPendingValue
-  delete data.pcispcReplaceValue
+  delete data.dccPendingValue
+  delete data.pcispcReplaceValue
 
-  res.redirect(url);
+  res.redirect('/dccpcispc#assets')
 })
 
 // The PC/ISPC path had its own case overview too. One case overview now.
-router.get('/dccpcispccaseoverview', function (req, res) { res.redirect(url); })
-router.post('/dccpcispccaseoverview', function (req, res) { res.redirect(url); })
+router.get('/dccpcispccaseoverview', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
+router.post('/dccpcispccaseoverview', function (req, res) { res.redirect(CASE_OVERVIEW_PAGE) })
 
 // ===========================================================================
 // DCC - Employment and Support Allowance
@@ -2434,13 +2434,13 @@ router.post('/dccpcispccaseoverview', function (req, res) { res.redirect(url); }
 //
 // Each tab keeps its rows in an array, so a case can have as many as it needs:
 //
-//   data.esaAssets  = [ { type, name, shareHeld, shareTotal, accumulating,
-//                         values: [ { date, amount } ] } ]
-//   data.esaRates   = [ { date, dateParts, amount, taxable, taxableElements } ]
-//   data.esaIncomes = [ { date, dateParts, amount, paymentPeriod, disregard,
-//                         description } ]
-//   data.esaTariffs = [ { date, dateParts, amount } ]
-//   data.esaResCare = [ { from, fromParts, to, toParts, pensioner } ]
+//   data.esaAssets  = [ { type, name, shareHeld, shareTotal, accumulating,
+//                         values: [ { date, amount } ] } ]
+//   data.esaRates   = [ { date, dateParts, amount, taxable, taxableElements } ]
+//   data.esaIncomes = [ { date, dateParts, amount, paymentPeriod, disregard,
+//                         description } ]
+//   data.esaTariffs = [ { date, dateParts, amount } ]
+//   data.esaResCare = [ { from, fromParts, to, toParts, pensioner } ]
 //
 // The tables on /dccesa read those arrays and nothing else. That matters:
 // the Prototype Kit copies every posted field into session data, so a value
@@ -2475,186 +2475,186 @@ const MAX_AMOUNT = 999999.99
 //
 
 function capitalise (text) {
-  return text.charAt(0).toUpperCase() + text.slice(1)
+  return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
 // Whole numbers only, so "12a" and "1.5" are both rejected.
 function isWholeNumber (value) {
-  return /^\d+$/.test(String(value).trim())
+  return /^\d+$/.test(String(value).trim())
 }
 
 // Money, so digits with an optional two decimal places. Commas, spaces and
 // pound signs are stripped first, since people paste amounts in.
 function parseAmount (value) {
-  return String(value === undefined || value === null ? '' : value)
-    .trim()
-    .replace(/[£,\s]/g, '')
+  return String(value === undefined || value === null ? '' : value)
+    .trim()
+    .replace(/[£,\s]/g, '')
 }
 
 function checkAmount (value, label) {
-  const amount = parseAmount(value)
+  const amount = parseAmount(value)
 
-  if (amount === '') {
-    return 'Enter ' + label
-  }
-  if (/^-/.test(amount)) {
-    return capitalise(label) + ' cannot be a negative number'
-  }
-  if (!/^\d+(\.\d{1,2})?$/.test(amount)) {
-    return capitalise(label) + ' must be an amount, like 16000 or 16000.50'
-  }
-  if (Number(amount) > MAX_AMOUNT) {
-    return capitalise(label) + ' must be £999,999.99 or less'
-  }
-  return null
+  if (amount === '') {
+    return 'Enter ' + label
+  }
+  if (/^-/.test(amount)) {
+    return capitalise(label) + ' cannot be a negative number'
+  }
+  if (!/^\d+(\.\d{1,2})?$/.test(amount)) {
+    return capitalise(label) + ' must be an amount, like 16000 or 16000.50'
+  }
+  if (Number(amount) > MAX_AMOUNT) {
+    return capitalise(label) + ' must be £999,999.99 or less'
+  }
+  return null
 }
 
 // An optional amount only has to be valid when something was typed.
 function checkOptionalAmount (value, label) {
-  if (parseAmount(value) === '') {
-    return null
-  }
-  return checkAmount(value, label)
+  if (parseAmount(value) === '') {
+    return null
+  }
+  return checkAmount(value, label)
 }
 
 // Dates come in as three separate boxes, so each is checked, then the whole
 // thing is checked for being a real date. 31 April and 29 February in a
 // non-leap year are both rejected here.
 function checkDate (body, prefix, label) {
-  const day = String(body[prefix + '-day'] || '').trim()
-  const month = String(body[prefix + '-month'] || '').trim()
-  const year = String(body[prefix + '-year'] || '').trim()
+  const day = String(body[prefix + '-day'] || '').trim()
+  const month = String(body[prefix + '-month'] || '').trim()
+  const year = String(body[prefix + '-year'] || '').trim()
 
-  if (!day && !month && !year) {
-    return 'Enter ' + label
-  }
+  if (!day && !month && !year) {
+    return 'Enter ' + label
+  }
 
-  const missing = []
-  if (!day) { missing.push('day') }
-  if (!month) { missing.push('month') }
-  if (!year) { missing.push('year') }
+  const missing = []
+  if (!day) { missing.push('day') }
+  if (!month) { missing.push('month') }
+  if (!year) { missing.push('year') }
 
-  if (missing.length) {
-    return capitalise(label) + ' must include a ' + missing.join(' and ')
-  }
+  if (missing.length) {
+    return capitalise(label) + ' must include a ' + missing.join(' and ')
+  }
 
-  if (!isWholeNumber(day) || !isWholeNumber(month) || !isWholeNumber(year)) {
-    return capitalise(label) + ' must be numbers, like 27 10 2008'
-  }
+  if (!isWholeNumber(day) || !isWholeNumber(month) || !isWholeNumber(year)) {
+    return capitalise(label) + ' must be numbers, like 27 10 2008'
+  }
 
-  if (year.length !== 4) {
-    return 'Year must be 4 numbers, like 2008'
-  }
+  if (year.length !== 4) {
+    return 'Year must be 4 numbers, like 2008'
+  }
 
-  const d = Number(day)
-  const m = Number(month)
-  const y = Number(year)
+  const d = Number(day)
+  const m = Number(month)
+  const y = Number(year)
 
-  if (m < 1 || m > 12) {
-    return 'Month must be a number between 1 and 12'
-  }
+  if (m < 1 || m > 12) {
+    return 'Month must be a number between 1 and 12'
+  }
 
-  const daysInMonth = new Date(y, m, 0).getDate()
+  const daysInMonth = new Date(y, m, 0).getDate()
 
-  if (d < 1 || d > daysInMonth) {
-    return 'Day must be a number between 1 and ' + daysInMonth + ' for that month'
-  }
+  if (d < 1 || d > daysInMonth) {
+    return 'Day must be a number between 1 and ' + daysInMonth + ' for that month'
+  }
 
-  return null
+  return null
 }
 
 // A real date that also falls inside the discrepancy period.
 function checkDateInPeriod (body, prefix, label) {
-  const error = checkDate(body, prefix, label)
-  if (error) { return error }
+  const error = checkDate(body, prefix, label)
+  if (error) { return error }
 
-  const value = dateValue(dateParts(body, prefix))
+  const value = dateValue(dateParts(body, prefix))
 
-  if (value < DCC_FROM || value > DCC_TO) {
-    return capitalise(label) + ' must be between ' + DCC_FROM_TEXT + ' and ' +
-           DCC_TO_TEXT + ', the dates of this calculation'
-  }
+  if (value < DCC_FROM || value > DCC_TO) {
+    return capitalise(label) + ' must be between ' + DCC_FROM_TEXT + ' and ' +
+           DCC_TO_TEXT + ', the dates of this calculation'
+  }
 
-  return null
+  return null
 }
 
 // True when a date is real and complete, so ranges can be compared.
 function dateValue (parts) {
-  if (!parts || !parts.year) { return null }
-  return new Date(Number(parts.year), Number(parts.month) - 1, Number(parts.day))
+  if (!parts || !parts.year) { return null }
+  return new Date(Number(parts.year), Number(parts.month) - 1, Number(parts.day))
 }
 
 // Builds a dd/mm/yyyy string from a date input's three fields. Padded, so
 // 1/1/2010 and 01/01/2010 are not treated as two different dates.
 function dateFrom (body, prefix) {
-  function pad (value) {
-    const text = String(value === undefined ? '' : value).trim()
-    return text.length === 1 ? '0' + text : text
-  }
+  function pad (value) {
+    const text = String(value === undefined ? '' : value).trim()
+    return text.length === 1 ? '0' + text : text
+  }
 
-  return pad(body[prefix + '-day']) + '/' +
-         pad(body[prefix + '-month']) + '/' +
-         String(body[prefix + '-year'] || '').trim()
+  return pad(body[prefix + '-day']) + '/' +
+         pad(body[prefix + '-month']) + '/' +
+         String(body[prefix + '-year'] || '').trim()
 }
 
 // Keeps the three parts of a date as well as the formatted version, so an
 // Edit link can put them back into the day, month and year boxes.
 function dateParts (body, prefix) {
-  return {
-    day: body[prefix + '-day'] || '',
-    month: body[prefix + '-month'] || '',
-    year: body[prefix + '-year'] || ''
-  }
+  return {
+    day: body[prefix + '-day'] || '',
+    month: body[prefix + '-month'] || '',
+    year: body[prefix + '-year'] || ''
+  }
 }
 
 // True when any of the named fields holds something. Used to spot a row that
 // was started but never added.
 function anyGiven (body, names) {
-  return names.some(function (name) {
-    return String(body[name] === undefined ? '' : body[name]).trim() !== ''
-  })
+  return names.some(function (name) {
+    return String(body[name] === undefined ? '' : body[name]).trim() !== ''
+  })
 }
 
 // Adds a row, or updates one when an index came through from an Edit link.
 function saveRow (data, key, index, row) {
-  const rows = data[key] || []
+  const rows = data[key] || []
 
-  if (index !== undefined && index !== '') {
-    rows[index] = row
-  } else {
-    rows.push(row)
-  }
+  if (index !== undefined && index !== '') {
+    rows[index] = row
+  } else {
+    rows.push(row)
+  }
 
-  data[key] = rows
+  data[key] = rows
 }
 
 // Clears the one-off fields behind an Add form, so the next entry starts
 // empty. Only called after a successful save - when validation fails the
 // fields stay put so the page can show what was typed.
 function clearFields (data, names) {
-  names.forEach(function (name) { delete data[name] })
+  names.forEach(function (name) { delete data[name] })
 }
 
 const rateFields = [
-  'esaRateDate-day', 'esaRateDate-month', 'esaRateDate-year',
-  'esaRateAmount', 'esaRateTaxable', 'esaTaxableElements'
+  'esaRateDate-day', 'esaRateDate-month', 'esaRateDate-year',
+  'esaRateAmount', 'esaRateTaxable', 'esaTaxableElements'
 ]
 
 const incomeFields = [
-  'esaIncomeDate-day', 'esaIncomeDate-month', 'esaIncomeDate-year',
-  'esaIncomeAmount', 'esaIncomePaymentPeriod', 'esaIncomeDisregard',
-  'esaIncomeDescription'
+  'esaIncomeDate-day', 'esaIncomeDate-month', 'esaIncomeDate-year',
+  'esaIncomeAmount', 'esaIncomePaymentPeriod', 'esaIncomeDisregard',
+  'esaIncomeDescription'
 ]
 
 const tariffFields = [
-  'esaTariffDate-day', 'esaTariffDate-month', 'esaTariffDate-year',
-  'esaTariffAmount'
+  'esaTariffDate-day', 'esaTariffDate-month', 'esaTariffDate-year',
+  'esaTariffAmount'
 ]
 
 const resCareFields = [
-  'esaResCareFrom-day', 'esaResCareFrom-month', 'esaResCareFrom-year',
-  'esaResCareTo-day', 'esaResCareTo-month', 'esaResCareTo-year',
-  'esaPensioner'
+  'esaResCareFrom-day', 'esaResCareFrom-month', 'esaResCareFrom-year',
+  'esaResCareTo-day', 'esaResCareTo-month', 'esaResCareTo-year',
+  'esaPensioner'
 ]
 
 // ---------------------------------------------------------------------------
@@ -2664,192 +2664,193 @@ const resCareFields = [
 // Save an asset. With an assetIndex it updates that one, otherwise it adds a
 // new one to the end of the list.
 router.post('/dccesa-asset-save', function (req, res) {
-  const data = req.session.data
-  const body = req.body
-  const assets = data.esaAssets || []
-  const index = body.assetIndex
-  const errors = []
+  const data = req.session.data
+  const body = req.body
+  const assets = data.esaAssets || []
+  const index = body.assetIndex
+  const errors = []
 
-  function fail (field, href, message) {
-    if (message) {
-      errors.push({ tab: 'assets', tabLabel: 'Assets', field: field, href: href, message: message })
-    }
-  }
+  function fail (field, href, message) {
+    if (message) {
+      errors.push({ tab: 'assets', tabLabel: 'Assets', field: field, href: href, message: message })
+    }
+  }
 
-  if (!body.esaAssetType) {
-    fail('esa-asset-type', '#esa-asset-type', 'Select an asset type')
-  }
+  if (!body.esaAssetType) {
+    fail('esa-asset-type', '#esa-asset-type', 'Select an asset type')
+  }
 
-  // The share is a fraction, so both numbers must be whole and the part held
-  // cannot be bigger than the whole.
-  if (!isWholeNumber(body.esaShareHeld)) {
-    fail('esa-share-held', '#esa-share-held',
-      'Share held by the customer must be a whole number, like 1')
-  }
+  // The share is a fraction, so both numbers must be whole and the part held
+  // cannot be bigger than the whole.
+  if (!isWholeNumber(body.esaShareHeld)) {
+    fail('esa-share-held', '#esa-share-held',
+      'Share held by the customer must be a whole number, like 1')
+  }
 
-  if (!isWholeNumber(body.esaShareTotal) || Number(body.esaShareTotal) === 0) {
-    fail('esa-share-total', '#esa-share-total',
-      'Total shares must be a whole number above 0, like 2')
-  }
+  if (!isWholeNumber(body.esaShareTotal) || Number(body.esaShareTotal) === 0) {
+    fail('esa-share-total', '#esa-share-total',
+      'Total shares must be a whole number above 0, like 2')
+  }
 
-  if (isWholeNumber(body.esaShareHeld) && isWholeNumber(body.esaShareTotal) &&
-      Number(body.esaShareHeld) > Number(body.esaShareTotal)) {
-    fail('esa-share-held', '#esa-share-held',
-      'Share held by the customer cannot be more than the total shares')
-  }
+  if (isWholeNumber(body.esaShareHeld) && isWholeNumber(body.esaShareTotal) &&
+      Number(body.esaShareHeld) > Number(body.esaShareTotal)) {
+    fail('esa-share-held', '#esa-share-held',
+      'Share held by the customer cannot be more than the total shares')
+  }
 
-  // An accumulating asset needs its own dates and values.
-  if (body.esaAccumulatingAsset === 'yes') {
-    const startError = checkDateInPeriod(body, 'esaAccumulatingStart', 'the start date')
-    const endError = checkDateInPeriod(body, 'esaAccumulatingEnd', 'the end date')
+  // An accumulating asset needs its own dates and values.
+  if (body.esaAccumulatingAsset === 'yes') {
+    const startError = checkDateInPeriod(body, 'esaAccumulatingStart', 'the start date')
+    const endError = checkDateInPeriod(body, 'esaAccumulatingEnd', 'the end date')
 
-    fail('esa-accumulating-start', '#esa-accumulating-start-day', startError)
-    fail('esa-accumulating-end', '#esa-accumulating-end-day', endError)
+    fail('esa-accumulating-start', '#esa-accumulating-start-day', startError)
+    fail('esa-accumulating-end', '#esa-accumulating-end-day', endError)
 
-    if (!startError && !endError) {
-      const from = dateValue(dateParts(body, 'esaAccumulatingStart'))
-      const to = dateValue(dateParts(body, 'esaAccumulatingEnd'))
+    if (!startError && !endError) {
+      const from = dateValue(dateParts(body, 'esaAccumulatingStart'))
+      const to = dateValue(dateParts(body, 'esaAccumulatingEnd'))
 
-      if (from && to && to < from) {
-        fail('esa-accumulating-end', '#esa-accumulating-end-day',
-          'The end date must be the same as or after the start date')
-      }
-    }
+      if (from && to && to < from) {
+        fail('esa-accumulating-end', '#esa-accumulating-end-day',
+          'The end date must be the same as or after the start date')
+      }
+    }
 
-    fail('esa-final-value', '#esa-final-value',
-      checkAmount(body.esaFinalValue, 'the final value'))
-  }
+    fail('esa-final-value', '#esa-final-value',
+      checkAmount(body.esaFinalValue, 'the final value'))
+  }
 
-  if (errors.length) {
-    data.dccErrors = errors
-    return res.redirect(url);
-  }
+  if (errors.length) {
+    data.dccErrors = errors
+    return res.redirect('/dccesanewassetaccumulatingassetno' +
+      (index !== undefined && index !== '' ? '?asset=' + index : ''))
+  }
 
-  const asset = {
-    type: body.esaAssetType,
-    name: body.esaAssetName || '',
-    shareHeld: body.esaShareHeld,
-    shareTotal: body.esaShareTotal,
-    accumulating: body.esaAccumulatingAsset || 'no',
-    values: []
-  }
+  const asset = {
+    type: body.esaAssetType,
+    name: body.esaAssetName || '',
+    shareHeld: body.esaShareHeld,
+    shareTotal: body.esaShareTotal,
+    accumulating: body.esaAccumulatingAsset || 'no',
+    values: []
+  }
 
-  if (index !== undefined && index !== '') {
-    asset.values = (assets[index] || {}).values || []
-    assets[index] = asset
-  } else {
-    assets.push(asset)
-  }
+  if (index !== undefined && index !== '') {
+    asset.values = (assets[index] || {}).values || []
+    assets[index] = asset
+  } else {
+    assets.push(asset)
+  }
 
-  data.esaAssets = assets
-  data.dccComplete = 'yes'
+  data.esaAssets = assets
+  data.dccComplete = 'yes'
 
-  clearFields(data, [
-    'esaAssetType', 'esaAssetName', 'esaShareHeld', 'esaShareTotal',
-    'esaAccumulatingAsset', 'esaFinalValue',
-    'esaAccumulatingStart-day', 'esaAccumulatingStart-month', 'esaAccumulatingStart-year',
-    'esaAccumulatingEnd-day', 'esaAccumulatingEnd-month', 'esaAccumulatingEnd-year',
-    'asset'
-  ])
+  clearFields(data, [
+    'esaAssetType', 'esaAssetName', 'esaShareHeld', 'esaShareTotal',
+    'esaAccumulatingAsset', 'esaFinalValue',
+    'esaAccumulatingStart-day', 'esaAccumulatingStart-month', 'esaAccumulatingStart-year',
+    'esaAccumulatingEnd-day', 'esaAccumulatingEnd-month', 'esaAccumulatingEnd-year',
+    'asset'
+  ])
 
-  delete data.dccErrors
+  delete data.dccErrors
 
-  res.redirect(url);
+  res.redirect('/dccesa#assets')
 })
 
 // Delete an asset, confirmed from /dccesadeleteasset. Its values go with it.
 router.post('/dccesa-asset-delete', function (req, res) {
-  const data = req.session.data
-  const index = req.body.assetIndex
+  const data = req.session.data
+  const index = req.body.assetIndex
 
-  data.esaAssets = (data.esaAssets || []).filter(function (a, i) {
-    return String(i) !== String(index)
-  })
+  data.esaAssets = (data.esaAssets || []).filter(function (a, i) {
+    return String(i) !== String(index)
+  })
 
-  delete data.asset
+  delete data.asset
 
-  res.redirect(url);
+  res.redirect('/dccesa#assets')
 })
 
 // Save a value against an asset. If a value already exists for that date, go
 // and ask whether to replace it rather than silently overwriting.
 router.post('/dccesa-value-save', function (req, res) {
-  const data = req.session.data
-  const body = req.body
-  const index = body.assetIndex
-  const asset = (data.esaAssets || [])[index]
-  const errors = []
+  const data = req.session.data
+  const body = req.body
+  const index = body.assetIndex
+  const asset = (data.esaAssets || [])[index]
+  const errors = []
 
-  if (!asset) {
-    return res.redirect(url);
-  }
+  if (!asset) {
+    return res.redirect('/dccesa#assets')
+  }
 
-  function fail (field, href, message) {
-    if (message) {
-      errors.push({ tab: 'assets', tabLabel: 'Assets', field: field, href: href, message: message })
-    }
-  }
+  function fail (field, href, message) {
+    if (message) {
+      errors.push({ tab: 'assets', tabLabel: 'Assets', field: field, href: href, message: message })
+    }
+  }
 
-  fail('esa-new-value-date', '#esa-new-value-date-day',
-    checkDateInPeriod(body, 'esaNewValueDate', 'the date'))
-  fail('esa-new-value', '#esa-new-value',
-    checkAmount(body.esaNewValue, 'the value'))
+  fail('esa-new-value-date', '#esa-new-value-date-day',
+    checkDateInPeriod(body, 'esaNewValueDate', 'the date'))
+  fail('esa-new-value', '#esa-new-value',
+    checkAmount(body.esaNewValue, 'the value'))
 
-  if (errors.length) {
-    data.dccErrors = errors
-    return res.redirect(url);
-  }
+  if (errors.length) {
+    data.dccErrors = errors
+    return res.redirect('/dccesaassetsshowvalues?asset=' + index + '&returnTo=/dccesa%23assets')
+  }
 
-  const date = dateFrom(body, 'esaNewValueDate')
-  const clash = (asset.values || []).some(function (v) { return v.date === date })
+  const date = dateFrom(body, 'esaNewValueDate')
+  const clash = (asset.values || []).some(function (v) { return v.date === date })
 
-  if (clash) {
-    return res.redirect(url);
-  }
+  if (clash) {
+    return res.redirect('/dccesaassetvaluesalreadyexist')
+  }
 
-  asset.values = asset.values || []
-  asset.values.push({ date: date, amount: parseAmount(body.esaNewValue) })
+  asset.values = asset.values || []
+  asset.values.push({ date: date, amount: parseAmount(body.esaNewValue) })
 
-  data.esaShowValues = 'showValues'
+  data.esaShowValues = 'showValues'
 
-  clearFields(data, [
-    'esaNewValueDate-day', 'esaNewValueDate-month', 'esaNewValueDate-year',
-    'esaNewValue'
-  ])
+  clearFields(data, [
+    'esaNewValueDate-day', 'esaNewValueDate-month', 'esaNewValueDate-year',
+    'esaNewValue'
+  ])
 
-  delete data.dccErrors
+  delete data.dccErrors
 
-  res.redirect(url);
+  res.redirect('/dccesa#assets')
 })
 
 // Answer to the duplicate date warning.
 // Yes - overwrite the value already held for that date.
-// No  - go back to the asset value page to enter a different date.
+// No  - go back to the asset value page to enter a different date.
 router.post('/dccesa-value-replace', function (req, res) {
-  const data = req.session.data
-  const index = req.body.assetIndex
-  const asset = (data.esaAssets || [])[index]
+  const data = req.session.data
+  const index = req.body.assetIndex
+  const asset = (data.esaAssets || [])[index]
 
-  if (req.body.esaReplaceValue === 'no' || !asset) {
-    return res.redirect(url);
-  }
+  if (req.body.esaReplaceValue === 'no' || !asset) {
+    return res.redirect('/dccesaassetsshowvalues?asset=' + index + '&returnTo=/dccesa%23assets')
+  }
 
-  const date = data['esaNewValueDate-day'] + '/' +
-               data['esaNewValueDate-month'] + '/' +
-               data['esaNewValueDate-year']
+  const date = data['esaNewValueDate-day'] + '/' +
+               data['esaNewValueDate-month'] + '/' +
+               data['esaNewValueDate-year']
 
-  asset.values = (asset.values || []).map(function (v) {
-    return v.date === date ? { date: date, amount: parseAmount(data.esaNewValue) } : v
-  })
+  asset.values = (asset.values || []).map(function (v) {
+    return v.date === date ? { date: date, amount: parseAmount(data.esaNewValue) } : v
+  })
 
-  data.esaShowValues = 'showValues'
+  data.esaShowValues = 'showValues'
 
-  clearFields(data, [
-    'esaNewValueDate-day', 'esaNewValueDate-month', 'esaNewValueDate-year',
-    'esaNewValue'
-  ])
+  clearFields(data, [
+    'esaNewValueDate-day', 'esaNewValueDate-month', 'esaNewValueDate-year',
+    'esaNewValue'
+  ])
 
-  res.redirect(url);
+  res.redirect('/dccesa#assets')
 })
 
 // ---------------------------------------------------------------------------
@@ -2860,58 +2861,58 @@ router.post('/dccesa-value-replace', function (req, res) {
 // it cannot be checked while a row is being added.
 //
 function dccEsaRunErrors (data, body) {
-  const errors = []
+  const errors = []
 
-  function fail (tab, tabLabel, field, href, message) {
-    errors.push({ tab: tab, tabLabel: tabLabel, field: field, href: href, message: message })
-  }
+  function fail (tab, tabLabel, field, href, message) {
+    errors.push({ tab: tab, tabLabel: tabLabel, field: field, href: href, message: message })
+  }
 
-  // The calculation compares what was paid against what was due, so it needs
-  // at least one rate and something to hold the capital.
-  if (!data.esaRates || !data.esaRates.length) {
-    fail('esa-paid', 'ESA Paid', 'esa-rate-date', '#esa-rate-date-day',
-      'Add at least one rate before running the calculation')
-  }
+  // The calculation compares what was paid against what was due, so it needs
+  // at least one rate and something to hold the capital.
+  if (!data.esaRates || !data.esaRates.length) {
+    fail('esa-paid', 'ESA Paid', 'esa-rate-date', '#esa-rate-date-day',
+      'Add at least one rate before running the calculation')
+  }
 
-  if (!data.esaAssets || !data.esaAssets.length) {
-    fail('assets', 'Assets', 'esa-assets', '#esa-assets-error',
-      'Add at least one asset before running the calculation')
-  }
+  if (!data.esaAssets || !data.esaAssets.length) {
+    fail('assets', 'Assets', 'esa-assets', '#esa-assets-error',
+      'Add at least one asset before running the calculation')
+  }
 
-  // An asset with no value has nothing to diminish.
-  ;(data.esaAssets || []).forEach(function (asset) {
-    if (!asset.values || !asset.values.length) {
-      fail('assets', 'Assets', 'esa-assets', '#esa-assets-error',
-        'Add at least one value to ' + (asset.name || asset.type))
-    }
-  })
+  // An asset with no value has nothing to diminish.
+  ;(data.esaAssets || []).forEach(function (asset) {
+    if (!asset.values || !asset.values.length) {
+      fail('assets', 'Assets', 'esa-assets', '#esa-assets-error',
+        'Add at least one value to ' + (asset.name || asset.type))
+    }
+  })
 
-  // A residential care period with no end date cannot be worked out.
-  ;(data.esaResCare || []).forEach(function (period) {
-    if (!period.toParts || !period.toParts.year) {
-      fail('res-care', 'Res.Care', 'esa-res-care-to', '#esa-res-care-to-day',
-        'Enter an end date for the residential care period starting ' + period.from)
-    }
-  })
+  // A residential care period with no end date cannot be worked out.
+  ;(data.esaResCare || []).forEach(function (period) {
+    if (!period.toParts || !period.toParts.year) {
+      fail('res-care', 'Res.Care', 'esa-res-care-to', '#esa-res-care-to-day',
+        'Enter an end date for the residential care period starting ' + period.from)
+    }
+  })
 
-  // Something half-typed into an Add form is not saved by Run. Say so, rather
-  // than throwing it away.
-  const started = [
-    { fields: rateFields, tab: 'esa-paid', tabLabel: 'ESA Paid', field: 'esa-rate-date', href: '#esa-rate-date-day', name: 'a rate', button: 'Add rate' },
-    { fields: incomeFields, tab: 'income', tabLabel: 'Income', field: 'esa-income-date', href: '#esa-income-date-day', name: 'an income entry', button: 'Add income' },
-    { fields: tariffFields, tab: 'tariff-income', tabLabel: 'Tariff Income', field: 'esa-tariff-date', href: '#esa-tariff-date-day', name: 'a tariff income entry', button: 'Add tariff income' },
-    { fields: resCareFields, tab: 'res-care', tabLabel: 'Res.Care', field: 'esa-res-care-from', href: '#esa-res-care-from-day', name: 'a residential care period', button: 'Add period' }
-  ]
+  // Something half-typed into an Add form is not saved by Run. Say so, rather
+  // than throwing it away.
+  const started = [
+    { fields: rateFields, tab: 'esa-paid', tabLabel: 'ESA Paid', field: 'esa-rate-date', href: '#esa-rate-date-day', name: 'a rate', button: 'Add rate' },
+    { fields: incomeFields, tab: 'income', tabLabel: 'Income', field: 'esa-income-date', href: '#esa-income-date-day', name: 'an income entry', button: 'Add income' },
+    { fields: tariffFields, tab: 'tariff-income', tabLabel: 'Tariff Income', field: 'esa-tariff-date', href: '#esa-tariff-date-day', name: 'a tariff income entry', button: 'Add tariff income' },
+    { fields: resCareFields, tab: 'res-care', tabLabel: 'Res.Care', field: 'esa-res-care-from', href: '#esa-res-care-from-day', name: 'a residential care period', button: 'Add period' }
+  ]
 
-  started.forEach(function (group) {
-    if (anyGiven(body, group.fields)) {
-      fail(group.tab, group.tabLabel, group.field, group.href,
-        'You have started ' + group.name + ' but not added it. Select ' +
-        group.button + ', or clear the fields.')
-    }
-  })
+  started.forEach(function (group) {
+    if (anyGiven(body, group.fields)) {
+      fail(group.tab, group.tabLabel, group.field, group.href,
+        'You have started ' + group.name + ' but not added it. Select ' +
+        group.button + ', or clear the fields.')
+    }
+  })
 
-  return errors
+  return errors
 }
 
 // ---------------------------------------------------------------------------
@@ -2922,239 +2923,239 @@ function dccEsaRunErrors (data, body) {
 // passes, and each Add returns to the tab it came from.
 //
 router.post('/dccesa-action', function (req, res) {
-  const data = req.session.data
-  const body = req.body
-  const action = body.action
-  const errors = []
+  const data = req.session.data
+  const body = req.body
+  const action = body.action
+  const errors = []
 
-  // Adds an error against a field, naming the tab so the page can point at it
-  // and mark the tab label.
-  function fail (tab, tabLabel, field, href, message) {
-    if (message) {
-      errors.push({ tab: tab, tabLabel: tabLabel, field: field, href: href, message: message })
-    }
-  }
+  // Adds an error against a field, naming the tab so the page can point at it
+  // and mark the tab label.
+  function fail (tab, tabLabel, field, href, message) {
+    if (message) {
+      errors.push({ tab: tab, tabLabel: tabLabel, field: field, href: href, message: message })
+    }
+  }
 
-  // ----- ESA Paid -----
-  if (action === 'add-rate') {
-    fail('esa-paid', 'ESA Paid', 'esa-rate-date', '#esa-rate-date-day',
-      checkDateInPeriod(body, 'esaRateDate', 'the date this rate applies from'))
-    fail('esa-paid', 'ESA Paid', 'esa-rate-amount', '#esa-rate-amount',
-      checkAmount(body.esaRateAmount, 'the amount'))
+  // ----- ESA Paid -----
+  if (action === 'add-rate') {
+    fail('esa-paid', 'ESA Paid', 'esa-rate-date', '#esa-rate-date-day',
+      checkDateInPeriod(body, 'esaRateDate', 'the date this rate applies from'))
+    fail('esa-paid', 'ESA Paid', 'esa-rate-amount', '#esa-rate-amount',
+      checkAmount(body.esaRateAmount, 'the amount'))
 
-    // Taxable elements is only needed when the rate is taxable, and is part
-    // of the amount so it cannot be bigger than it.
-    if (body.esaRateTaxable) {
-      const taxableError = checkAmount(body.esaTaxableElements, 'the taxable elements')
+    // Taxable elements is only needed when the rate is taxable, and is part
+    // of the amount so it cannot be bigger than it.
+    if (body.esaRateTaxable) {
+      const taxableError = checkAmount(body.esaTaxableElements, 'the taxable elements')
 
-      fail('esa-paid', 'ESA Paid', 'esa-taxable-elements', '#esa-taxable-elements', taxableError)
+      fail('esa-paid', 'ESA Paid', 'esa-taxable-elements', '#esa-taxable-elements', taxableError)
 
-      if (!taxableError && !checkAmount(body.esaRateAmount, 'x') &&
-          Number(parseAmount(body.esaTaxableElements)) > Number(parseAmount(body.esaRateAmount))) {
-        fail('esa-paid', 'ESA Paid', 'esa-taxable-elements', '#esa-taxable-elements',
-          'The taxable elements cannot be more than the amount')
-      }
-    }
+      if (!taxableError && !checkAmount(body.esaRateAmount, 'x') &&
+          Number(parseAmount(body.esaTaxableElements)) > Number(parseAmount(body.esaRateAmount))) {
+        fail('esa-paid', 'ESA Paid', 'esa-taxable-elements', '#esa-taxable-elements',
+          'The taxable elements cannot be more than the amount')
+      }
+    }
 
-    // Two rates from the same date would contradict each other.
-    if (!errors.length) {
-      const date = dateFrom(body, 'esaRateDate')
-      const clash = (data.esaRates || []).some(function (rate, i) {
-        return rate.date === date && String(i) !== String(body.editRateIndex)
-      })
+    // Two rates from the same date would contradict each other.
+    if (!errors.length) {
+      const date = dateFrom(body, 'esaRateDate')
+      const clash = (data.esaRates || []).some(function (rate, i) {
+        return rate.date === date && String(i) !== String(body.editRateIndex)
+      })
 
-      if (clash) {
-        fail('esa-paid', 'ESA Paid', 'esa-rate-date', '#esa-rate-date-day',
-          'A rate has already been recorded for ' + date + '. Edit that rate, or use a different date.')
-      }
-    }
+      if (clash) {
+        fail('esa-paid', 'ESA Paid', 'esa-rate-date', '#esa-rate-date-day',
+          'A rate has already been recorded for ' + date + '. Edit that rate, or use a different date.')
+      }
+    }
 
-    if (errors.length) {
-      data.dccErrors = errors
-      return res.redirect(url);
-    }
+    if (errors.length) {
+      data.dccErrors = errors
+      return res.redirect('/dccesa#esa-paid')
+    }
 
-    saveRow(data, 'esaRates', body.editRateIndex, {
-      date: dateFrom(body, 'esaRateDate'),
-      dateParts: dateParts(body, 'esaRateDate'),
-      amount: parseAmount(body.esaRateAmount),
-      taxable: body.esaRateTaxable ? 'yes' : '',
-      taxableElements: body.esaRateTaxable ? parseAmount(body.esaTaxableElements) : ''
-    })
+    saveRow(data, 'esaRates', body.editRateIndex, {
+      date: dateFrom(body, 'esaRateDate'),
+      dateParts: dateParts(body, 'esaRateDate'),
+      amount: parseAmount(body.esaRateAmount),
+      taxable: body.esaRateTaxable ? 'yes' : '',
+      taxableElements: body.esaRateTaxable ? parseAmount(body.esaTaxableElements) : ''
+    })
 
-    clearFields(data, rateFields)
-    delete data.editRate
-    delete data.dccErrors
-    return res.redirect(url);
-  }
+    clearFields(data, rateFields)
+    delete data.editRate
+    delete data.dccErrors
+    return res.redirect('/dccesa#esa-paid')
+  }
 
-  // ----- Income -----
-  if (action === 'add-income') {
-    fail('income', 'Income', 'esa-income-date', '#esa-income-date-day',
-      checkDateInPeriod(body, 'esaIncomeDate', 'the date this income applies from'))
-    fail('income', 'Income', 'esa-income-amount', '#esa-income-amount',
-      checkAmount(body.esaIncomeAmount, 'the amount'))
+  // ----- Income -----
+  if (action === 'add-income') {
+    fail('income', 'Income', 'esa-income-date', '#esa-income-date-day',
+      checkDateInPeriod(body, 'esaIncomeDate', 'the date this income applies from'))
+    fail('income', 'Income', 'esa-income-amount', '#esa-income-amount',
+      checkAmount(body.esaIncomeAmount, 'the amount'))
 
-    if (!body.esaIncomePaymentPeriod) {
-      fail('income', 'Income', 'esa-income-payment-period', '#esa-income-payment-period',
-        'Select a payment period')
-    }
+    if (!body.esaIncomePaymentPeriod) {
+      fail('income', 'Income', 'esa-income-payment-period', '#esa-income-payment-period',
+        'Select a payment period')
+    }
 
-    const disregardError = checkOptionalAmount(body.esaIncomeDisregard, 'the weekly disregard')
-    fail('income', 'Income', 'esa-income-disregard', '#esa-income-disregard', disregardError)
+    const disregardError = checkOptionalAmount(body.esaIncomeDisregard, 'the weekly disregard')
+    fail('income', 'Income', 'esa-income-disregard', '#esa-income-disregard', disregardError)
 
-    // A disregard bigger than the income itself would give a negative figure.
-    if (!disregardError && parseAmount(body.esaIncomeDisregard) !== '' &&
-        !checkAmount(body.esaIncomeAmount, 'x') &&
-        Number(parseAmount(body.esaIncomeDisregard)) > Number(parseAmount(body.esaIncomeAmount))) {
-      fail('income', 'Income', 'esa-income-disregard', '#esa-income-disregard',
-        'The weekly disregard cannot be more than the amount')
-    }
+    // A disregard bigger than the income itself would give a negative figure.
+    if (!disregardError && parseAmount(body.esaIncomeDisregard) !== '' &&
+        !checkAmount(body.esaIncomeAmount, 'x') &&
+        Number(parseAmount(body.esaIncomeDisregard)) > Number(parseAmount(body.esaIncomeAmount))) {
+      fail('income', 'Income', 'esa-income-disregard', '#esa-income-disregard',
+        'The weekly disregard cannot be more than the amount')
+    }
 
-    if (String(body.esaIncomeDescription || '').length > 100) {
-      fail('income', 'Income', 'esa-income-description', '#esa-income-description',
-        'Description must be 100 characters or fewer')
-    }
+    if (String(body.esaIncomeDescription || '').length > 100) {
+      fail('income', 'Income', 'esa-income-description', '#esa-income-description',
+        'Description must be 100 characters or fewer')
+    }
 
-    if (errors.length) {
-      data.dccErrors = errors
-      return res.redirect(url);
-    }
+    if (errors.length) {
+      data.dccErrors = errors
+      return res.redirect('/dccesa#income')
+    }
 
-    saveRow(data, 'esaIncomes', body.editIncomeIndex, {
-      date: dateFrom(body, 'esaIncomeDate'),
-      dateParts: dateParts(body, 'esaIncomeDate'),
-      amount: parseAmount(body.esaIncomeAmount),
-      paymentPeriod: body.esaIncomePaymentPeriod || '',
-      disregard: parseAmount(body.esaIncomeDisregard),
-      description: body.esaIncomeDescription || ''
-    })
+    saveRow(data, 'esaIncomes', body.editIncomeIndex, {
+      date: dateFrom(body, 'esaIncomeDate'),
+      dateParts: dateParts(body, 'esaIncomeDate'),
+      amount: parseAmount(body.esaIncomeAmount),
+      paymentPeriod: body.esaIncomePaymentPeriod || '',
+      disregard: parseAmount(body.esaIncomeDisregard),
+      description: body.esaIncomeDescription || ''
+    })
 
-    clearFields(data, incomeFields)
-    delete data.editIncome
-    delete data.dccErrors
-    return res.redirect(url);
-  }
+    clearFields(data, incomeFields)
+    delete data.editIncome
+    delete data.dccErrors
+    return res.redirect('/dccesa#income')
+  }
 
-  // ----- Tariff income -----
-  if (action === 'add-tariff') {
-    fail('tariff-income', 'Tariff Income', 'esa-tariff-date', '#esa-tariff-date-day',
-      checkDateInPeriod(body, 'esaTariffDate', 'the date this tariff income applies from'))
-    fail('tariff-income', 'Tariff Income', 'esa-tariff-amount', '#esa-tariff-amount',
-      checkAmount(body.esaTariffAmount, 'the amount'))
+  // ----- Tariff income -----
+  if (action === 'add-tariff') {
+    fail('tariff-income', 'Tariff Income', 'esa-tariff-date', '#esa-tariff-date-day',
+      checkDateInPeriod(body, 'esaTariffDate', 'the date this tariff income applies from'))
+    fail('tariff-income', 'Tariff Income', 'esa-tariff-amount', '#esa-tariff-amount',
+      checkAmount(body.esaTariffAmount, 'the amount'))
 
-    if (!errors.length) {
-      const date = dateFrom(body, 'esaTariffDate')
-      const clash = (data.esaTariffs || []).some(function (tariff, i) {
-        return tariff.date === date && String(i) !== String(body.editTariffIndex)
-      })
+    if (!errors.length) {
+      const date = dateFrom(body, 'esaTariffDate')
+      const clash = (data.esaTariffs || []).some(function (tariff, i) {
+        return tariff.date === date && String(i) !== String(body.editTariffIndex)
+      })
 
-      if (clash) {
-        fail('tariff-income', 'Tariff Income', 'esa-tariff-date', '#esa-tariff-date-day',
-          'Tariff income has already been recorded for ' + date + '. Edit that entry, or use a different date.')
-      }
-    }
+      if (clash) {
+        fail('tariff-income', 'Tariff Income', 'esa-tariff-date', '#esa-tariff-date-day',
+          'Tariff income has already been recorded for ' + date + '. Edit that entry, or use a different date.')
+      }
+    }
 
-    if (errors.length) {
-      data.dccErrors = errors
-      return res.redirect(url);
-    }
+    if (errors.length) {
+      data.dccErrors = errors
+      return res.redirect('/dccesa#tariff-income')
+    }
 
-    saveRow(data, 'esaTariffs', body.editTariffIndex, {
-      date: dateFrom(body, 'esaTariffDate'),
-      dateParts: dateParts(body, 'esaTariffDate'),
-      amount: parseAmount(body.esaTariffAmount)
-    })
+    saveRow(data, 'esaTariffs', body.editTariffIndex, {
+      date: dateFrom(body, 'esaTariffDate'),
+      dateParts: dateParts(body, 'esaTariffDate'),
+      amount: parseAmount(body.esaTariffAmount)
+    })
 
-    clearFields(data, tariffFields)
-    delete data.editTariff
-    delete data.dccErrors
-    return res.redirect(url);
-  }
+    clearFields(data, tariffFields)
+    delete data.editTariff
+    delete data.dccErrors
+    return res.redirect('/dccesa#tariff-income')
+  }
 
-  // ----- Residential care -----
-  if (action === 'add-rescare') {
-    fail('res-care', 'Res.Care', 'esa-res-care-from', '#esa-res-care-from-day',
-      checkDateInPeriod(body, 'esaResCareFrom', 'the date the period started'))
+  // ----- Residential care -----
+  if (action === 'add-rescare') {
+    fail('res-care', 'Res.Care', 'esa-res-care-from', '#esa-res-care-from-day',
+      checkDateInPeriod(body, 'esaResCareFrom', 'the date the period started'))
 
-    // The end date is optional, but has to be real if given, and cannot be
-    // before the start.
-    const toGiven = anyGiven(body, [
-      'esaResCareTo-day', 'esaResCareTo-month', 'esaResCareTo-year'
-    ])
+    // The end date is optional, but has to be real if given, and cannot be
+    // before the start.
+    const toGiven = anyGiven(body, [
+      'esaResCareTo-day', 'esaResCareTo-month', 'esaResCareTo-year'
+    ])
 
-    if (toGiven) {
-      fail('res-care', 'Res.Care', 'esa-res-care-to', '#esa-res-care-to-day',
-        checkDateInPeriod(body, 'esaResCareTo', 'the date the period ended'))
-    }
+    if (toGiven) {
+      fail('res-care', 'Res.Care', 'esa-res-care-to', '#esa-res-care-to-day',
+        checkDateInPeriod(body, 'esaResCareTo', 'the date the period ended'))
+    }
 
-    if (!errors.length && toGiven) {
-      const from = dateValue(dateParts(body, 'esaResCareFrom'))
-      const to = dateValue(dateParts(body, 'esaResCareTo'))
+    if (!errors.length && toGiven) {
+      const from = dateValue(dateParts(body, 'esaResCareFrom'))
+      const to = dateValue(dateParts(body, 'esaResCareTo'))
 
-      if (from && to && to < from) {
-        fail('res-care', 'Res.Care', 'esa-res-care-to', '#esa-res-care-to-day',
-          'The date the period ended must be the same as or after the date it started')
-      }
-    }
+      if (from && to && to < from) {
+        fail('res-care', 'Res.Care', 'esa-res-care-to', '#esa-res-care-to-day',
+          'The date the period ended must be the same as or after the date it started')
+      }
+    }
 
-    // Two residential care periods cannot cover the same day.
-    if (!errors.length) {
-      const from = dateValue(dateParts(body, 'esaResCareFrom'))
-      const to = toGiven ? dateValue(dateParts(body, 'esaResCareTo')) : DCC_TO
+    // Two residential care periods cannot cover the same day.
+    if (!errors.length) {
+      const from = dateValue(dateParts(body, 'esaResCareFrom'))
+      const to = toGiven ? dateValue(dateParts(body, 'esaResCareTo')) : DCC_TO
 
-      const overlap = (data.esaResCare || []).some(function (period, i) {
-        if (String(i) === String(body.editResCareIndex)) { return false }
+      const overlap = (data.esaResCare || []).some(function (period, i) {
+        if (String(i) === String(body.editResCareIndex)) { return false }
 
-        const otherFrom = dateValue(period.fromParts)
-        const otherTo = period.toParts && period.toParts.year
-          ? dateValue(period.toParts)
-          : DCC_TO
+        const otherFrom = dateValue(period.fromParts)
+        const otherTo = period.toParts && period.toParts.year
+          ? dateValue(period.toParts)
+          : DCC_TO
 
-        return otherFrom && from <= otherTo && to >= otherFrom
-      })
+        return otherFrom && from <= otherTo && to >= otherFrom
+      })
 
-      if (overlap) {
-        fail('res-care', 'Res.Care', 'esa-res-care-from', '#esa-res-care-from-day',
-          'This period overlaps one already recorded. Change the dates, or edit the period already there.')
-      }
-    }
+      if (overlap) {
+        fail('res-care', 'Res.Care', 'esa-res-care-from', '#esa-res-care-from-day',
+          'This period overlaps one already recorded. Change the dates, or edit the period already there.')
+      }
+    }
 
-    if (errors.length) {
-      data.dccErrors = errors
-      return res.redirect(url);
-    }
+    if (errors.length) {
+      data.dccErrors = errors
+      return res.redirect('/dccesa#res-care')
+    }
 
-    saveRow(data, 'esaResCare', body.editResCareIndex, {
-      from: dateFrom(body, 'esaResCareFrom'),
-      fromParts: dateParts(body, 'esaResCareFrom'),
-      to: toGiven ? dateFrom(body, 'esaResCareTo') : 'Ongoing',
-      toParts: dateParts(body, 'esaResCareTo'),
-      pensioner: body.esaPensioner ? 'yes' : ''
-    })
+    saveRow(data, 'esaResCare', body.editResCareIndex, {
+      from: dateFrom(body, 'esaResCareFrom'),
+      fromParts: dateParts(body, 'esaResCareFrom'),
+      to: toGiven ? dateFrom(body, 'esaResCareTo') : 'Ongoing',
+      toParts: dateParts(body, 'esaResCareTo'),
+      pensioner: body.esaPensioner ? 'yes' : ''
+    })
 
-    clearFields(data, resCareFields)
-    delete data.editResCare
-    delete data.dccErrors
-    return res.redirect(url);
-  }
+    clearFields(data, resCareFields)
+    delete data.editResCare
+    delete data.dccErrors
+    return res.redirect('/dccesa#res-care')
+  }
 
-  // ----- Run the calculation -----
-  const runErrors = dccEsaRunErrors(data, body)
+  // ----- Run the calculation -----
+  const runErrors = dccEsaRunErrors(data, body)
 
-  if (runErrors.length) {
-    data.dccErrors = runErrors
-    return res.redirect(url);
-  }
+  if (runErrors.length) {
+    data.dccErrors = runErrors
+    return res.redirect('/dccesa')
+  }
 
-  data.dccComplete = 'yes'
-  data.caseBanner = 'dcc'
-  delete data.caseBannerSeen
-  delete data.dccErrors
+  data.dccComplete = 'yes'
+  data.caseBanner = 'dcc'
+  delete data.caseBannerSeen
+  delete data.dccErrors
 
-  console.log('DCC (ESA): calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
+  console.log('DCC (ESA): calculation run, redirecting to ' + CASE_OVERVIEW_PAGE)
 
-  res.redirect(url);
+  res.redirect(CASE_OVERVIEW_PAGE)
 })
 
 // ---------------------------------------------------------------------------
@@ -3162,124 +3163,124 @@ router.post('/dccesa-action', function (req, res) {
 // ---------------------------------------------------------------------------
 
 const esaTabs = {
-  rate: { array: 'esaRates', tab: 'esa-paid', marker: 'editRate' },
-  income: { array: 'esaIncomes', tab: 'income', marker: 'editIncome' },
-  tariff: { array: 'esaTariffs', tab: 'tariff-income', marker: 'editTariff' },
-  rescare: { array: 'esaResCare', tab: 'res-care', marker: 'editResCare' }
+  rate: { array: 'esaRates', tab: 'esa-paid', marker: 'editRate' },
+  income: { array: 'esaIncomes', tab: 'income', marker: 'editIncome' },
+  tariff: { array: 'esaTariffs', tab: 'tariff-income', marker: 'editTariff' },
+  rescare: { array: 'esaResCare', tab: 'res-care', marker: 'editResCare' }
 }
 
 // Edit puts the row back into the Add form and marks which row is being
 // changed, so saving replaces it rather than adding a second copy.
 router.get('/dccesa-edit-:key', function (req, res) {
-  const data = req.session.data
-  const config = esaTabs[req.params.key]
-  const index = req.query.index
+  const data = req.session.data
+  const config = esaTabs[req.params.key]
+  const index = req.query.index
 
-  if (!config) { return res.redirect(url); }
+  if (!config) { return res.redirect('/dccesa') }
 
-  const row = (data[config.array] || [])[index]
+  const row = (data[config.array] || [])[index]
 
-  if (!row) { return res.redirect(url); }
+  if (!row) { return res.redirect('/dccesa#' + config.tab) }
 
-  if (req.params.key === 'rate') {
-    data['esaRateDate-day'] = row.dateParts.day
-    data['esaRateDate-month'] = row.dateParts.month
-    data['esaRateDate-year'] = row.dateParts.year
-    data.esaRateAmount = row.amount
-    data.esaRateTaxable = row.taxable ? 'taxable' : ''
-    data.esaTaxableElements = row.taxableElements
-  }
+  if (req.params.key === 'rate') {
+    data['esaRateDate-day'] = row.dateParts.day
+    data['esaRateDate-month'] = row.dateParts.month
+    data['esaRateDate-year'] = row.dateParts.year
+    data.esaRateAmount = row.amount
+    data.esaRateTaxable = row.taxable ? 'taxable' : ''
+    data.esaTaxableElements = row.taxableElements
+  }
 
-  if (req.params.key === 'income') {
-    data['esaIncomeDate-day'] = row.dateParts.day
-    data['esaIncomeDate-month'] = row.dateParts.month
-    data['esaIncomeDate-year'] = row.dateParts.year
-    data.esaIncomeAmount = row.amount
-    data.esaIncomePaymentPeriod = row.paymentPeriod
-    data.esaIncomeDisregard = row.disregard
-    data.esaIncomeDescription = row.description
-  }
+  if (req.params.key === 'income') {
+    data['esaIncomeDate-day'] = row.dateParts.day
+    data['esaIncomeDate-month'] = row.dateParts.month
+    data['esaIncomeDate-year'] = row.dateParts.year
+    data.esaIncomeAmount = row.amount
+    data.esaIncomePaymentPeriod = row.paymentPeriod
+    data.esaIncomeDisregard = row.disregard
+    data.esaIncomeDescription = row.description
+  }
 
-  if (req.params.key === 'tariff') {
-    data['esaTariffDate-day'] = row.dateParts.day
-    data['esaTariffDate-month'] = row.dateParts.month
-    data['esaTariffDate-year'] = row.dateParts.year
-    data.esaTariffAmount = row.amount
-  }
+  if (req.params.key === 'tariff') {
+    data['esaTariffDate-day'] = row.dateParts.day
+    data['esaTariffDate-month'] = row.dateParts.month
+    data['esaTariffDate-year'] = row.dateParts.year
+    data.esaTariffAmount = row.amount
+  }
 
-  if (req.params.key === 'rescare') {
-    data['esaResCareFrom-day'] = row.fromParts.day
-    data['esaResCareFrom-month'] = row.fromParts.month
-    data['esaResCareFrom-year'] = row.fromParts.year
-    data['esaResCareTo-day'] = row.toParts.day
-    data['esaResCareTo-month'] = row.toParts.month
-    data['esaResCareTo-year'] = row.toParts.year
-    data.esaPensioner = row.pensioner ? 'pensioner' : ''
-  }
+  if (req.params.key === 'rescare') {
+    data['esaResCareFrom-day'] = row.fromParts.day
+    data['esaResCareFrom-month'] = row.fromParts.month
+    data['esaResCareFrom-year'] = row.fromParts.year
+    data['esaResCareTo-day'] = row.toParts.day
+    data['esaResCareTo-month'] = row.toParts.month
+    data['esaResCareTo-year'] = row.toParts.year
+    data.esaPensioner = row.pensioner ? 'pensioner' : ''
+  }
 
-  data[config.marker] = index
-  delete data.dccErrors
+  data[config.marker] = index
+  delete data.dccErrors
 
-  res.redirect(url);
+  res.redirect('/dccesa#' + config.tab)
 })
 
 // Cancel an edit - empties the form and forgets which row was being changed.
 router.get('/dccesa-cancel-:key', function (req, res) {
-  const data = req.session.data
-  const config = esaTabs[req.params.key]
+  const data = req.session.data
+  const config = esaTabs[req.params.key]
 
-  if (!config) { return res.redirect(url); }
+  if (!config) { return res.redirect('/dccesa') }
 
-  const fields = {
-    rate: rateFields,
-    income: incomeFields,
-    tariff: tariffFields,
-    rescare: resCareFields
-  }
+  const fields = {
+    rate: rateFields,
+    income: incomeFields,
+    tariff: tariffFields,
+    rescare: resCareFields
+  }
 
-  clearFields(data, fields[req.params.key])
-  delete data[config.marker]
-  delete data.dccErrors
+  clearFields(data, fields[req.params.key])
+  delete data[config.marker]
+  delete data.dccErrors
 
-  res.redirect(url);
+  res.redirect('/dccesa#' + config.tab)
 })
 
 // Delete a row from one of the tabs. The link says which array and which row.
 router.get('/dccesa-delete-:key', function (req, res) {
-  const data = req.session.data
-  const index = req.query.index
+  const data = req.session.data
+  const index = req.query.index
 
-  // The exclusions tab holds a single entry rather than an array.
-  if (req.params.key === 'exclusion') {
-    clearFields(data, [
-      'esaExclusionReason', 'esaExclusionCode',
-      'esaExclusionFrom-day', 'esaExclusionFrom-month', 'esaExclusionFrom-year',
-      'esaExclusionTo-day', 'esaExclusionTo-month', 'esaExclusionTo-year'
-    ])
-    return res.redirect(url);
-  }
+  // The exclusions tab holds a single entry rather than an array.
+  if (req.params.key === 'exclusion') {
+    clearFields(data, [
+      'esaExclusionReason', 'esaExclusionCode',
+      'esaExclusionFrom-day', 'esaExclusionFrom-month', 'esaExclusionFrom-year',
+      'esaExclusionTo-day', 'esaExclusionTo-month', 'esaExclusionTo-year'
+    ])
+    return res.redirect('/dccesa#exclusions')
+  }
 
-  const config = esaTabs[req.params.key]
+  const config = esaTabs[req.params.key]
 
-  if (!config) { return res.redirect(url); }
+  if (!config) { return res.redirect('/dccesa') }
 
-  data[config.array] = (data[config.array] || []).filter(function (row, i) {
-    return String(i) !== String(index)
-  })
+  data[config.array] = (data[config.array] || []).filter(function (row, i) {
+    return String(i) !== String(index)
+  })
 
-  // Deleting the row being edited leaves the form pointing at nothing.
-  if (String(data[config.marker]) === String(index)) {
-    delete data[config.marker]
-  }
+  // Deleting the row being edited leaves the form pointing at nothing.
+  if (String(data[config.marker]) === String(index)) {
+    delete data[config.marker]
+  }
 
-  delete data.dccErrors
+  delete data.dccErrors
 
-  res.redirect(url);
+  res.redirect('/dccesa#' + config.tab)
 })
 
 // Old asset value page kept working - it posts here before the warning.
 router.post('/dccesa-asset-value', function (req, res) {
-  res.redirect(url);
+  res.redirect('/dccesaassetvaluesalreadyexist')
 })
 
 // ---------------------------------------------------------------------------
@@ -3293,94 +3294,94 @@ router.post('/dccesa-asset-value', function (req, res) {
 // Save the case - snapshots the session against the case reference. Saving
 // again overwrites rather than creating a duplicate.
 router.post('/case-save', function (req, res) {
-  const data = req.session.data
-  const cases = data.savedCases || []
-  const nino = data.nino || 'AB 12 34 56 C'
+  const data = req.session.data
+  const cases = data.savedCases || []
+  const nino = data.nino || 'AB 12 34 56 C'
 
-  const snapshot = Object.assign({}, data)
-  delete snapshot.savedCases
-  delete snapshot.caseSaved
-  delete snapshot.caseDeleted
-  delete snapshot.caseToDelete
-  delete snapshot.returnTo
-  delete snapshot.dccErrors
+  const snapshot = Object.assign({}, data)
+  delete snapshot.savedCases
+  delete snapshot.caseSaved
+  delete snapshot.caseDeleted
+  delete snapshot.caseToDelete
+  delete snapshot.returnTo
+  delete snapshot.dccErrors
 
-  const record = {
-    nino: nino,
-    surname: data.surname || 'Martin',
-    benefit: data.benefit || '',
-    savedAt: new Date().toLocaleDateString('en-GB'),
-    snapshot: snapshot
-  }
+  const record = {
+    nino: nino,
+    surname: data.surname || 'Martin',
+    benefit: data.benefit || '',
+    savedAt: new Date().toLocaleDateString('en-GB'),
+    snapshot: snapshot
+  }
 
-  const existing = cases.findIndex(function (c) { return c.nino === nino })
+  const existing = cases.findIndex(function (c) { return c.nino === nino })
 
-  if (existing > -1) {
-    cases[existing] = record
-  } else {
-    cases.push(record)
-  }
+  if (existing > -1) {
+    cases[existing] = record
+  } else {
+    cases.push(record)
+  }
 
-  data.savedCases = cases
-  data.caseSaved = 'yes'
+  data.savedCases = cases
+  data.caseSaved = 'yes'
 
-  res.redirect(url);
+  res.redirect('/opcalctype')
 })
 
 // Open a saved case - restores its snapshot over the current session.
 router.get('/case-open/:index', function (req, res) {
-  const cases = req.session.data.savedCases || []
-  const record = cases[req.params.index]
+  const cases = req.session.data.savedCases || []
+  const record = cases[req.params.index]
 
-  if (!record) {
-    return res.redirect(url);
-  }
+  if (!record) {
+    return res.redirect('/openingexistingcase')
+  }
 
-  req.session.data = Object.assign({}, record.snapshot, { savedCases: cases })
+  req.session.data = Object.assign({}, record.snapshot, { savedCases: cases })
 
-  res.redirect(url);
+  res.redirect('/opcalctype')
 })
 
 // Coming from /deleteacase - a case was picked from the list, so go and
 // confirm it. caseToDelete holds which one.
 router.post('/case-delete-select', function (req, res) {
-  res.redirect(url);
+  res.redirect('/deletecase')
 })
 
 // Coming from /opcalctype - deleting the case that is currently open.
 // Clear any stale pick from /deleteacase first, or the confirmation page
 // would show the wrong case and delete the wrong one.
 router.get('/deletecase-open', function (req, res) {
-  delete req.session.data.caseToDelete
-  res.redirect(url);
+  delete req.session.data.caseToDelete
+  res.redirect('/deletecase')
 })
 
 // Delete a case, confirmed from /deletecase.
 //
 // Two ways to get here:
-//   - from /deleteacase, where a case was picked from the list. caseToDelete
-//     holds its position in savedCases, and whatever is open stays open.
-//   - from /opcalctype, deleting the case currently open. No caseToDelete, so
-//     we go by the NINO in the session and clear the working data too.
+//   - from /deleteacase, where a case was picked from the list. caseToDelete
+//     holds its position in savedCases, and whatever is open stays open.
+//   - from /opcalctype, deleting the case currently open. No caseToDelete, so
+//     we go by the NINO in the session and clear the working data too.
 router.post('/case-delete', function (req, res) {
-  const data = req.session.data
-  const cases = data.savedCases || []
-  const picked = data.caseToDelete
+  const data = req.session.data
+  const cases = data.savedCases || []
+  const picked = data.caseToDelete
 
-  if (picked !== undefined && picked !== '') {
-    const remaining = cases.filter(function (c, i) { return String(i) !== String(picked) })
-    data.savedCases = remaining
-    data.caseDeleted = 'yes'
-    delete data.caseToDelete
-    return res.redirect(url);
-  }
+  if (picked !== undefined && picked !== '') {
+    const remaining = cases.filter(function (c, i) { return String(i) !== String(picked) })
+    data.savedCases = remaining
+    data.caseDeleted = 'yes'
+    delete data.caseToDelete
+    return res.redirect('/landingpage')
+  }
 
-  const remaining = cases.filter(function (c) { return c.nino !== data.nino })
+  const remaining = cases.filter(function (c) { return c.nino !== data.nino })
 
-  req.session.data = {
-    savedCases: remaining,
-    caseDeleted: 'yes'
-  }
+  req.session.data = {
+    savedCases: remaining,
+    caseDeleted: 'yes'
+  }
 
-  res.redirect(url);
+  res.redirect('/landingpage')
 })
