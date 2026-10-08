@@ -39,11 +39,16 @@
   {# to the tab it came from.                                                 #}
   {{ govukBackLink({
     text: "Back",
-    href: data.returnTo if data.returnTo else "/opcalctype"
+    href: data.returnTo if data.returnTo else "/a14#housing"
   }) }}
 {% endblock %}
 
 {% block content %}
+
+{# Save had both a link and "submit" on it. A button with a link becomes a
+   plain link, so pressing Save went back to the form and nothing was kept.
+   It is now a real submit button. #}
+
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
@@ -123,22 +128,18 @@
         <div class="govuk-button-group">
           {{ govukButton({
             text: "Save",
-            href: "/A14pcispc/a14#housing",
             type: "submit"
           }) }}
 
           {{ govukButton({
             text: "Cancel",
-            href: data.returnTo if data.returnTo else "/A14/a14#housing",
+            href: data.returnTo if data.returnTo else "/a14#housing",
             classes: "govuk-button--secondary"
           }) }}
         </div>
 
       </form>
 
-      <p>
-        <a href="#">Get help with non-dependant deductions</a>
-      </p>
 
     </div>
   </div>

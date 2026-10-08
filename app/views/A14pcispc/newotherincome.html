@@ -58,6 +58,17 @@
 
         <p class="govuk-body">Record income the customer or their partner received that is not a benefit.</p>
 
+        {# Viktoria said she would add a type box here too, as on New benefit. #}
+        {{ govukInput({
+          id: "other-income-type-code",
+          name: "otherIncomeTypeCode",
+          classes: "govuk-input--width-3",
+          inputmode: "numeric",
+          label: { text: "Income type number", classes: "govuk-label--s" },
+          hint: { text: "If you do not know it, choose the type from the list instead" },
+          value: data.otherIncomeTypeCode
+        }) }}
+
         {{ govukSelect({
           id: "other-income-type",
           name: "otherIncomeType",
@@ -155,16 +166,13 @@
 
           {{ govukButton({
             text: "Cancel",
-            href: data.returnTo if data.returnTo else "/a14#bwe-bwc",
+            href: data.returnTo if data.returnTo else "/a14#income",
             classes: "govuk-button--secondary"
           }) }}
         </div>
 
       </form>
 
-      <p>
-        <a href="#">Get help with other income details</a>
-      </p>
 
     </div>
   </div>

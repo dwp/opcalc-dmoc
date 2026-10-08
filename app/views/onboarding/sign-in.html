@@ -1,20 +1,26 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-Content page template – {{ serviceName }} – GOV.UK Prototype Kit
+Sign in – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block containerStart %}
 {{ govukBackLink({
 text: "Back",
-href: "/start"
+href: "/onboarding/start"
 }) }}
 {% endblock %}
 
 {% block content %}
 
+{# Not on the main journey: in the live service people are expected to be
+   signed in automatically. Fixed a typo that broke the page layout
+   (class=s"...") and the missing closing tags, and the password box now
+   hides what is typed. #}
+
+
 <div class="govuk-grid-row">
-<div class=s"govuk-grid-column-two-thirds">
+<div class="govuk-grid-column-two-thirds">
 
 <h1 class="govuk-heading-l">
 Sign in to OpCalc
@@ -27,29 +33,30 @@ Sign in to OpCalc
 {{ govukInput({
 label: {
 text: "User ID",
-classes: "govuk-label--m",
-isPageHeading: true
+classes: "govuk-label--s"
 },
-id: "User ID",
-name: "User ID"
+id: "user-id",
+name: "userId",
+autocomplete: "username",
+spellcheck: false
 }) }}
 
 {{ govukInput({
 label: {
 text: "Password",
-classes: "govuk-label--m",
-isPageHeading: true
+classes: "govuk-label--s"
 },
-id: "Password",
-name: "Password"
+id: "password",
+name: "password",
+type: "password",
+autocomplete: "current-password"
 }) }}
 
 {% from "govuk/components/button/macro.njk" import govukButton %}
 
 {{ govukButton({
-text: "Sign In",
-href: "/landing-page",
-isStartButton: true
+text: "Sign in",
+href: "/onboarding/start"
 }) }}
 
 <p class="govuk-body">
@@ -58,5 +65,8 @@ isStartButton: true
 <p class="govuk-body">
 <a class="govuk-link" href="#">Change your password</a>
 </p>
+
+</div>
+</div>
 
 {% endblock %}

@@ -52,7 +52,23 @@
         Asset
       </h1>
 
-      <form action="/dccesa-asset-accumulating" method="post">
+      {# Posted to /dccesa-asset-accumulating, which has no route, so Save asset
+   went nowhere. It now uses the same save as the other asset page. #}
+      <form action="/dccesa-asset-save" method="post">
+
+        {# Joanne: "we know the numbers because we use it all the time". Type the
+           asset type number, or choose from the list. The numbers need adding
+           from the legacy system so typing one can pick the list item. #}
+        {{ govukInput({
+          id: "esa-asset-type-code",
+          name: "esaAssetTypeCode",
+          classes: "govuk-input--width-3",
+          inputmode: "numeric",
+          label: { text: "Asset type number" },
+          hint: { text: "If you do not know it, choose the asset type from the list instead" },
+          attributes: { "data-code-lookup": "esa-asset-type" },
+          value: data.esaAssetTypeCode
+        }) }}
 
         {{ govukSelect({
           id: "esa-asset-type",
@@ -62,13 +78,13 @@
           },
           items: [
             { value: "", text: "Select an asset type", selected: not data.esaAssetType },
-            { value: "cash", text: "Cash", selected: data.esaAssetType == "cash" },
-            { value: "bank-account", text: "Bank account", selected: data.esaAssetType == "bank-account" },
-            { value: "building-society", text: "Building society account", selected: data.esaAssetType == "building-society" },
-            { value: "premium-bonds", text: "Premium bonds", selected: data.esaAssetType == "premium-bonds" },
-            { value: "shares", text: "Shares", selected: data.esaAssetType == "shares" },
-            { value: "property", text: "Property", selected: data.esaAssetType == "property" },
-            { value: "other", text: "Other", selected: data.esaAssetType == "other" }
+            { value: "Cash", text: "Cash", selected: data.esaAssetType == "Cash" },
+            { value: "Bank account", text: "Bank account", selected: data.esaAssetType == "Bank account" },
+            { value: "Building society account", text: "Building society account", selected: data.esaAssetType == "Building society account" },
+            { value: "Premium bonds", text: "Premium bonds", selected: data.esaAssetType == "Premium bonds" },
+            { value: "Shares", text: "Shares", selected: data.esaAssetType == "Shares" },
+            { value: "Property", text: "Property", selected: data.esaAssetType == "Property" },
+            { value: "Other", text: "Other", selected: data.esaAssetType == "Other" }
           ]
         }) }}
 
@@ -77,6 +93,9 @@
           name: "esaAssetName",
           label: {
             text: "Name (optional)"
+          },
+          hint: {
+            text: "For example, the bank name and the last 4 digits of the account number, so you can tell accounts apart"
           },
           value: data.esaAssetName
         }) }}

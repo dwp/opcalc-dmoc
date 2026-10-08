@@ -16,6 +16,15 @@
 // This takes a copy of the form and sends it to /a14-autosave as fields
 // change, and again just before following any link. The route only ever
 // merges what it is sent, so this can never clear anything.
+//
+// One save at a time, and never at the same moment as the next page.
+// The Prototype Kit keeps each person's answers in a file. If two requests
+// write that file at once, the kit can read it half written, decide it is
+// broken and throw it away, losing everything entered for the case. The old
+// version saved in the background while the browser was already loading the
+// next page, and testing showed this wiping the case about one time in two.
+// So now saves queue up one behind another, links wait for the last save to
+// finish before leaving, and a form waits too before it is sent.
 
 window.GOVUKPrototypeKit.documentReady(() => {
   const tabs = document.querySelector('form .govuk-tabs')
@@ -26,23 +35,35 @@ window.GOVUKPrototypeKit.documentReady(() => {
   }
 
   let pending = null
+  let queue = Promise.resolve()
+  let busy = 0
 
-  function save (leaving) {
-    try {
-      const body = new URLSearchParams(new FormData(form)).toString()
+  function save () {
+    const body = new URLSearchParams(new FormData(form)).toString()
+    busy++
 
-      window.fetch('/a14-autosave', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body,
-        // keepalive lets the request finish after the page has navigated
-        // away, which is the whole point when someone clicks a link.
-        keepalive: !!leaving
+    queue = queue
+      .then(function () {
+        return window.fetch('/a14-autosave', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          credentials: 'same-origin',
+          body: body
+        })
       })
-    } catch (e) {
-      // Saving is a convenience - if it fails the form still works normally,
-      // so there is nothing worth interrupting anyone for.
-    }
+      .catch(function () {
+        // Saving is a convenience. If it fails the form still works
+        // normally, so there is nothing worth interrupting anyone for.
+      })
+      .then(function () { busy-- })
+
+    return queue
+  }
+
+  // Never wait more than 3 seconds, so a slow save cannot trap anyone on
+  // the page.
+  function saved () {
+    return Promise.race([queue, new Promise(function (resolve) { window.setTimeout(resolve, 3000) })])
   }
 
   // Typing fires constantly, so wait for a pause rather than sending on every
@@ -61,26 +82,46 @@ window.GOVUKPrototypeKit.documentReady(() => {
   })
 
   // Any link that leaves the page - "New benefit week", "New exclusion", a
-  // back link, anything. Tab links are ignored, since they stay put.
+  // back link, anything. Tab links are ignored, since they stay put. The
+  // link waits until the save has finished, then goes.
   document.addEventListener('click', function (event) {
     if (!event.target || !event.target.closest) { return }
+    if (event.defaultPrevented || event.button !== 0) { return }
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) { return }
 
     const link = event.target.closest('a[href]')
-    if (!link) { return }
+    if (!link || link.target === '_blank' || link.hasAttribute('download')) { return }
 
     const href = link.getAttribute('href') || ''
 
     if (href.charAt(0) === '#' || href.indexOf('javascript:') === 0) { return }
 
+    event.preventDefault()
     window.clearTimeout(pending)
-    save(true)
+    save()
+    saved().then(function () { window.location.href = link.href })
   })
 
-  // Catches anything else - closing the tab, the back button, a form
-  // submitting elsewhere.
-  window.addEventListener('pagehide', function () {
+  // Pressing a button that sends the form sends every field anyway, so any
+  // save still waiting is dropped. If one is already on its way, the form
+  // waits for it and then sends itself.
+  form.addEventListener('submit', function (event) {
     window.clearTimeout(pending)
-    save(true)
+
+    if (busy > 0) {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+
+      const submitter = event.submitter
+
+      saved().then(function () {
+        if (form.requestSubmit) {
+          form.requestSubmit(submitter && submitter.form === form ? submitter : undefined)
+        } else {
+          form.submit()
+        }
+      })
+    }
   })
 })
 
@@ -1050,5 +1091,219 @@ window.GOVUKPrototypeKit.documentReady(() => {
       rules.map(function (r) { return r.label + ' (' + r.type + (r.required ? ', needed' : '') + ')' }).join(', '))
 
     setUpChecks(form, rules, inferChecks(rules), form, 'submit')
+  })
+})
+
+// ===========================================================================
+// 3. Small helpers added after the user research round (October 2026)
+// ===========================================================================
+//
+// Each one only switches on where a page asks for it with a data attribute,
+// so nothing changes on pages that do not use them.
+
+window.GOVUKPrototypeKit.documentReady(() => {
+  const DAY_MS = 24 * 60 * 60 * 1000
+  const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+    'August', 'September', 'October', 'November', 'December']
+
+  // The three boxes of a GOV.UK date input, read as a real date or null.
+  function readDate (container) {
+    if (!container) { return null }
+    const boxes = container.querySelectorAll('input')
+    if (boxes.length < 3) { return null }
+    const d = parseInt(boxes[0].value, 10)
+    const m = parseInt(boxes[1].value, 10)
+    const y = parseInt(boxes[2].value, 10)
+    if (!d || !m || !y || String(y).length !== 4) { return null }
+    const made = new Date(Date.UTC(y, m - 1, d))
+    if (made.getUTCDate() !== d || made.getUTCMonth() !== m - 1) { return null }
+    return made
+  }
+
+  function writeDate (container, date) {
+    const boxes = container.querySelectorAll('input')
+    boxes[0].value = date.getUTCDate()
+    boxes[1].value = date.getUTCMonth() + 1
+    boxes[2].value = date.getUTCFullYear()
+    boxes[0].dispatchEvent(new Event('input', { bubbles: true }))
+  }
+
+  function longDate (date) {
+    return WEEKDAYS[date.getUTCDay()] + ' ' + date.getUTCDate() + ' ' +
+      MONTHS[date.getUTCMonth()] + ' ' + date.getUTCFullYear()
+  }
+
+  // ---- Day of the week under a date ---------------------------------------
+  // Lynn and David check the day of the week as they type a date, because a
+  // benefit date on the wrong weekday means the date is wrong. OpCalc shows
+  // it today. Put data-weekday="true" on a govukDateInput to switch it on.
+  document.querySelectorAll('.govuk-date-input[data-weekday]').forEach(function (container) {
+    const note = document.createElement('p')
+    note.className = 'govuk-hint govuk-!-margin-top-2 govuk-!-margin-bottom-0 opcalc-weekday'
+    note.setAttribute('aria-live', 'polite')
+    container.insertAdjacentElement('afterend', note)
+
+    function update () {
+      const date = readDate(container)
+      note.textContent = date ? longDate(date) : ''
+    }
+
+    container.addEventListener('input', update)
+    update()
+  })
+
+  // ---- Length of a period ---------------------------------------------------
+  // "It should be for pension credit weekly paid benefits, so it should always
+  // be weeks and not days" - Lynn. Leftover days are the clue that a date is
+  // wrong. Counts both the first and last day, as OpCalc does.
+  document.querySelectorAll('[data-period-from][data-period-to]').forEach(function (summary) {
+    const from = document.getElementById(summary.getAttribute('data-period-from'))
+    const to = document.getElementById(summary.getAttribute('data-period-to'))
+    if (!from || !to) { return }
+
+    function update () {
+      const start = readDate(from)
+      const end = readDate(to)
+
+      if (!start || !end) { summary.textContent = ''; return }
+      if (end < start) { summary.textContent = 'The end date is before the start date'; return }
+
+      const days = Math.round((end - start) / DAY_MS) + 1
+      const weeks = Math.floor(days / 7)
+      const rest = days % 7
+
+      summary.textContent = 'Period: ' + weeks + (weeks === 1 ? ' week' : ' weeks') +
+        (rest ? ' and ' + rest + (rest === 1 ? ' day' : ' days') : '')
+    }
+
+    from.addEventListener('input', update)
+    to.addEventListener('input', update)
+    update()
+  })
+
+  // ---- Move a date on by a week ----------------------------------------------
+  // Joanne enters a balance for every week and moves the date on with the up
+  // arrow in OpCalc, 7 presses at a time. These buttons do it in one.
+  document.querySelectorAll('[data-date-step][data-date-target]').forEach(function (button) {
+    button.addEventListener('click', function (event) {
+      event.preventDefault()
+      const container = document.getElementById(button.getAttribute('data-date-target'))
+      const date = readDate(container)
+      if (!date) { return }
+      const step = parseInt(button.getAttribute('data-date-step'), 10) || 0
+      writeDate(container, new Date(date.getTime() + step * DAY_MS))
+    })
+  })
+
+  // ---- Type a code, pick the list item -----------------------------------------
+  // Users know the benefit, asset and exclusion numbers and type them rather
+  // than scroll a list. Put data-code-lookup="id-of-select" on the box, and
+  // data-code="15" on the matching option. Typing a code the list does not
+  // know leaves the list alone.
+  document.querySelectorAll('[data-code-lookup]').forEach(function (input) {
+    const select = document.getElementById(input.getAttribute('data-code-lookup'))
+    if (!select) { return }
+
+    input.addEventListener('input', function () {
+      const code = input.value.trim()
+      if (!code) { return }
+      const match = select.querySelector('option[data-code="' + code.replace(/"/g, '') + '"]')
+      if (match) {
+        select.value = match.value
+        select.dispatchEvent(new Event('change', { bubbles: true }))
+      }
+    })
+  })
+
+  // ---- Find a case by National Insurance number -------------------------------
+  // Saved and importable cases are sorted by National Insurance number and
+  // the lists are long (Lynn keeps 200 to 300, David's import list holds
+  // 18,487), so pension credit cases starting W, X, Y or Z meant scrolling to
+  // the end. Type part of the number to narrow the list.
+  document.querySelectorAll('input[type="search"][aria-controls]').forEach(function (input) {
+    const tableId = input.getAttribute('aria-controls')
+    const table = document.getElementById(tableId)
+    if (!table) { return }
+
+    const rows = table.querySelectorAll('tbody tr[data-nino]')
+    const count = document.getElementById(tableId + '-count')
+    const none = document.getElementById(tableId + '-none')
+    const original = count ? count.textContent : ''
+
+    input.addEventListener('input', function () {
+      const wanted = input.value.replace(/\s+/g, '').toUpperCase()
+      let shown = 0
+
+      rows.forEach(function (row) {
+        const match = !wanted || row.getAttribute('data-nino').toUpperCase().indexOf(wanted) !== -1
+        row.hidden = !match
+        if (match) { shown += 1 }
+      })
+
+      if (count) {
+        count.textContent = wanted
+          ? shown + (shown === 1 ? ' case matches' : ' cases match') + ' "' + input.value.trim() + '"'
+          : original
+      }
+      if (none) { none.classList.toggle('govuk-!-display-none', shown !== 0 || !wanted) }
+    })
+  })
+
+  // ---- Copy a table for Excel -------------------------------------------------
+  // David finishes each case by copying the QB16 schedule (Form, Copy
+  // schedule) and pasting it into his team's Excel workbook.
+  // This copies the table as tab separated rows, which Excel pastes into
+  // cells.
+  document.querySelectorAll('[data-copy-table]').forEach(function (button) {
+    const table = document.getElementById(button.getAttribute('data-copy-table'))
+    const status = document.getElementById(button.getAttribute('data-copy-status'))
+    if (!table) { return }
+
+    button.addEventListener('click', function () {
+      const text = Array.prototype.map.call(table.querySelectorAll('tr'), function (row) {
+        return Array.prototype.map.call(row.querySelectorAll('th, td'), function (cell) {
+          return cell.textContent.replace(/\s+/g, ' ').trim()
+        }).join('\t')
+      }).join('\n')
+
+      function done (ok) {
+        if (status) {
+          status.textContent = ok
+            ? 'Schedule copied. You can now paste it into Excel.'
+            : 'The schedule could not be copied. Select the table and copy it instead.'
+        }
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done(true) }, function () { done(false) })
+      } else {
+        done(false)
+      }
+    })
+  })
+
+  // ---- Clear this page --------------------------------------------------------
+  // Clear used to be a second submit button, so pressing it moved on to the
+  // next page. Nobody we spoke to had used it, so it is now a link that only
+  // empties the boxes on the page.
+  document.querySelectorAll('.js-clear-form').forEach(function (link) {
+    link.addEventListener('click', function (event) {
+      event.preventDefault()
+      const form = link.closest('form')
+      if (!form) { return }
+      form.querySelectorAll('input, select, textarea').forEach(function (field) {
+        if (field.type === 'hidden' || field.type === 'submit') { return }
+        if (field.type === 'radio' || field.type === 'checkbox') {
+          field.checked = false
+        } else if (field.tagName === 'SELECT') {
+          field.selectedIndex = 0
+        } else {
+          field.value = ''
+        }
+      })
+      const first = form.querySelector('input:not([type="hidden"]), select, textarea')
+      if (first) { first.focus() }
+    })
   })
 })

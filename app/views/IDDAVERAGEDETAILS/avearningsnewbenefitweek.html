@@ -1,0 +1,131 @@
+{% extends "layouts/main.html" %}
+
+{#
+  NEW PAGE. The BWE/BWC tab on avearnings.html linked to "New benefit week"
+  but the page did not exist, so the link went nowhere. This is the BA3
+  version with the field names the average earnings table expects
+  (avBwStart, avBwPayDay, avBwType, avBwPartWeeks).
+#}
+
+{% block pageTitle %}
+  Change of benefit payment day – Average earnings – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        { href: "#", text: "Accessibility statement" },
+        { href: "#", text: "Privacy notice" },
+        { href: "#", text: "Cookies" }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/avearnings#bwe-bwc"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Average earnings calculation</span>
+
+      <h1 class="govuk-heading-l">
+        Change of benefit payment day
+      </h1>
+
+      <form action="/return-to-tab" method="post">
+
+        {{ govukDateInput({
+          id: "av-bw-start",
+          namePrefix: "avBwStart",
+          fieldset: {
+            legend: {
+              text: "Start date"
+            }
+          },
+          hint: {
+            text: "The date the payment day changed. For example, 11 4 1988"
+          },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["avBwStart-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["avBwStart-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["avBwStart-year"] }
+          ]
+        }) }}
+
+        {{ govukSelect({
+          id: "av-bw-pay-day",
+          name: "avBwPayDay",
+          label: { text: "Pay day" },
+          items: [
+            { value: "Monday", text: "Monday", selected: data.avBwPayDay == "Monday" or not data.avBwPayDay },
+            { value: "Tuesday", text: "Tuesday", selected: data.avBwPayDay == "Tuesday" },
+            { value: "Wednesday", text: "Wednesday", selected: data.avBwPayDay == "Wednesday" },
+            { value: "Thursday", text: "Thursday", selected: data.avBwPayDay == "Thursday" },
+            { value: "Friday", text: "Friday", selected: data.avBwPayDay == "Friday" },
+            { value: "Saturday", text: "Saturday", selected: data.avBwPayDay == "Saturday" },
+            { value: "Sunday", text: "Sunday", selected: data.avBwPayDay == "Sunday" }
+          ]
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "av-bw-type",
+          name: "avBwType",
+          classes: "govuk-radios--inline",
+          fieldset: {
+            legend: {
+              text: "Benefit week type"
+            }
+          },
+          items: [
+            { value: "BWE", text: "BWE", checked: data.avBwType == "BWE" or not data.avBwType },
+            { value: "BWC", text: "BWC", checked: data.avBwType == "BWC" }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "av-bw-part-weeks",
+          name: "avBwPartWeeks",
+          classes: "govuk-input--width-3",
+          inputmode: "numeric",
+          label: { text: "Part week(s)" },
+          hint: { text: "Leave blank if the change creates no part weeks" },
+          value: data.avBwPartWeeks
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Save",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/avearnings#bwe-bwc",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

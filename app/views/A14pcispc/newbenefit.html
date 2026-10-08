@@ -58,24 +58,55 @@
 
         <p class="govuk-body">Record a benefit the customer or their partner received.</p>
 
+        {# Everyone we spoke to types the benefit number rather than scrolling
+           the list ("99% of the time we know the type number, so it'll be type
+           15 for state pension" - David). Typing a number picks the benefit
+           below. Only 15 is filled in so far: the full list of numbers is
+           needed from the legacy system. #}
+        {{ govukInput({
+          id: "benefit-type-code",
+          name: "benefitTypeCode",
+          classes: "govuk-input--width-3",
+          inputmode: "numeric",
+          label: { text: "Benefit type number", classes: "govuk-label--s" },
+          hint: { text: "For example, 15 for State Pension. If you do not know it, choose the benefit from the list instead." },
+          attributes: { "data-code-lookup": "benefit-name" },
+          value: data.benefitTypeCode
+        }) }}
+
         {{ govukSelect({
           id: "benefit-name",
           name: "benefitName",
-          label: {
-            text: "Benefit"
-          },
+          label: { text: "Benefit", classes: "govuk-label--s" },
           items: [
             { value: "", text: "Choose a benefit", selected: not data.benefitName },
             { value: "Attendance Allowance", text: "Attendance Allowance", selected: data.benefitName == "Attendance Allowance" },
             { value: "Bereavement Allowance", text: "Bereavement Allowance", selected: data.benefitName == "Bereavement Allowance" },
+            { value: "Carer's Allowance", text: "Carer's Allowance", selected: data.benefitName == "Carer's Allowance" },
             { value: "Child Benefit", text: "Child Benefit", selected: data.benefitName == "Child Benefit" },
             { value: "DLA Care Component", text: "DLA Care Component", selected: data.benefitName == "DLA Care Component" },
             { value: "DLA Mobility Component", text: "DLA Mobility Component", selected: data.benefitName == "DLA Mobility Component" },
             { value: "Incapacity Benefit", text: "Incapacity Benefit", selected: data.benefitName == "Incapacity Benefit" },
             { value: "Maternity Allowance", text: "Maternity Allowance", selected: data.benefitName == "Maternity Allowance" },
             { value: "Severe Disablement Allowance", text: "Severe Disablement Allowance", selected: data.benefitName == "Severe Disablement Allowance" },
-            { value: "State Pension", text: "State Pension", selected: data.benefitName == "State Pension" },
-            { value: "Widowed Parent\'s Allowance", text: "Widowed Parent\'s Allowance", selected: data.benefitName == "Widowed Parent\'s Allowance" }
+            { value: "State Pension", text: "State Pension", selected: data.benefitName == "State Pension", attributes: { "data-code": "15" } },
+            { value: "Widowed Parent's Allowance", text: "Widowed Parent's Allowance", selected: data.benefitName == "Widowed Parent's Allowance" }
+          ]
+        }) }}
+
+        {# Moved up to sit under the benefit, which is the order Lynn fills
+           them in. #}
+        {{ govukSelect({
+          id: "benefit-qualifying-period",
+          name: "benefitQualifyingPeriod",
+          label: { text: "Qualifying period", classes: "govuk-label--s" },
+          items: [
+            { value: "Weekly", text: "Weekly", selected: data.benefitQualifyingPeriod == "Weekly" or not data.benefitQualifyingPeriod },
+            { value: "Fortnightly", text: "Fortnightly", selected: data.benefitQualifyingPeriod == "Fortnightly" },
+            { value: "4 weekly", text: "4 weekly", selected: data.benefitQualifyingPeriod == "4 weekly" },
+            { value: "Monthly", text: "Monthly", selected: data.benefitQualifyingPeriod == "Monthly" },
+            { value: "Quarterly", text: "Quarterly", selected: data.benefitQualifyingPeriod == "Quarterly" },
+            { value: "Annually", text: "Annually", selected: data.benefitQualifyingPeriod == "Annually" }
           ]
         }) }}
 
@@ -83,14 +114,8 @@
           idPrefix: "benefit-paid-to",
           name: "benefitPaidTo",
           classes: "govuk-radios--inline",
-          fieldset: {
-            legend: {
-              text: "Paid to"
-            }
-          },
-          hint: {
-            text: "Partner is only available on a couple case"
-          },
+          fieldset: { legend: { text: "Paid to", classes: "govuk-fieldset__legend--s" } },
+          hint: { text: "Partner is only available on a couple case" },
           items: [
             { value: "customer", text: "Customer", checked: data.benefitPaidTo == "customer" or not data.benefitPaidTo },
             { value: "partner", text: "Partner", checked: data.benefitPaidTo == "partner" }
@@ -102,26 +127,8 @@
           name: "benefitAmount",
           classes: "govuk-input--width-5",
           prefix: { text: "£" },
-          label: {
-            text: "Amount"
-          },
+          label: { text: "Amount", classes: "govuk-label--s" },
           value: data.benefitAmount
-        }) }}
-
-        {{ govukSelect({
-          id: "benefit-qualifying-period",
-          name: "benefitQualifyingPeriod",
-          label: {
-            text: "Qualifying period"
-          },
-          items: [
-            { value: "Weekly", text: "Weekly", selected: data.benefitQualifyingPeriod == "Weekly" or not data.benefitQualifyingPeriod },
-            { value: "Fortnightly", text: "Fortnightly", selected: data.benefitQualifyingPeriod == "Fortnightly" },
-            { value: "4 weekly", text: "4 weekly", selected: data.benefitQualifyingPeriod == "4 weekly" },
-            { value: "Monthly", text: "Monthly", selected: data.benefitQualifyingPeriod == "Monthly" },
-            { value: "Quarterly", text: "Quarterly", selected: data.benefitQualifyingPeriod == "Quarterly" },
-            { value: "Annually", text: "Annually", selected: data.benefitQualifyingPeriod == "Annually" }
-          ]
         }) }}
 
         {{ govukInput({
@@ -129,25 +136,24 @@
           name: "benefitDisregards",
           classes: "govuk-input--width-5",
           prefix: { text: "£" },
-          label: {
-            text: "Disregards"
-          },
-          hint: {
-            text: "Leave blank if no disregard applies"
-          },
+          label: { text: "Disregard", classes: "govuk-label--s" },
+          hint: { text: "Leave blank if no disregard applies" },
           value: data.benefitDisregards
         }) }}
 
-        {{ govukInput({
-          id: "benefit-text",
-          name: "benefitText",
-          label: {
-            text: "Text"
-          },
-          hint: {
-            text: "Any note to show against this benefit"
-          },
-          value: data.benefitText
+        {# Replaces the "Text" box, which Lynn said is not used. The savings
+           credit question was missing, and it decides whether the income
+           counts towards savings credit. David: it depends on the customer,
+           so there is no default. #}
+        {{ govukRadios({
+          idPrefix: "benefit-savings-credit",
+          name: "benefitSavingsCredit",
+          classes: "govuk-radios--inline",
+          fieldset: { legend: { text: "Is this savings credit qualifying income?", classes: "govuk-fieldset__legend--s" } },
+          items: [
+            { value: "Yes", text: "Yes", checked: data.benefitSavingsCredit == "Yes" },
+            { value: "No", text: "No", checked: data.benefitSavingsCredit == "No" }
+          ]
         }) }}
 
         <div class="govuk-button-group">
@@ -158,16 +164,13 @@
 
           {{ govukButton({
             text: "Cancel",
-            href: data.returnTo if data.retulandingpagernTo else "/A14pcispc/a14#bwe-bwc",
+            href: data.returnTo if data.returnTo else "/a14#income",
             classes: "govuk-button--secondary"
           }) }}
         </div>
 
       </form>
 
-      <p>
-        <a href="#">Get help with benefit details</a>
-      </p>
 
     </div>
   </div>

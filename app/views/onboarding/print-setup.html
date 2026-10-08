@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-  A14 form – OpCalc – GOV.UK Prototype Kit
+  Print setup – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
@@ -42,128 +42,93 @@
 {% endblock %}
  
 {% block content %}
- 
+
+{#
+  Print setup.
+
+  Changes after user research (Oct 2026):
+  - Lynn sets this first thing each morning and OpCalc remembers it until
+    it is closed, so the page now says that.
+  - The Printer and Source lists had placeholder options from the GOV.UK
+    example ("Recently published", "Most views"). They now hold printer
+    style options. The real printer list will come from the machine.
+  - Fields have their own names, so one answer no longer overwrites
+    another, and Confirm saves and goes back to saved cases.
+#}
+
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
- 
-      <h1 class="govuk-heading-l">
-        Print setup
-      </h1>
- 
-      <h2 class="govuk-heading-m">
-        Printer
-      </h2>
- 
-      <div class="govuk-form-group">
-  <label class="govuk-label" for="sort">
-    Name
-  </label>
-  <select class="govuk-select" id="sort" name="sort">
-    <option value="published">Recently published</option>
-    <option value="updated" selected>Recently updated</option>
-    <option value="views">Most views</option>
-    <option value="comments">Most comments</option>
-  </select>
-</div>
 
-<dl class="govuk-summary-list">
-  <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">
-      Status
-    </dt>
-    <dd class="govuk-summary-list__value">
-      Ready
-    </dd>
-  </div>
-  <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">
-      Type
-    </dt>
-    <dd class="govuk-summary-list__value">
-     Microsoft Print to PDF
-    </dd>
-  </div>
-  <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">
-      Where
-    </dt>
-    <dd class="govuk-summary-list__value">
-      PORTPROMPT
-    </dd>
-  </div>
-  <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">
-      Comment
-    </dt>
-    <dd class="govuk-summary-list__value">
-     
-    </dd>
-  </div>
-</dl>
+      <h1 class="govuk-heading-l">Print setup</h1>
 
+      <p class="govuk-body">OpCalc remembers these settings until you close it.</p>
 
-<h3 class="govuk-heading-m">
-   Paper
-</h3>
+      <form action="/onboarding/landing-page" method="post" novalidate>
 
-<div class="govuk-form-group">
-  <label class="govuk-label" for="sort">
-    Size
-  </label>
-  <select class="govuk-select" id="sort" name="sort">
-    <option value="published">A3</option>
-    <option value="updated" selected>A4</option>
-    <option value="views">A5</option>
-    <option value="comments">B4 (JIS)</option>
-  </select>
-</div>
+        <h2 class="govuk-heading-m">Printer</h2>
 
-<div class="govuk-form-group">
-  <label class="govuk-label" for="sort">
-    Source
-  </label>
-  <select class="govuk-select" id="sort" name="sort">
-    <option value="published">Recently published</option>
-    <option value="updated" selected>Recently updated</option>
-    <option value="views">Most views</option>
-    <option value="comments">Most comments</option>
-  </select>
-</div>
+        {{ govukSelect({
+          id: "printer-name",
+          name: "printerName",
+          label: { text: "Name" },
+          items: [
+            { value: "Microsoft Print to PDF", text: "Microsoft Print to PDF", selected: data.printerName == "Microsoft Print to PDF" or not data.printerName },
+            { value: "Office printer", text: "Office printer", selected: data.printerName == "Office printer" }
+          ]
+        }) }}
 
-<h4 class="govuk-heading-m">
-   Orientation
-</h4>
+        {{ govukSummaryList({
+          classes: "govuk-summary-list--no-border",
+          rows: [
+            { key: { text: "Status" }, value: { text: "Ready" } },
+            { key: { text: "Type" }, value: { text: "Microsoft Print to PDF" } },
+            { key: { text: "Where" }, value: { text: "PORTPROMPT:" } }
+          ]
+        }) }}
 
-<div class="govuk-form-group">
-  <fieldset class="govuk-fieldset" aria-describedby="changedName-hint">
-   
-    <div class="govuk-radios govuk-radios--inline" data-module="govuk-radios">
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="changedName" name="changedName" type="radio" value="yes">
-        <label class="govuk-label govuk-radios__label" for="changedName">
-          Portrait
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="changedName-2" name="changedName" type="radio" value="no">
-        <label class="govuk-label govuk-radios__label" for="changedName-2">
-          Landscape
-        </label>
-      </div>
-    </div>
-  </fieldset>
-</div>
-   
+        <h2 class="govuk-heading-m">Paper</h2>
 
-{% from "govuk/components/button/macro.njk" import govukButton %}
- 
-{{ govukButton({
-        text: "Confirm",
-        href: "#"
-      }) }}
+        {{ govukSelect({
+          id: "paper-size",
+          name: "paperSize",
+          label: { text: "Size" },
+          items: [
+            { value: "A4", text: "A4", selected: data.paperSize == "A4" or not data.paperSize },
+            { value: "A3", text: "A3", selected: data.paperSize == "A3" },
+            { value: "A5", text: "A5", selected: data.paperSize == "A5" }
+          ]
+        }) }}
 
- 
+        {{ govukSelect({
+          id: "paper-source",
+          name: "paperSource",
+          label: { text: "Source" },
+          items: [
+            { value: "Automatically select", text: "Automatically select", selected: data.paperSource == "Automatically select" or not data.paperSource },
+            { value: "Tray 1", text: "Tray 1", selected: data.paperSource == "Tray 1" },
+            { value: "Tray 2", text: "Tray 2", selected: data.paperSource == "Tray 2" }
+          ]
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "orientation",
+          name: "orientation",
+          classes: "govuk-radios--inline",
+          fieldset: { legend: { text: "Orientation", classes: "govuk-fieldset__legend--m" } },
+          items: [
+            { value: "portrait", text: "Portrait", checked: data.orientation == "portrait" or not data.orientation },
+            { value: "landscape", text: "Landscape", checked: data.orientation == "landscape" }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({ text: "Save print setup", type: "submit" }) }}
+          <a class="govuk-link" href="/onboarding/landing-page">Cancel</a>
+        </div>
+
+      </form>
+
     </div>
   </div>
- 
+
 {% endblock %}

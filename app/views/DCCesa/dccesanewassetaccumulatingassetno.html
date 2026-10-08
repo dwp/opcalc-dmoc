@@ -61,6 +61,20 @@
 
         <input type="hidden" name="assetIndex" value="{{ data.asset if editing else '' }}">
 
+        {# Joanne: "we know the numbers because we use it all the time". Type the
+           asset type number, or choose from the list. The numbers need adding
+           from the legacy system so typing one can pick the list item. #}
+        {{ govukInput({
+          id: "esa-asset-type-code",
+          name: "esaAssetTypeCode",
+          classes: "govuk-input--width-3",
+          inputmode: "numeric",
+          label: { text: "Asset type number" },
+          hint: { text: "If you do not know it, choose the asset type from the list instead" },
+          attributes: { "data-code-lookup": "esa-asset-type" },
+          value: data.esaAssetTypeCode
+        }) }}
+
         {{ govukSelect({
           id: "esa-asset-type",
           name: "esaAssetType",
@@ -86,7 +100,7 @@
             text: "Name (optional)"
           },
           hint: {
-            text: "For example, Bank Account (savings)"
+            text: "For example, the bank name and the last 4 digits of the account number, so you can tell accounts apart"
           },
           value: asset.name
         }) }}

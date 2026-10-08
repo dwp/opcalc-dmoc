@@ -23,8 +23,17 @@
 #}
 
 {% set errors = data.hclNewFormErrors if data.hclNewFormErrors else [] %}
-{% set refError = (errors | selectattr("href", "equalto", "#hcl-ref") | first) %}
-{% set typeError = (errors | selectattr("href", "equalto", "#hcl-loan-type") | first) %}
+{# Each field picks out its own message. This used selectattr("href",
+   "equalto", ...), but Nunjucks ignores the test there and returns every
+   error, so both fields showed "Enter a loan reference" (Emma's review). #}
+{% set refErrors = [] %}
+{% set typeErrors = [] %}
+{% for error in errors %}
+  {% if error.href == "#hcl-ref" %}{% set _ = refErrors.push(error) %}{% endif %}
+  {% if error.href == "#hcl-loan-type" %}{% set _ = typeErrors.push(error) %}{% endif %}
+{% endfor %}
+{% set refError = refErrors[0] %}
+{% set typeError = typeErrors[0] %}
 
 {% block pageTitle %}
   {{ "Error: " if errors | length }}Create a new housing cost loan – OpCalc – GOV.UK Prototype Kit
@@ -97,7 +106,7 @@
             Loan reference
           </label>
           <div id="hcl-ref-hint" class="govuk-hint">
-            Enter a reference for this loan
+            A name you will recognise this loan by, for example the lender's name
           </div>
           {% if refError %}
             <p id="hcl-ref-error" class="govuk-error-message">
@@ -111,13 +120,10 @@
         </div>
 
         <div class="govuk-form-group{{ ' govuk-form-group--error' if typeError }}">
-          <fieldset class="govuk-fieldset" aria-describedby="hcl-loan-type-hint{{ ' hcl-loan-type-error' if typeError }}">
+          <fieldset class="govuk-fieldset"{% if typeError %} aria-describedby="hcl-loan-type-error"{% endif %}>
             <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
               Type of loan
             </legend>
-            <div id="hcl-loan-type-hint" class="govuk-hint">
-              This decides which details you are asked for on the next page
-            </div>
             {% if typeError %}
               <p id="hcl-loan-type-error" class="govuk-error-message">
                 <span class="govuk-visually-hidden">Error:</span> {{ typeError.message }}

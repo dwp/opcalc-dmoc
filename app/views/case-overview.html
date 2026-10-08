@@ -189,11 +189,24 @@
         </div>
       {% endif %}
 
-      <h1 class="govuk-heading-l">Case overview</h1>
+      {# The heading names the customer so it is clear which case is open
+         (Emma's content review). The National Insurance number, benefit and
+         period sit underneath. #}
+      <span class="govuk-caption-l">Case overview</span>
+      <h1 class="govuk-heading-l">{{ customerName }}</h1>
 
-      <p class="govuk-body">
-        {{ customerName }} &nbsp;·&nbsp; {{ caseRef }}{{ " · " + discrepancyPeriod if discrepancyPeriod }}
-      </p>
+      {{ govukSummaryList({
+        classes: "govuk-summary-list--no-border",
+        rows: [
+          { key: { text: "National Insurance number" }, value: { text: caseRef } },
+          { key: { text: "Benefit" }, value: { text: data.benefitLabel if data.benefitLabel else "Not chosen yet" } },
+          { key: { text: "Discrepancy period" }, value: { text: discrepancyPeriod if discrepancyPeriod else "Not entered yet" } }
+        ]
+      }) }}
+
+      <h2 class="govuk-heading-m">Forms and calculations</h2>
+
+      <p class="govuk-body">Complete the ones this case needs, in any order. Ones that do not apply to this benefit are shown as inactive.</p>
 
       {#
         Every row is described the same way, so the table below is built from
@@ -223,6 +236,7 @@
           ref: a14Reference,
           view: "/a14forms",
           edit: "/a14",
+          print: "/a14forms",
           start: "/newform"
         },
         {
@@ -239,6 +253,7 @@
           ref: qb16Reference,
           view: "/viewqb16",
           edit: "/qb16listofentries",
+          print: "/qb16PDF",
           start: "/qb16listofentries"
         },
         {
@@ -259,6 +274,7 @@
           ref: dccReference,
           view: "/dcc-view",
           edit: "/dcc",
+          print: "/dccPDF",
           start: "/dcc"
         },
         {
@@ -303,6 +319,12 @@
             {% set _ = actions.push('<a class="govuk-link" href="' + record.edit +
               '">Edit<span class="govuk-visually-hidden"> ' + record.name + '</span></a>') %}
           {% endif %}
+          {# David sometimes needs to print only the A14s, or only the QB16,
+             so a finished record can be printed from its own row. #}
+          {% if record.print %}
+            {% set _ = actions.push('<a class="govuk-link" href="' + record.print +
+              '">Print<span class="govuk-visually-hidden"> ' + record.name + '</span></a>') %}
+          {% endif %}
         {% elif record.status == "incomplete" and record.start %}
           {% set _ = actions.push('<a class="govuk-link" href="' + record.start +
             '">Start<span class="govuk-visually-hidden"> ' + record.name + '</span></a>') %}
@@ -320,7 +342,7 @@
         caption: "Records held for this case",
         captionClasses: "govuk-visually-hidden",
         head: [
-          { text: "Type" },
+          { text: "Form or calculation" },
           { text: "Reference" },
           { text: "Status" },
           { text: "Actions" }
@@ -328,26 +350,26 @@
         rows: rows
       }) }}
 
-      <h2 class="govuk-heading-m">Printing</h2>
+      {# One link instead of four. Lynn preferred picking what to print on
+         the next page, and Viktoria had planned to simplify this. #}
+      <h2 class="govuk-heading-m">This case</h2>
 
       <ul class="govuk-list">
-        <li><a class="govuk-link" href="/a14forms">Print A14 PDFs</a></li>
-        <li><a class="govuk-link" href="/qb16PDF">Print the QB16 calculation</a></li>
-        <li><a class="govuk-link" href="/dccPDF">Print the diminishing capital calculation</a></li>
         <li><a class="govuk-link" href="/qb16caseprintselection">Print PDFs for this case</a></li>
+        <li><a class="govuk-link" href="/onboarding/export-case">Export this case</a></li>
       </ul>
 
-      {# Nothing here needs saving, so these navigate rather than submit. There
-         is no form involved, which is why govukButton with href is right. #}
+      {# Close case now asks whether to save first, the same as OpCalc does
+         today. Lynn always saves; closing without saving loses the case. #}
       <div class="govuk-button-group">
         {{ govukButton({
-          text: "Close case",
+          text: "Save as draft",
           href: "/onboarding/landing-page"
         }) }}
 
         {{ govukButton({
-          text: "Save as draft",
-          href: "/onboarding/landing-page",
+          text: "Close case",
+          href: "/onboarding/close-case",
           classes: "govuk-button--secondary"
         }) }}
 

@@ -43,6 +43,21 @@
 
 {% block content %}
 
+{#
+  Adding values to an asset.
+
+  Changes after user research (Oct 2026). Joanne enters a bank balance for
+  every week, sometimes hundreds of them, and today she does it by putting
+  in the first date and pressing the up arrow 7 times to get to the next
+  benefit week:
+  - "Save and add another value" saves and stays here, with the date
+    already moved on 7 days, so only the amount needs typing.
+  - Previous week and Next week buttons move the date 7 days.
+  - Values can be entered in any order and are sorted by date.
+  - The day of the week shows under the date.
+#}
+
+
   {% set asset = data.esaAssets[data.asset] %}
 
   <div class="govuk-grid-row">
@@ -57,7 +72,8 @@
       {{ govukSummaryList({
         rows: [
           { key: { text: "Asset type" }, value: { text: asset.type } },
-          { key: { text: "Name" }, value: { text: asset.name if asset.name else "Not given" } }
+          { key: { text: "Name" }, value: { text: asset.name if asset.name else "Not given" } },
+          { key: { text: "Values recorded" }, value: { text: (asset.values | length) if asset.values else 0 } }
         ]
       }) }}
 
@@ -82,9 +98,13 @@
 
       {% endif %}
 
+      {% if data.esaValueSaved %}
+        <div class="govuk-inset-text">Value for {{ data.esaValueSaved }} saved. The date below has moved on a week.</div>
+      {% endif %}
+
       <h2 class="govuk-heading-m">Add a value</h2>
 
-      <p class="govuk-body govuk-hint">Record what this asset was worth on a given date. Add a value each time the amount changed.</p>
+      <p class="govuk-body govuk-hint">Add one value for each week. You can enter them in any order; they are sorted by date.</p>
 
       <form action="/dccesa-value-save" method="post">
 
@@ -101,12 +121,20 @@
           hint: {
             text: "For example, 27 10 2008"
           },
+          attributes: { "data-weekday": "true" },
           items: [
-            { name: "day", classes: "govuk-input--width-2" },
-            { name: "month", classes: "govuk-input--width-2" },
-            { name: "year", classes: "govuk-input--width-4" }
+            { name: "day", classes: "govuk-input--width-2", value: data["esaNewValueDate-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["esaNewValueDate-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["esaNewValueDate-year"] }
           ]
         }) }}
+
+        {# Joanne moves the date on a week at a time with the up arrow in
+           OpCalc today. These do the same: one press, 7 days. #}
+        <div class="govuk-button-group opcalc-date-steps">
+          <button type="button" class="govuk-button govuk-button--secondary govuk-!-margin-bottom-2" data-module="govuk-button" data-date-step="-7" data-date-target="esa-new-value-date">Previous week</button>
+          <button type="button" class="govuk-button govuk-button--secondary govuk-!-margin-bottom-2" data-module="govuk-button" data-date-step="7" data-date-target="esa-new-value-date">Next week</button>
+        </div>
 
         {{ govukInput({
           id: "esa-new-value",
@@ -115,13 +143,24 @@
           prefix: { text: "£" },
           label: {
             text: "Value"
-          }
+          },
+          attributes: { autofocus: "autofocus" } if data.esaValueSaved else {}
         }) }}
 
         <div class="govuk-button-group">
           {{ govukButton({
-            text: "Save",
+            text: "Save and add another value",
+            name: "valueAction",
+            value: "another",
             type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Save and go back",
+            name: "valueAction",
+            value: "finish",
+            type: "submit",
+            classes: "govuk-button--secondary"
           }) }}
 
           {{ govukButton({

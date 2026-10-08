@@ -1,0 +1,104 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  A value for this date already exists – DCC (PC or IS/PC) – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: data.returnTo if data.returnTo else "/dccpcispc#assets"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      {% set existingDate = (data["pcispcNewValueDate-day"] if data["pcispcNewValueDate-day"] else "27") + "/" + (data["pcispcNewValueDate-month"] if data["pcispcNewValueDate-month"] else "10") + "/" + (data["pcispcNewValueDate-year"] if data["pcispcNewValueDate-year"] else "2008") %}
+
+      {{ govukWarningText({
+        text: "A value for " + existingDate + " has already been recorded against this asset.",
+        iconFallbackText: "Warning"
+      }) }}
+
+      <form action="/dccpcispc-value-replace" method="post">
+
+        {{ govukRadios({
+          idPrefix: "pcispc-replace-value",
+          name: "pcispcReplaceValue",
+          fieldset: {
+            legend: {
+              text: "Do you want to replace it?",
+              isPageHeading: true,
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          items: [
+            {
+              value: "yes",
+              text: "Yes, replace the existing value",
+              hint: {
+                text: "The value already recorded for " + existingDate + " will be overwritten."
+              }
+            },
+            {
+              value: "no",
+              text: "No, let me change the date",
+              hint: {
+                text: "You will go back to the asset value so you can enter a different date."
+              }
+            }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Continue",
+            type: "submit"
+          }) }}
+
+          {{ govukButton({
+            text: "Cancel",
+            href: data.returnTo if data.returnTo else "/dccpcispc#assets",
+            classes: "govuk-button--secondary"
+          }) }}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

@@ -55,6 +55,7 @@
         {{ govukDateInput({
           id: "ba3-from",
           namePrefix: "ba3From",
+          attributes: { "data-weekday": "true" },
           fieldset: {
             legend: {
               text: "From"
@@ -73,13 +74,14 @@
         {{ govukDateInput({
           id: "ba3-to",
           namePrefix: "ba3To",
+          attributes: { "data-weekday": "true" },
           fieldset: {
             legend: {
               text: "To"
             }
           },
           hint: {
-            text: "The number of weeks and days is worked out from these two dates when you save"
+            text: "The number of weeks and days shows below as you type"
           },
           items: [
             { name: "day", classes: "govuk-input--width-2", value: data["ba3To-day"] },
@@ -87,6 +89,8 @@
             { name: "year", classes: "govuk-input--width-4", value: data["ba3To-year"] }
           ]
         }) }}
+
+        <p class="govuk-body govuk-!-font-weight-bold" data-period-from="ba3-from" data-period-to="ba3-to" aria-live="polite"></p>
 
         {#
           The old dialog showed "Use A14(s)" greyed out when the case had no

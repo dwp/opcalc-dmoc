@@ -60,6 +60,24 @@
            rather than a question, so it is hidden rather than asked. #}
         <input type="hidden" name="entryForm" value="QB16">
 
+        {# Moved to the top and ticked by default. David only types gross
+           incorrect: gross correct comes from the A14s he has just done. #}
+        {{ govukCheckboxes({
+          idPrefix: "calculation-options",
+          name: "calculationOptions",
+          fieldset: {
+            legend: {
+              text: "Include in this calculation",
+              classes: "govuk-fieldset__legend--s"
+            }
+          },
+          items: [
+            { value: "useA14", text: "Use A14(s)", checked: (not data.calculationOptions) or ("useA14" in data.calculationOptions), hint: { text: "Gross correct is then filled in from the A14 forms" } },
+            { value: "useEarningsOnly", text: "Use earnings only", checked: data.calculationOptions and "useEarningsOnly" in data.calculationOptions },
+            { value: "useDcc", text: "Use diminishing capital calculation (DCC)", checked: data.calculationOptions and "useDcc" in data.calculationOptions }
+          ]
+        }) }}
+
         <h2 class="govuk-heading-m">Gross amounts</h2>
 
         {{ govukInput({
@@ -85,7 +103,7 @@
             text: "Gross correct"
           },
           hint: {
-            text: "The amount that should have been paid."
+            text: "The amount that should have been paid. Filled in from the A14 forms if you are using them."
           },
           prefix: {
             text: "£"
@@ -184,27 +202,13 @@
           ]
         }) }}
 
-        {{ govukCheckboxes({
-          idPrefix: "calculation-options",
-          name: "calculationOptions",
-          fieldset: {
-            legend: {
-              text: "Include in this calculation",
-              classes: "govuk-fieldset__legend--s"
-            }
-          },
-          items: [
-            { value: "useA14", text: "Use A14(s)" },
-            { value: "useEarningsOnly", text: "Use earnings only" },
-            { value: "useDcc", text: "Use diminishing capital calculation (DCC)" }
-          ]
-        }) }}
 
         <h2 class="govuk-heading-m">Discrepancy period</h2>
 
         {{ govukDateInput({
           id: "from-date",
           namePrefix: "qb16From",
+          attributes: { "data-weekday": "true" },
           fieldset: {
             legend: {
               text: "From",
@@ -224,6 +228,7 @@
         {{ govukDateInput({
           id: "to-date",
           namePrefix: "qb16To",
+          attributes: { "data-weekday": "true" },
           fieldset: {
             legend: {
               text: "To",
@@ -239,6 +244,10 @@
             { name: "year", classes: "govuk-input--width-4", value: data["qb16To-year"] }
           ]
         }) }}
+
+        {# Day of the week and total weeks, the same check as on benefit
+           details (Lynn and David). #}
+        <p class="govuk-body govuk-!-font-weight-bold opcalc-period-summary" data-period-from="from-date" data-period-to="to-date" aria-live="polite"></p>
 
         <h2 class="govuk-heading-m">Overpayment calculation</h2>
 

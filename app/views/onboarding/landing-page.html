@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-  Start page – OpCalc – GOV.UK Prototype Kit
+  Saved cases – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
@@ -43,234 +43,112 @@
 
 {% block content %}
 
+{#
+  Saved cases.
+
+  Changes after user research (Oct 2026):
+  - Column says "National Insurance number" in full (Emma's content review).
+  - A "Find a case" box filters the list as you type. Lynn keeps 200 to 300
+    cases and the list is sorted by National Insurance number, so a case
+    starting with W, X, Y or Z means paging to the end every time.
+  - Each saved calculation has its own row with its period. David and Lynn
+    both keep several calculations under one National Insurance number and
+    choose between them by date.
+  - Start a new case is a normal button rather than a start button, so it
+    is not more prominent than Open (Emma's content review).
+  - The links had a typo in their class (class=gov"govuk-link") which
+    stopped them being styled as links.
+#}
+
+{% set savedRows = [
+  { nino: "AB 12 34 56 C", benefit: "Income Support", period: "10/07/2015 to 16/07/2026" },
+  { nino: "CD 12 34 56 C", benefit: "Pension Credit", period: "01/04/2023 to 04/11/2025" },
+  { nino: "CD 12 34 56 C", benefit: "Pension Credit", period: "05/11/2025 to 16/07/2026" },
+  { nino: "EF 12 34 56 C", benefit: "Employment and Support Allowance", period: "27/10/2008 to 16/07/2026" },
+  { nino: "GH 12 34 56 C", benefit: "Invalidity Benefit", period: "03/03/2006 to 13/07/2026" },
+  { nino: "WX 12 34 56 C", benefit: "Pension Credit", period: "13/08/2024 to 02/09/2025" },
+  { nino: "WX 12 34 56 C", benefit: "Pension Credit", period: "03/09/2025 to 16/07/2026" }
+] %}
+
 <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
+  <div class="govuk-grid-column-full">
 
-  {% from "govuk/components/select/macro.njk" import govukSelect %}
+    <h1 class="govuk-heading-l">Saved cases</h1>
 
-      {{ govukTable({
-  caption: "Saved cases",
-  captionClasses: "govuk-table__caption--l",
-  firstCellIsHeader: true,
-  head: [
-    {
-      text: "NINO"
-    },
-    {
-      text: "Benefit",
-      format: "text"
-    },
-    {
-      text: "Actions",
-      format: "govuk-link"
-    },
-    {
-      text: "",
-      format: "govuk-link"
-    }
-  ],
-  rows: [
-    [
-      {
-        text: "AB 12 34 56 C"
-      },
-      {
-        text: "Income Support",
-        format: "text"
-      },
-     
-       {
-        html: '<a class=gov"govuk-link" href="/onboarding/case-overview">Open</a>',
-        format: "link"
-      },
-      {
-        html: '<a class=gov"govuk-link" href="/onboarding/deletecase">Delete</a>',
-        format: "link"
-      }
-    ],
-    [
-      {
-        text: "CD 12 34 56 C"
-      },
-      {
-        text: "Pension Credit",
-        format: "text"
-      },
-     
-       {
-        html: '<a class=gov"govuk-link" href="/onboarding/case-overview">Open</a>',
-        format: "link"
-      },
-      {
-        html: '<a class=gov"govuk-link" href="/onboarding/deletecase">Delete</a>',
-        format: "link"
-      }
-    ],
-    [
-      {
-        text: "EF 12 34 56 C"
-      },
-      {
-        text: "Employment and Support Allowance",
-        format: "text"
-      },
-      
-       {
-        html: '<a class=gov"govuk-link" href="/onboarding/case-overview">Open</a>',
-        format: "link"
-      },
-      {
-        html: '<a class=gov"govuk-link" href="/onboarding/deletecase">Delete</a>',
-        format: "link"
-      }
-    ],
-    [
-      {
-        text: "GH 12 34 56 C"
-      },
-      {
-        text: "Invalidity Benefit",
-        format: "text"
-      },
-     
-       {
-        html: '<a class=gov"govuk-link" href="/onboarding/case-overview">Open</a>',
-        format: "link"
-      },
-      {
-        html: '<a class=gov"govuk-link" href="/onboarding/deletecase">Delete</a>',
-        format: "link"
-      }
-    ],
-    [
-      {
-        text: "IJ 12 34 56 C"
-      },
-      {
-        text: "Retirement Pension",
-        format: "text"
-      },
-     
-       {
-        html: '<a class=gov"govuk-link" href="/onboarding/case-overview">Open</a>',
-        format: "link"
-      },
-      {
-        html: '<a class=gov"govuk-link" href="/onboarding/deletecase">Delete</a>',
-        format: "link"
-      }
-    ],
-    [
-      {
-        text: "KL 12 34 56 C"
-      },
-      {
-        text: "Employment and Support Allowance",
-        format: "text"
-      },
-      
-       {
-        html: '<a class=gov"govuk-link" href="/onboarding/case-overview">Open</a>',
-        format: "link"
-      },
-      {
-        html: '<a class=gov"govuk-link" href="/onboarding/deletecase">Delete</a>',
-        format: "link"
-      }
-    ]
-  ]
-}) }}
-
-<nav class="govuk-pagination" aria-label="Pagination">
-  <ul class="govuk-pagination__list">
-    <li class="govuk-pagination__item govuk-pagination__item--current">
-      <a class="govuk-link govuk-pagination__link" href="#" aria-label="Page 1" aria-current="page">
-        1
-      </a>
-    </li>
-    <li class="govuk-pagination__item">
-      <a class="govuk-link govuk-pagination__link" href="#" aria-label="Page 2">
-        2
-      </a>
-    </li>
-    <li class="govuk-pagination__item">
-      <a class="govuk-link govuk-pagination__link" href="#" aria-label="Page 3">
-        3
-      </a>
-    </li>
-  </ul>
-  <div class="govuk-pagination__next">
-    <a class="govuk-link govuk-pagination__link" href="#" rel="next">
-      <span class="govuk-pagination__link-title">
-        Next<span class="govuk-visually-hidden"> page</span>
-      </span>
-      <svg class="govuk-pagination__icon govuk-pagination__icon--next" xmlns="http://www.w3.org/2000/svg" height="13" width="15" aria-hidden="true" focusable="false" viewBox="0 0 15 13">
-        <path d="m8.107-0.0078125-1.4136 1.414 4.2926 4.293h-12.986v2h12.896l-4.1855 3.9766 1.377 1.4492 6.7441-6.4062-6.7246-6.7266z"></path>
-      </svg>
-    </a>
-  </div>
-</nav>
-
-{% from "govuk/components/button/macro.njk" import govukButton %}
- 
-{{ govukButton({
+    <div class="govuk-button-group">
+      {{ govukButton({
         text: "Start a new case",
-        href: "/customer-details/personal-details",
-        isStartButton: true
+        href: "/customer-details/personal-details"
       }) }}
-
-<!-- {{ govukButton({
-        text: "Open an exisiting case",
-        href: "/saved-cases",
-        isStartButton: true
-      }) }} -->
- 
-
-<h1 class="govuk-heading-m">
-        More actions
-      </h1>
-
-<p class="govuk-body">
-  <a href="/onboarding/import-case" class="govuk-link govuk-link--no-visited-state">Import a case</a>
-  <br>
-  <a href="/onboarding/export-case" class="govuk-link govuk-link--no-visited-state">Export a case</a>
-  <br>
-  <a href="/onboarding/print-setup" class="govuk-link govuk-link--no-visited-state">Print setup</a>
-</p>
-
-
- 
     </div>
 
-    <!-- <div class="govuk-grid-column-one-third">
- 
-      <aside class="govuk-prototype-kit-common-templates-related-items" role="complementary">
-        <h2 class="govuk-heading-m" id="subsection-title">
-          More actions
-        </h2>
-        <nav role="navigation" aria-labelledby="subsection-title">
-          <ul class="govuk-list govuk-!-font-size-16">
-            <li>
-              <a href="/onboarding/import-case">
-                Import a case <span class="govuk-visually-hidden">in Subsection</span>
-              </a>
-            </li>
-            <li>
-              <a href="/onboarding/export-case">
-                Export a case <span class="govuk-visually-hidden">in Subsection</span>
-              </a>
-            </li>
-            <li>
-              <a href="/onboarding/print-setup">
-                Print setup <span class="govuk-visually-hidden">in Subsection</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </aside>
- 
-    </div> -->
+    <div class="govuk-form-group">
+      <label class="govuk-label govuk-label--s" for="find-case">Find a case</label>
+      <div id="find-case-hint" class="govuk-hint">Enter all or part of a National Insurance number</div>
+      <input class="govuk-input govuk-input--width-10 govuk-input--extra-letter-spacing" id="find-case" type="search" spellcheck="false" autocomplete="off" aria-describedby="find-case-hint" aria-controls="saved-cases-table">
+    </div>
+
+    <p class="govuk-body govuk-hint" id="saved-cases-table-count" aria-live="polite">Sorted by National Insurance number.</p>
+
+    <table class="govuk-table" id="saved-cases-table">
+      <caption class="govuk-table__caption govuk-visually-hidden">Saved cases</caption>
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th scope="col" class="govuk-table__header">National Insurance number</th>
+          <th scope="col" class="govuk-table__header">Benefit</th>
+          <th scope="col" class="govuk-table__header">Discrepancy period</th>
+          <th scope="col" class="govuk-table__header">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for row in savedRows %}
+          <tr class="govuk-table__row" data-nino="{{ row.nino | replace(' ', '') }}">
+            <td class="govuk-table__cell">{{ row.nino }}</td>
+            <td class="govuk-table__cell">{{ row.benefit }}</td>
+            <td class="govuk-table__cell">{{ row.period }}</td>
+            <td class="govuk-table__cell">
+              <a class="govuk-link" href="/onboarding/case-overview">Open<span class="govuk-visually-hidden"> case {{ row.nino }}, {{ row.period }}</span></a>
+              |
+              <a class="govuk-link" href="/onboarding/deletecase">Delete<span class="govuk-visually-hidden"> case {{ row.nino }}, {{ row.period }}</span></a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <p class="govuk-body govuk-!-display-none" id="saved-cases-table-none">No saved cases match that National Insurance number.</p>
+
+    <nav class="govuk-pagination" aria-label="Pagination">
+      <ul class="govuk-pagination__list">
+        <li class="govuk-pagination__item govuk-pagination__item--current">
+          <a class="govuk-link govuk-pagination__link" href="#" aria-label="Page 1" aria-current="page">1</a>
+        </li>
+        <li class="govuk-pagination__item">
+          <a class="govuk-link govuk-pagination__link" href="#" aria-label="Page 2">2</a>
+        </li>
+        <li class="govuk-pagination__item">
+          <a class="govuk-link govuk-pagination__link" href="#" aria-label="Page 3">3</a>
+        </li>
+      </ul>
+      <div class="govuk-pagination__next">
+        <a class="govuk-link govuk-pagination__link" href="#" rel="next">
+          <span class="govuk-pagination__link-title">Next<span class="govuk-visually-hidden"> page</span></span>
+          <svg class="govuk-pagination__icon govuk-pagination__icon--next" xmlns="http://www.w3.org/2000/svg" height="13" width="15" aria-hidden="true" focusable="false" viewBox="0 0 15 13">
+            <path d="m8.107-0.0078125-1.4136 1.414 4.2926 4.293h-12.986v2h12.896l-4.1855 3.9766 1.377 1.4492 6.7441-6.4062-6.7246-6.7266z"></path>
+          </svg>
+        </a>
+      </div>
+    </nav>
+
+    <h2 class="govuk-heading-m">More actions</h2>
+
+    <ul class="govuk-list">
+      <li><a href="/onboarding/import-case" class="govuk-link govuk-link--no-visited-state">Import a case</a></li>
+      <li><a href="/onboarding/export-case" class="govuk-link govuk-link--no-visited-state">Export cases</a></li>
+      <li><a href="/onboarding/print-setup" class="govuk-link govuk-link--no-visited-state">Print setup</a></li>
+    </ul>
 
   </div>
- 
+</div>
+
 {% endblock %}

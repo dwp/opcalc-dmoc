@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-  Start page – OpCalc – GOV.UK Prototype Kit
+  Personal details – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
@@ -43,185 +43,128 @@
 
 {% block content %}
 
+{#
+  Personal details.
+
+  Changes after user research (Oct 2026):
+  - The third party question is first and says what a third party is
+    (Emma's content review). Yes goes to third party details, No skips
+    that page. Lynn has never filled in appointee details because they do
+    not show on the A14 panels, and being sent through the page every time
+    slowed her down. CHECK with Viktoria that this matches what the legacy
+    Third party checkbox did.
+  - Every field has its own name. Surname and Forenames were both saved as
+    "fullName", and Title and Sex were both saved as "sort", so the second
+    answer overwrote the first. The names now match what the case overview
+    and check your answers pages read (nino, surname, firstName).
+  - Address and telephone are optional. David never fills them in and types
+    A11AA just to get past the postcode, because the address is not used
+    anywhere in the calculation.
+  - Clear was a submit button, so pressing it went to the next page. Nobody
+    we spoke to has used it, so it is now a link that empties the page.
+  - Only one h1 on the page. The legends were each marked up as an h1.
+#}
+
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
 
-      <h1 class="govuk-heading-l">
-        Personal Details
-      </h1>
+      <span class="govuk-caption-l">Customer details</span>
+      <h1 class="govuk-heading-l">Personal details</h1>
 
-      <form class="form" action="/customer-details/appointee-other-details" method="post">
+      <form class="form" action="/personal-details-continue" method="post" novalidate>
 
-        <div class="govuk-form-group">
-  <label class="govuk-label" for="national-insurance-number">
-    National Insurance number
-  </label>
-  <!-- <div id="national-insurance-number-hint" class="govuk-hint">
-    It’s on your National Insurance card, benefit letter, payslip or P60 – for example, ‘QQ 12 34 56 C’
-  </div> -->
-  <input class="govuk-input govuk-input--width-10 govuk-input--extra-letter-spacing" id="national-insurance-number" name="nationalInsuranceNumber" type="text" spellcheck="false" aria-describedby="national-insurance-number-hint">
-</div>
+        {{ govukRadios({
+          idPrefix: "third-party",
+          name: "thirdParty",
+          classes: "govuk-radios--inline",
+          fieldset: {
+            legend: { text: "Does the customer have a third party acting for them?", classes: "govuk-fieldset__legend--s" }
+          },
+          hint: { text: "For example, an appointee, someone with power of attorney, or a corporate acting body such as a local council" },
+          items: [
+            { value: "yes", text: "Yes", checked: data.thirdParty == "yes" },
+            { value: "no", text: "No", checked: data.thirdParty == "no" }
+          ]
+        }) }}
 
-<div class="govuk-form-group">
-  <fieldset class="govuk-fieldset" role="group" aria-describedby="date-of-birth-hint">
-    <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
-      <h1 class="govuk-fieldset__heading">
-        Date of birth
-      </h1>
-    </legend>
-    <!-- <div id="passport-issued-hint" class="govuk-hint">
-      For example, 27 3 2024
-    </div> -->
-    <div class="govuk-date-input" id="date-of-birth">
-      <div class="govuk-date-input__item">
-        <div class="govuk-form-group">
-          <label class="govuk-label govuk-date-input__label" for="date-of-birth-day">
-            Day
-          </label>
-          <input class="govuk-input govuk-date-input__input govuk-input--width-2" id="date-of-birth-day" name="date-of-birth-day" type="text" inputmode="numeric">
+        {{ govukInput({
+          id: "nino",
+          name: "nino",
+          label: { text: "National Insurance number", classes: "govuk-label--s" },
+          hint: { text: "For example, QQ 12 34 56 C" },
+          classes: "govuk-input--width-10 govuk-input--extra-letter-spacing",
+          spellcheck: false,
+          value: data.nino
+        }) }}
+
+        {{ govukDateInput({
+          id: "date-of-birth",
+          namePrefix: "dateOfBirth",
+          fieldset: { legend: { text: "Date of birth", classes: "govuk-fieldset__legend--s" } },
+          hint: { text: "For example, 27 3 1950" },
+          items: [
+            { name: "day", classes: "govuk-input--width-2", value: data["dateOfBirth-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["dateOfBirth-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["dateOfBirth-year"] }
+          ]
+        }) }}
+
+        {{ govukInput({
+          id: "surname",
+          name: "surname",
+          label: { text: "Surname", classes: "govuk-label--s" },
+          classes: "govuk-!-width-two-thirds",
+          spellcheck: false,
+          autocomplete: "family-name",
+          value: data.surname
+        }) }}
+
+        {{ govukInput({
+          id: "first-name",
+          name: "firstName",
+          label: { text: "Forenames", classes: "govuk-label--s" },
+          classes: "govuk-!-width-two-thirds",
+          spellcheck: false,
+          autocomplete: "given-name",
+          value: data.firstName
+        }) }}
+
+        {{ govukSelect({
+          id: "title",
+          name: "title",
+          label: { text: "Title", classes: "govuk-label--s" },
+          items: [
+            { value: "Mr", text: "Mr", selected: data.title == "Mr" or not data.title },
+            { value: "Mrs", text: "Mrs", selected: data.title == "Mrs" },
+            { value: "Miss", text: "Miss", selected: data.title == "Miss" },
+            { value: "Ms", text: "Ms", selected: data.title == "Ms" },
+            { value: "Dr", text: "Dr", selected: data.title == "Dr" }
+          ]
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "sex",
+          name: "sex",
+          classes: "govuk-radios--inline",
+          fieldset: { legend: { text: "Sex", classes: "govuk-fieldset__legend--s" } },
+          items: [
+            { value: "Female", text: "Female", checked: data.sex == "Female" },
+            { value: "Male", text: "Male", checked: data.sex == "Male" }
+          ]
+        }) }}
+
+        <h2 class="govuk-heading-m">Address (optional)</h2>
+
+        {{ govukInput({ id: "address-line-1", name: "addressLine1", label: { text: "Address line 1" }, autocomplete: "address-line1", value: data.addressLine1 }) }}
+        {{ govukInput({ id: "address-line-2", name: "addressLine2", label: { text: "Address line 2" }, autocomplete: "address-line2", value: data.addressLine2 }) }}
+        {{ govukInput({ id: "address-town", name: "addressTown", label: { text: "Town or city" }, classes: "govuk-!-width-two-thirds", autocomplete: "address-level2", value: data.addressTown }) }}
+        {{ govukInput({ id: "address-postcode", name: "addressPostcode", label: { text: "Postcode" }, classes: "govuk-input--width-10", autocomplete: "postal-code", value: data.addressPostcode }) }}
+        {{ govukInput({ id: "telephone", name: "telephone", label: { text: "Telephone (optional)" }, classes: "govuk-input--width-20", type: "tel", autocomplete: "tel", value: data.telephone }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({ text: "Continue", type: "submit", preventDoubleClick: true }) }}
+          <a class="govuk-link js-clear-form" href="#">Clear this page</a>
         </div>
-      </div>
-      <div class="govuk-date-input__item">
-        <div class="govuk-form-group">
-          <label class="govuk-label govuk-date-input__label" for="date-of-birth-month">
-            Month
-          </label>
-          <input class="govuk-input govuk-date-input__input govuk-input--width-2" id="date-of-birth-month" name="date-of-birth-month" type="text" inputmode="numeric">
-        </div>
-      </div>
-      <div class="govuk-date-input__item">
-        <div class="govuk-form-group">
-          <label class="govuk-label govuk-date-input__label" for="date-of-birth-year">
-            Year
-          </label>
-          <input class="govuk-input govuk-date-input__input govuk-input--width-4" id="date-of-birth-year" name="date-of-birth-year" type="text" inputmode="numeric">
-        </div>
-      </div>
-    </div>
-  </fieldset>
-</div>
-
-<div class="govuk-form-group">
-  <label class="govuk-label" for="full-name">
-    Surname
-  </label>
-  <input class="govuk-input" id="full-name" name="fullName" type="text" spellcheck="false" autocomplete="name">
-</div>
-
-<div class="govuk-form-group">
-  <label class="govuk-label" for="full-name">
-    Forenames
-  </label>
-  <input class="govuk-input" id="full-name" name="fullName" type="text" spellcheck="false" autocomplete="name">
-</div>
-
-<div class="govuk-form-group">
-  <label class="govuk-label" for="sort">
-    Title
-  </label>
-  <select class="govuk-select" id="sort" name="sort">
-    <option value="published" selected>Mr</option>
-    <option value="updated">Ms</option>
-    <option value="views">Mrs</option>
-    <option value="comments">Miss</option>
-  </select>
-</div>
-
-<div class="govuk-form-group">
-  <label class="govuk-label" for="sort">
-    Sex
-  </label>
-  <select class="govuk-select" id="sort" name="sort">
-    <option value="published">Female</option>
-    <option value="updated" selected>Male</option>
-  </select>
-</div>
-
-<fieldset class="govuk-fieldset">
-  <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
-    <h1 class="govuk-fieldset__heading">
-      Address
-    </h1>
-  </legend>
-  <div class="govuk-form-group">
-    <label class="govuk-label" for="address-line-1">
-      Address line 1
-    </label>
-    <input class="govuk-input" id="address-line-1" name="addressLine1" type="text" autocomplete="address-line1">
-  </div>
-  <div class="govuk-form-group">
-    <label class="govuk-label" for="address-line-2">
-      Address line 2 (optional)
-    </label>
-    <input class="govuk-input" id="address-line-2" name="addressLine2" type="text" autocomplete="address-line2">
-  </div>
-  <div class="govuk-form-group">
-    <label class="govuk-label" for="address-town">
-      Town or city
-    </label>
-    <input class="govuk-input govuk-!-width-two-thirds" id="address-town" name="addressTown" type="text" autocomplete="address-level2">
-  </div>
-  <div class="govuk-form-group">
-    <label class="govuk-label" for="address-postcode">
-      Postcode
-    </label>
-    <input class="govuk-input govuk-input--width-10" id="address-postcode" name="addressPostcode" type="text" autocomplete="postal-code">
-  </div>
-  <div class="govuk-form-group">
-    <label class="govuk-label" for="address-postcode">
-      Telephone
-    </label>
-    <input class="govuk-input govuk-input--width-10" id="telephone" name="telephone" type="text" autocomplete="telephone">
-  </div>
-  
-</fieldset>
-
-<!-- <div class="govuk-form-group">
-  <fieldset class="govuk-fieldset" aria-describedby="contact-hint">
-    <div class="govuk-checkboxes" data-module="govuk-checkboxes">
-      <div class="govuk-checkboxes__item">
-        <input class="govuk-checkboxes__input" id="contact" name="contact" type="checkbox" value="email" data-aria-controls="conditional-contact">
-        <label class="govuk-label govuk-checkboxes__label" for="contact">
-          Third Party
-        </label>
-      </div>
-     
-    </div>
-  </fieldset>
-</div> -->
-
-<div class="govuk-form-group">
-  <fieldset class="govuk-fieldset">
-    <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
-      <h2 class="govuk-fieldset__heading">
-        Is there a Third Party?
-      </h2>
-    </legend>
-    <div class="govuk-radios govuk-radios--small govuk-radios--inline" data-module="govuk-radios">
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="changedName" name="changedName" type="radio" value="month">
-        <label class="govuk-label govuk-radios__label" for="changedName">
-          Yes
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="changedName-2" name="changedName" type="radio" value="year">
-        <label class="govuk-label govuk-radios__label" for="changedName-2">
-          No
-        </label>
-      </div>
-    </div>
-  </fieldset>
-</div>
-
-<div class="govuk-button-group">
-  <button type="submit" class="govuk-button" data-module="govuk-button">
-    Continue
-  </button>
-  <button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button">
-    Clear
-  </button>
-</div>
 
       </form>
 

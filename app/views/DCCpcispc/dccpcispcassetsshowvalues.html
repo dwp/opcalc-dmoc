@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-  Asset value – DCC (IS or JSA) – OpCalc – GOV.UK Prototype Kit
+  Asset value – DCC (PC or IS/PC) – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
@@ -37,11 +37,16 @@
 {% block containerStart %}
   {{ govukBackLink({
     text: "Back",
-    href: data.returnTo if data.returnTo else "/onboarding/case-overview"
+    href: data.returnTo if data.returnTo else "/dccpcispc#assets"
   }) }}
 {% endblock %}
 
 {% block content %}
+
+{# NEW PAGE. "New value" on the PC/ISPC Assets tab linked here but the page
+   did not exist. Copied from the IS/JSA version with pcispc field names,
+   which the Values table on dccpcispc.html already expects. #}
+
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
@@ -55,7 +60,7 @@
       {{ govukSummaryList({
         rows: [
           { key: { text: "Asset type" }, value: { text: "Cash" } },
-          { key: { text: "Name" }, value: { text: data.isjsaAssetName if data.isjsaAssetName else "Not given" } }
+          { key: { text: "Name" }, value: { text: data.pcispcAssetName if data.pcispcAssetName else "Not given" } }
         ]
       }) }}
 
@@ -63,11 +68,11 @@
 
       {# Not /return-to-tab. Saving a value goes through the "already exists"
      screen first, and the value is only kept if you say yes to replacing. #}
-      <form action="/dccisjsa-asset-value" method="post">
+      <form action="/dccpcispc-asset-value" method="post">
 
         {{ govukDateInput({
-          id: "isjsa-new-value-date",
-          namePrefix: "isjsaNewValueDate",
+          id: "pcispc-new-value-date",
+          namePrefix: "pcispcNewValueDate",
           attributes: { "data-weekday": "true" },
           fieldset: {
             legend: {
@@ -78,28 +83,28 @@
             text: "For example, 27 10 2008"
           },
           items: [
-            { name: "day", classes: "govuk-input--width-2", value: data["isjsaNewValueDate-day"] },
-            { name: "month", classes: "govuk-input--width-2", value: data["isjsaNewValueDate-month"] },
-            { name: "year", classes: "govuk-input--width-4", value: data["isjsaNewValueDate-year"] }
+            { name: "day", classes: "govuk-input--width-2", value: data["pcispcNewValueDate-day"] },
+            { name: "month", classes: "govuk-input--width-2", value: data["pcispcNewValueDate-month"] },
+            { name: "year", classes: "govuk-input--width-4", value: data["pcispcNewValueDate-year"] }
           ]
         }) }}
 
         {# Moves the date on a week at a time, like the up arrow Joanne uses
            in OpCalc today. #}
         <div class="govuk-button-group">
-          <button type="button" class="govuk-button govuk-button--secondary govuk-!-margin-bottom-2" data-module="govuk-button" data-date-step="-7" data-date-target="isjsa-new-value-date">Previous week</button>
-          <button type="button" class="govuk-button govuk-button--secondary govuk-!-margin-bottom-2" data-module="govuk-button" data-date-step="7" data-date-target="isjsa-new-value-date">Next week</button>
+          <button type="button" class="govuk-button govuk-button--secondary govuk-!-margin-bottom-2" data-module="govuk-button" data-date-step="-7" data-date-target="pcispc-new-value-date">Previous week</button>
+          <button type="button" class="govuk-button govuk-button--secondary govuk-!-margin-bottom-2" data-module="govuk-button" data-date-step="7" data-date-target="pcispc-new-value-date">Next week</button>
         </div>
 
         {{ govukInput({
-          id: "isjsa-new-value",
-          name: "isjsaNewValue",
+          id: "pcispc-new-value",
+          name: "pcispcNewValue",
           classes: "govuk-input--width-5",
           prefix: { text: "£" },
           label: {
             text: "Value"
           },
-          value: data.isjsaNewValue
+          value: data.pcispcNewValue
         }) }}
 
         <div class="govuk-button-group">
@@ -110,7 +115,7 @@
 
           {{ govukButton({
             text: "Cancel",
-            href: data.returnTo if data.returnTo else "/onboarding/case-overview",
+            href: data.returnTo if data.returnTo else "/dccpcispc#assets",
             classes: "govuk-button--secondary"
           }) }}
         </div>

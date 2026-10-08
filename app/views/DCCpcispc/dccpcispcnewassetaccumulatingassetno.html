@@ -159,6 +159,20 @@
 
       <form action="/return-to-tab" method="post">
 
+        {# Joanne: "we know the numbers because we use it all the time". Type the
+           asset type number, or choose from the list. The numbers need adding
+           from the legacy system so typing one can pick the list item. #}
+        {{ govukInput({
+          id: "pcispc-asset-type-code",
+          name: "pcispcAssetTypeCode",
+          classes: "govuk-input--width-3",
+          inputmode: "numeric",
+          label: { text: "Asset type number" },
+          hint: { text: "If you do not know it, choose the asset type from the list instead" },
+          attributes: { "data-code-lookup": "pcispc-asset-type" },
+          value: data.pcispcAssetTypeCode
+        }) }}
+
         {{ govukSelect({
           id: "pcispc-asset-type",
           name: "pcispcAssetType",
@@ -182,6 +196,9 @@
           name: "pcispcAssetName",
           label: {
             text: "Name (optional)"
+          },
+          hint: {
+            text: "For example, the bank name and the last 4 digits of the account number, so you can tell accounts apart"
           },
           value: data.pcispcAssetName
         }) }}

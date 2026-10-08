@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-  Start page – OpCalc – GOV.UK Prototype Kit
+  Saved cases – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
@@ -51,15 +51,14 @@
  <!-- <p class="govuk-body">No saved cases</p> -->
 
  <div class="govuk-inset-text">
-  No saved cases
+  You have no saved cases. Start a new case, or import one a colleague has exported.
 </div>
 
 {% from "govuk/components/button/macro.njk" import govukButton %}
  
 {{ govukButton({
         text: "Start a new case",
-        href: "/customer-details/personal-details",
-        isStartButton: true
+        href: "/customer-details/personal-details"
       }) }}
 
 <!-- {{ govukButton({
@@ -69,17 +68,14 @@
       }) }} -->
  
 
-<h1 class="govuk-heading-m">
+<h2 class="govuk-heading-m">
         More actions
-      </h1>
+      </h2>
 
-<p class="govuk-body">
-  <a href="/onboarding/import-case" class="govuk-link govuk-link--no-visited-state">Import a case</a>
-  <br>
-  <a href="/onboarding/export-case" class="govuk-link govuk-link--no-visited-state">Export a case</a>
-  <br>
-  <a href="/onboarding/print-setup" class="govuk-link govuk-link--no-visited-state">Print setup</a>
-</p>
+<ul class="govuk-list">
+  <li><a href="/onboarding/import-case" class="govuk-link govuk-link--no-visited-state">Import a case</a></li>
+  <li><a href="/onboarding/print-setup" class="govuk-link govuk-link--no-visited-state">Print setup</a></li>
+</ul>
 
 
  

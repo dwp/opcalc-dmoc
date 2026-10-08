@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-  Start page – OpCalc – GOV.UK Prototype Kit
+  Third party details – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
@@ -43,150 +43,105 @@
 
 {% block content %}
 
+{#
+  Third party details (was "Appointee or Other Details").
+
+  Only reached when "Does the customer have a third party acting for
+  them?" is Yes on personal details.
+
+  Changes after user research (Oct 2026):
+  - Heading is "Third party details" and the first question asks which
+    kind of third party, with two choices instead of "Is it a Corporate
+    Body?" Yes / No (Emma's content review). Lynn's team describes these as
+    a power of attorney or appointee (a personal acting body) or a
+    corporate acting body.
+  - Each choice reveals only the fields it needs. A corporate acting body
+    has one name; a person has surname, forenames and title.
+  - The address only shows when the third party does not live with the
+    customer.
+  - Fields have their own names. Surname and Forenames were both "fullName"
+    and the organisation name was an email field.
+  - Clear is a link that empties the page instead of a second submit
+    button.
+#}
+
+  {% set personHtml %}
+    {{ govukInput({ id: "third-party-surname", name: "thirdPartySurname", label: { text: "Surname" }, classes: "govuk-!-width-two-thirds", spellcheck: false, value: data.thirdPartySurname }) }}
+    {{ govukInput({ id: "third-party-forenames", name: "thirdPartyForenames", label: { text: "Forenames" }, classes: "govuk-!-width-two-thirds", spellcheck: false, value: data.thirdPartyForenames }) }}
+    {{ govukSelect({
+      id: "third-party-title",
+      name: "thirdPartyTitle",
+      label: { text: "Title" },
+      items: [
+        { value: "Mr", text: "Mr", selected: data.thirdPartyTitle == "Mr" or not data.thirdPartyTitle },
+        { value: "Mrs", text: "Mrs", selected: data.thirdPartyTitle == "Mrs" },
+        { value: "Miss", text: "Miss", selected: data.thirdPartyTitle == "Miss" },
+        { value: "Ms", text: "Ms", selected: data.thirdPartyTitle == "Ms" },
+        { value: "Dr", text: "Dr", selected: data.thirdPartyTitle == "Dr" }
+      ]
+    }) }}
+  {% endset %}
+
+  {% set organisationHtml %}
+    {{ govukInput({ id: "third-party-organisation", name: "thirdPartyOrganisation", label: { text: "Name of the organisation" }, hint: { text: "For example, Sunderland City Council" }, spellcheck: false, value: data.thirdPartyOrganisation }) }}
+  {% endset %}
+
+  {% set addressHtml %}
+    {{ govukInput({ id: "third-party-address-line-1", name: "thirdPartyAddressLine1", label: { text: "Address line 1" }, autocomplete: "address-line1", value: data.thirdPartyAddressLine1 }) }}
+    {{ govukInput({ id: "third-party-address-line-2", name: "thirdPartyAddressLine2", label: { text: "Address line 2 (optional)" }, autocomplete: "address-line2", value: data.thirdPartyAddressLine2 }) }}
+    {{ govukInput({ id: "third-party-town", name: "thirdPartyTown", label: { text: "Town or city" }, classes: "govuk-!-width-two-thirds", autocomplete: "address-level2", value: data.thirdPartyTown }) }}
+    {{ govukInput({ id: "third-party-postcode", name: "thirdPartyPostcode", label: { text: "Postcode" }, classes: "govuk-input--width-10", autocomplete: "postal-code", value: data.thirdPartyPostcode }) }}
+  {% endset %}
+
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
 
-      <h1 class="govuk-heading-l">
-        Appointee or Other Details
-      </h1>
+      <span class="govuk-caption-l">Customer details</span>
+      <h1 class="govuk-heading-l">Third party details</h1>
 
-      <form class="form" action="/customer-details/select-benefit" method="post">
+      <form class="form" action="/customer-details/select-benefit" method="post" novalidate>
 
-        <div class="govuk-form-group">
-  <fieldset class="govuk-fieldset" aria-describedby="contact-hint">
-    <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
-      <h1 class="govuk-fieldset__heading">
-        Is it a Corporate Body?
-      </h1>
-    </legend>
-    <div class="govuk-radios" data-module="govuk-radios">
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="contact" name="contact" type="radio" value="email" data-aria-controls="conditional-contact">
-        <label class="govuk-label govuk-radios__label" for="contact">
-          Yes
-        </label>
-      </div>
-      <div class="govuk-radios__conditional govuk-radios__conditional--hidden" id="conditional-contact">
-        <div class="govuk-form-group">
-          <label class="govuk-label" for="contact-by-email">
-            Names
-          </label>
-          <input class="govuk-input" id="contact-by-email" name="contactByEmail" type="email" spellcheck="false" autocomplete="email">
+        {{ govukRadios({
+          idPrefix: "third-party-type",
+          name: "thirdPartyType",
+          fieldset: {
+            legend: { text: "Who is acting for the customer?", classes: "govuk-fieldset__legend--m" }
+          },
+          items: [
+            {
+              value: "personal",
+              text: "A person (personal acting body)",
+              hint: { text: "For example, an appointee or someone with power of attorney" },
+              checked: data.thirdPartyType == "personal",
+              conditional: { html: personHtml }
+            },
+            {
+              value: "corporate",
+              text: "An organisation (corporate acting body)",
+              hint: { text: "For example, a local council or a care home" },
+              checked: data.thirdPartyType == "corporate",
+              conditional: { html: organisationHtml }
+            }
+          ]
+        }) }}
+
+        {{ govukRadios({
+          idPrefix: "third-party-same-address",
+          name: "thirdPartySameAddress",
+          classes: "govuk-radios--inline",
+          fieldset: { legend: { text: "Do they have the same address as the customer?", classes: "govuk-fieldset__legend--s" } },
+          items: [
+            { value: "yes", text: "Yes", checked: data.thirdPartySameAddress == "yes" },
+            { value: "no", text: "No", checked: data.thirdPartySameAddress == "no", conditional: { html: addressHtml } }
+          ]
+        }) }}
+
+        {{ govukInput({ id: "third-party-telephone", name: "thirdPartyTelephone", label: { text: "Telephone (optional)", classes: "govuk-label--s" }, classes: "govuk-input--width-20", type: "tel", autocomplete: "tel", value: data.thirdPartyTelephone }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({ text: "Continue", type: "submit", preventDoubleClick: true }) }}
+          <a class="govuk-link js-clear-form" href="#">Clear this page</a>
         </div>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="contact-2" name="contact" type="radio" value="phone" data-aria-controls="conditional-contact-2">
-        <label class="govuk-label govuk-radios__label" for="contact-2">
-          No
-        </label>
-      </div>
-      <div class="govuk-radios__conditional govuk-radios__conditional--hidden" id="conditional-contact-2">
-        <div class="govuk-form-group">
-  <label class="govuk-label" for="full-name">
-    Surname
-  </label>
-  <input class="govuk-input" id="full-name" name="fullName" type="text" spellcheck="false" autocomplete="name">
-</div>
-
-<div class="govuk-form-group">
-  <label class="govuk-label" for="full-name">
-    Forenames
-  </label>
-  <input class="govuk-input" id="full-name" name="fullName" type="text" spellcheck="false" autocomplete="name">
-</div>
-
-<div class="govuk-form-group">
-  <label class="govuk-label" for="sort">
-    Title
-  </label>
-  <select class="govuk-select" id="sort" name="sort">
-    <option value="published">Ms</option>
-    <option value="updated" selected>Mr</option>
-    <option value="views">Miss</option>
-    <option value="comments">Mrs</option>
-  </select>
-</div>
-
-<div class="govuk-form-group">
-  <fieldset class="govuk-fieldset" aria-describedby="corporate-hint">
-  
-    <div class="govuk-checkboxes" data-module="govuk-checkboxes">
-      <div class="govuk-checkboxes__item">
-        <input class="govuk-checkboxes__input" id="same-address" name="same-address" type="checkbox" value="same-address">
-        <label class="govuk-label govuk-checkboxes__label" for="same-address">
-          Appointee has same address as customer
-        </label>
-      </div>
-    </div>
-  </fieldset>
-</div>
-      </div>
-      
-    </div>
-  </fieldset>
-</div>
-
-<!-- <div class="govuk-form-group">
-  <fieldset class="govuk-fieldset" aria-describedby="corporate-hint">
-  
-    <div class="govuk-checkboxes" data-module="govuk-checkboxes">
-      <div class="govuk-checkboxes__item">
-        <input class="govuk-checkboxes__input" id="corporate" name="corporate" type="checkbox" value="corporate-body">
-        <label class="govuk-label govuk-checkboxes__label" for="corporate">
-          Corporate body
-        </label>
-      </div>
-    </div>
-  </fieldset>
-</div> -->
-
-<fieldset class="govuk-fieldset">
-  <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
-    <h1 class="govuk-fieldset__heading">
-      Address
-    </h1>
-  </legend>
-
-  <div class="govuk-form-group">
-    <label class="govuk-label" for="address-line-1">
-      Address line 1
-    </label>
-    <input class="govuk-input" id="address-line-1" name="addressLine1" type="text" autocomplete="address-line1">
-  </div>
-  <div class="govuk-form-group">
-    <label class="govuk-label" for="address-line-2">
-      Address line 2 (optional)
-    </label>
-    <input class="govuk-input" id="address-line-2" name="addressLine2" type="text" autocomplete="address-line2">
-  </div>
-  <div class="govuk-form-group">
-    <label class="govuk-label" for="address-town">
-      Town or city
-    </label>
-    <input class="govuk-input govuk-!-width-two-thirds" id="address-town" name="addressTown" type="text" autocomplete="address-level2">
-  </div>
-  <div class="govuk-form-group">
-    <label class="govuk-label" for="address-postcode">
-      Postcode
-    </label>
-    <input class="govuk-input govuk-input--width-10" id="address-postcode" name="addressPostcode" type="text" autocomplete="postal-code">
-  </div>
-  <div class="govuk-form-group">
-    <label class="govuk-label" for="address-postcode">
-      Telephone
-    </label>
-    <input class="govuk-input govuk-input--width-10" id="telephone" name="telephone" type="text" autocomplete="telephone">
-  </div>
-</fieldset>
-
-       <div class="govuk-button-group">
-  <button type="submit" class="govuk-button" data-module="govuk-button">
-    Continue
-  </button>
-  <button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button">
-    Clear
-  </button>
-</div>
 
       </form>
 

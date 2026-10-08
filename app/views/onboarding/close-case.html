@@ -1,0 +1,66 @@
+{% extends "layouts/main.html" %}
+
+{#
+  NEW PAGE. Close case on the case overview comes here first.
+
+  In OpCalc today, closing a case asks "Save changes to this case?". Yes
+  keeps it in saved cases; No loses it. Lynn always says Yes, and she asked
+  whether a closed case could still be changed later. It can, as long as it
+  was saved, so this page keeps that question.
+#}
+
+{% block pageTitle %}
+  Do you want to save this case before closing it? – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/onboarding/landing-page",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/onboarding/case-overview"
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <form action="/close-case-answer" method="post" novalidate>
+
+        <span class="govuk-caption-l">{{ data.nino if data.nino else "AB 12 34 56 C" }}</span>
+
+        {{ govukRadios({
+          idPrefix: "save-before-closing",
+          name: "saveBeforeClosing",
+          fieldset: {
+            legend: {
+              text: "Do you want to save this case before closing it?",
+              isPageHeading: true,
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          items: [
+            { value: "yes", text: "Yes, save it", hint: { text: "It will stay in your saved cases so you can open it and make changes later" } },
+            { value: "no", text: "No, close without saving", hint: { text: "Anything you have done on this case since it was last saved will be lost" } }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({ text: "Close case", type: "submit" }) }}
+          <a class="govuk-link" href="/onboarding/case-overview">Cancel</a>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

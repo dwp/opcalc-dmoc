@@ -81,6 +81,7 @@
         }) }}
       {% endif %}
 
+      <span class="govuk-caption-l">Customer details</span>
       <h1 class="govuk-heading-l">Benefit details</h1>
 
       {# The benefit decides which A14 form Continue opens, so it is worth
@@ -115,6 +116,7 @@
         {{ govukDateInput({
           id: "discrepancy-from",
           namePrefix: "discrepancyFrom",
+          attributes: { "data-weekday": "true" },
           fieldset: {
             legend: {
               text: "From",
@@ -145,6 +147,7 @@
         {{ govukDateInput({
           id: "discrepancy-to",
           namePrefix: "discrepancyTo",
+          attributes: { "data-weekday": "true" },
           fieldset: {
             legend: {
               text: "To",
@@ -172,6 +175,11 @@
           ]
         }) }}
 
+        {# Lynn and David both use the weeks and days total as a check: a weekly
+           benefit should come out in whole weeks, so leftover days mean a date
+           is wrong. Filled in by application.js as the dates are typed. #}
+        <p class="govuk-body govuk-!-font-weight-bold opcalc-period-summary" data-period-from="discrepancy-from" data-period-to="discrepancy-to" aria-live="polite"></p>
+
         {# Set from the benefit when it was chosen, but still changeable. #}
         {{ govukSelect({
           id: "initial-benefit-week",
@@ -188,6 +196,23 @@
           ]
         }) }}
 
+        {# Entitlement start date only applies to benefit week ending cases, so
+           it sits under that answer. Lynn: choosing BWC greys it out in OpCalc
+           today, because benefit week ending only came in around 2010. #}
+        {% set entitlementHtml %}
+          {{ govukDateInput({
+            id: "entitlement-start",
+            namePrefix: "entitlementStart",
+            fieldset: { legend: { text: "Entitlement start date (optional)", classes: "govuk-fieldset__legend--s" } },
+            hint: { text: "Only if entitlement started after 30 September 2003. Most cases leave this blank." },
+            items: [
+              { name: "day", classes: "govuk-input--width-2", value: data["entitlementStart-day"] },
+              { name: "month", classes: "govuk-input--width-2", value: data["entitlementStart-month"] },
+              { name: "year", classes: "govuk-input--width-4", value: data["entitlementStart-year"] }
+            ]
+          }) }}
+        {% endset %}
+
         {{ govukRadios({
           idPrefix: "benefit-week-type",
           name: "benefitWeekType",
@@ -199,73 +224,26 @@
           },
           errorMessage: { text: weekTypeError[0].message } if weekTypeError[0] else false,
           items: [
-            { value: "BWE", text: "BWE (Benefit Week Ending)", checked: data.benefitWeekType == "BWE" },
-            { value: "BWC", text: "BWC (Benefit Week Commencing)", checked: data.benefitWeekType == "BWC" }
+            { value: "BWE", text: "Benefit week ending (BWE)", checked: data.benefitWeekType == "BWE", conditional: { html: entitlementHtml } },
+            { value: "BWC", text: "Benefit week commencing (BWC)", checked: data.benefitWeekType == "BWC" }
           ]
         }) }}
 
-        <div class="govuk-form-group">
-  <fieldset class="govuk-fieldset" role="group" aria-describedby="passport-issued-hint">
-    <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
-      <h1 class="govuk-fieldset__heading">
-        Entitlement start date
-      </h1>
-    </legend>
-    <div id="passport-issued-hint" class="govuk-hint">
-      If after 30/09/2003
-    </div>
-    <div class="govuk-date-input" id="passport-issued">
-      <div class="govuk-date-input__item">
-        <div class="govuk-form-group">
-          <label class="govuk-label govuk-date-input__label" for="passport-issued-day">
-            Day
-          </label>
-          <input class="govuk-input govuk-date-input__input govuk-input--width-2" id="passport-issued-day" name="passport-issued-day" type="text" inputmode="numeric">
-        </div>
-      </div>
-      <div class="govuk-date-input__item">
-        <div class="govuk-form-group">
-          <label class="govuk-label govuk-date-input__label" for="passport-issued-month">
-            Month
-          </label>
-          <input class="govuk-input govuk-date-input__input govuk-input--width-2" id="passport-issued-month" name="passport-issued-month" type="text" inputmode="numeric">
-        </div>
-      </div>
-      <div class="govuk-date-input__item">
-        <div class="govuk-form-group">
-          <label class="govuk-label govuk-date-input__label" for="passport-issued-year">
-            Year
-          </label>
-          <input class="govuk-input govuk-date-input__input govuk-input--width-4" id="passport-issued-year" name="passport-issued-year" type="text" inputmode="numeric">
-        </div>
-      </div>
-    </div>
-  </fieldset>
-</div>
-
-<div class="govuk-form-group">
-  <fieldset class="govuk-fieldset">
-    <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
-      <h2 class="govuk-fieldset__heading">
-        Is the date of claim prior to 06/04/2004?
-      </h2>
-    </legend>
-    <div class="govuk-radios govuk-radios--small govuk-radios--inline" data-module="govuk-radios">
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="changedName" name="changedName" type="radio" value="month">
-        <label class="govuk-label govuk-radios__label" for="changedName">
-          Yes
-        </label>
-      </div>
-      <div class="govuk-radios__item">
-        <input class="govuk-radios__input" id="changedName-2" name="changedName" type="radio" value="year">
-        <label class="govuk-label govuk-radios__label" for="changedName-2">
-          No
-        </label>
-      </div>
-    </div>
-  </fieldset>
-</div>
+        {# Only asked where it matters. No one we spoke to knew what it was for,
+           and it is always greyed out for Pension Credit. The IS/JSA A14 uses
+           it to decide whether the Dependants tab is available. #}
+        {% if data.benefit in ["IS", "IS-JSA", "JSA"] %}
+          {{ govukRadios({
+            idPrefix: "claim-before-2004",
+            name: "claimBefore2004",
+            classes: "govuk-radios--inline govuk-radios--small",
+            fieldset: { legend: { text: "Is the date of claim before 6 April 2004?", classes: "govuk-fieldset__legend--s" } },
+            items: [
+              { value: "yes", text: "Yes", checked: data.claimBefore2004 == "yes" },
+              { value: "no", text: "No", checked: data.claimBefore2004 == "no" }
+            ]
+          }) }}
+        {% endif %}
 
         {{ govukButton({
           text: "Continue",

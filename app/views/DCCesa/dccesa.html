@@ -100,7 +100,9 @@
         Diminishing capital calculation (Employment and Support Allowance)
       </h1>
 
-      <p class="govuk-body">{{ data.nino if data.nino else "AB 12 34 56 C" }}{{ " · " + data.benefitLabel if data.benefitLabel }} · DCC: 27/10/2008 to 16/07/2026</p>
+      {# Benefit removed from this line: Joanne already knows which benefit the
+         case is for, and Viktoria wanted less on the screen. #}
+      <p class="govuk-body">{{ data.nino if data.nino else "AB 12 34 56 C" }} · DCC: 27/10/2008 to 16/07/2026</p>
 
       <form action="/dccesa-action" method="post">
 
@@ -114,7 +116,7 @@
           {# dated values. The Actions column only exists once there is an    #}
           {# asset to act on.                                                  #}
           {% set assetHead = [
-            { text: "Name" }, { text: "Date" }, { text: "Value" }, { text: "C.S." }
+            { text: "Name" }, { text: "Date" }, { text: "Value" }, { text: "Customer share" }
           ] %}
 
           {% if data.esaAssets and data.esaAssets.length %}
@@ -482,11 +484,11 @@
 
           <h2 class="govuk-heading-m">Residential care periods</h2>
 
-          <p class="govuk-body govuk-hint">Every period recorded on this tab is treated as residential care, so there is nothing else to choose.</p>
+          <p class="govuk-body govuk-hint">Record any period where the customer was in residential care.</p>
 
           {# The Actions column only exists once there is a row to act on.    #}
           {% set headresCareHtml = [
-            { text: "From" }, { text: "To" }
+            { text: "From" }, { text: "To" }, { text: "Applies" }
           ] %}
 
           {% if data.esaResCare and data.esaResCare.length %}
@@ -497,7 +499,7 @@
 
           {% for row in data.esaResCare %}
             {% set _ = rowsresCareHtml.push([
-              { text: row.from }, { text: row.to },
+              { text: row.from }, { text: row.to }, { text: row.applies if row.applies else "" },
               { html: '<a class="govuk-link" href="/dccesa-edit-rescare?index=' + loop.index0 + '">Edit</a> | <a class="govuk-link" href="/dccesa-delete-rescare?index=' + loop.index0 + '">Delete</a>' }
             ]) %}
           {% endfor %}
@@ -505,7 +507,7 @@
           {{ govukTable({
             head: headresCareHtml,
             rows: rowsresCareHtml if rowsresCareHtml.length else [
-              [{ html: '<span class="govuk-hint">No periods recorded</span>' }, { text: "" }]
+              [{ html: '<span class="govuk-hint">No periods recorded</span>' }, { text: "" }, { text: "" }]
             ]
           }) }}
 
@@ -544,6 +546,23 @@
               ]
             }) }}
 
+
+            {# Joanne: OpCalc has a Residential care tick box here and she has to
+               tick it. It moves the point tariff income starts from £6,000
+               to £10,000 for that period. #}
+            {{ govukCheckboxes({
+              idPrefix: "esa-res-care-applies",
+              name: "esaResCareApplies",
+              items: [
+                {
+                  value: "Residential care",
+                  text: "Residential care",
+                  id: "esa-res-care-applies",
+                  checked: data.esaResCareApplies,
+                  hint: { text: "Tariff income starts at £10,000 of capital instead of £6,000 for this period" }
+                }
+              ]
+            }) }}
 
             {{ govukButton({
               text: "Save changes" if data.editResCare is defined and data.editResCare != "" else "Add period",
@@ -639,9 +658,6 @@
 
       </form>
 
-      <p>
-        <a href="#">Get help with the diminishing capital calculation</a>
-      </p>
 
     </div>
   </div>

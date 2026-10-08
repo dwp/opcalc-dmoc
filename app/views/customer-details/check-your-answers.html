@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-  Start page – OpCalc – GOV.UK Prototype Kit
+  Check your answers – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
@@ -42,85 +42,80 @@
 {% endblock %}
 
 {% block content %}
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds-from-desktop">
 
-      <h1 class="govuk-heading-xl">
-        Check your answers
-      </h1>
+{#
+  Check your answers.
+
+  Every user liked having this page. Lynn once did around 50 changes in a
+  calculation and printed it before noticing the National Insurance number
+  was wrong, so all of it had to be done again.
+
+  It used to show "Answer 1", "Answer 2" and "Answer 3". It now shows what
+  was actually entered, grouped the same way as the pages it came from, and
+  each Change link goes back to the right page.
+#}
+
+{% macro dateText(prefix) -%}
+  {%- if data[prefix + "-day"] and data[prefix + "-month"] and data[prefix + "-year"] -%}
+    {%- set d = data[prefix + "-day"] | string -%}{%- set m = data[prefix + "-month"] | string -%}
+    {{- ("0" + d) if d | length == 1 else d }}/{{ ("0" + m) if m | length == 1 else m }}/{{ data[prefix + "-year"] -}}
+  {%- else -%}Not given{%- endif -%}
+{%- endmacro %}
+
+{% set notGiven = "Not given" %}
+
+{% set customerAddress = [data.addressLine1, data.addressLine2, data.addressTown, data.addressPostcode] | select | join(", ") %}
+
+
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h1 class="govuk-heading-l">Check your answers before creating the case</h1>
+
+      <h2 class="govuk-heading-m">Personal details</h2>
 
       {{ govukSummaryList({
         rows: [
-          {
-            key: {
-              text: "Personal details"
-            },
-            value: {
-              text: "Answer 1"
-            },
-            actions: {
-              items: [
-                {
-                  href: "/customer-details/personal-details",
-                  text: "Change",
-                  visuallyHiddenText: "Question 1"
-                }
-              ]
-            }
-          }
-          ,
-          {
-            key: {
-              text: "Appointee or other details"
-            },
-            value: {
-              text: "Answer 2"
-            },
-            actions: {
-              items: [
-                {
-                  href: "/customer-details/appointee-other-details",
-                  text: "Change",
-                  visuallyHiddenText: "Question 2"
-                }
-              ]
-            }
-          }
-          ,
-          {
-            key: {
-              text: "Benefits details"
-            },
-            value: {
-              text: "Answer 3"
-            },
-            actions: {
-              items: [
-                {
-                  href: "/customer-details/benefit-details",
-                  text: "Change",
-                  visuallyHiddenText: "Question 3"
-                }
-              ]
-            }
-          }
+          { key: { text: "Third party acting for the customer" }, value: { text: "Yes" if data.thirdParty == "yes" else ("No" if data.thirdParty == "no" else notGiven) }, actions: { items: [{ href: "/customer-details/personal-details#third-party", text: "Change", visuallyHiddenText: "whether there is a third party" }] } },
+          { key: { text: "National Insurance number" }, value: { text: data.nino if data.nino else notGiven }, actions: { items: [{ href: "/customer-details/personal-details#nino", text: "Change", visuallyHiddenText: "National Insurance number" }] } },
+          { key: { text: "Date of birth" }, value: { text: dateText("dateOfBirth") | trim }, actions: { items: [{ href: "/customer-details/personal-details#date-of-birth-day", text: "Change", visuallyHiddenText: "date of birth" }] } },
+          { key: { text: "Name" }, value: { text: ([data.title, data.firstName, data.surname] | select | join(" ")) if data.surname else notGiven }, actions: { items: [{ href: "/customer-details/personal-details#surname", text: "Change", visuallyHiddenText: "name" }] } },
+          { key: { text: "Sex" }, value: { text: data.sex if data.sex else notGiven }, actions: { items: [{ href: "/customer-details/personal-details#sex", text: "Change", visuallyHiddenText: "sex" }] } },
+          { key: { text: "Address" }, value: { text: customerAddress if customerAddress else notGiven }, actions: { items: [{ href: "/customer-details/personal-details#address-line-1", text: "Change", visuallyHiddenText: "address" }] } }
         ]
       }) }}
 
-      <!-- <h2 class="govuk-heading-m">
-        Now confirm your answers
-      </h2> -->
+      {% if data.thirdParty == "yes" %}
+        <h2 class="govuk-heading-m">Third party details</h2>
 
-      <!-- <p>
-        You are confirming that, to the best of your knowledge, the details you are providing are correct.
-      </p> -->
+        {% set thirdPartyName = data.thirdPartyOrganisation if data.thirdPartyType == "corporate" else ([data.thirdPartyTitle, data.thirdPartyForenames, data.thirdPartySurname] | select | join(" ")) %}
+
+        {{ govukSummaryList({
+          rows: [
+            { key: { text: "Type" }, value: { text: "Organisation (corporate acting body)" if data.thirdPartyType == "corporate" else ("Person (personal acting body)" if data.thirdPartyType == "personal" else notGiven) }, actions: { items: [{ href: "/customer-details/appointee-other-details", text: "Change", visuallyHiddenText: "type of third party" }] } },
+            { key: { text: "Name" }, value: { text: thirdPartyName if (data.thirdPartySurname or data.thirdPartyOrganisation) else notGiven }, actions: { items: [{ href: "/customer-details/appointee-other-details", text: "Change", visuallyHiddenText: "third party name" }] } },
+            { key: { text: "Address" }, value: { text: "Same as the customer" if data.thirdPartySameAddress == "yes" else ([data.thirdPartyAddressLine1, data.thirdPartyAddressLine2, data.thirdPartyTown, data.thirdPartyPostcode] | select | join(", ") or notGiven) }, actions: { items: [{ href: "/customer-details/appointee-other-details", text: "Change", visuallyHiddenText: "third party address" }] } }
+          ]
+        }) }}
+      {% endif %}
+
+      <h2 class="govuk-heading-m">Benefit details</h2>
+
+      {{ govukSummaryList({
+        rows: [
+          { key: { text: "Benefit" }, value: { text: data.benefitLabel if data.benefitLabel else notGiven }, actions: { items: [{ href: "/customer-details/select-benefit", text: "Change", visuallyHiddenText: "benefit" }] } },
+          { key: { text: "Discrepancy period" }, value: { text: (dateText("discrepancyFrom") | trim) + " to " + (dateText("discrepancyTo") | trim) }, actions: { items: [{ href: "/customer-details/benefits-details#discrepancy-from-day", text: "Change", visuallyHiddenText: "discrepancy period" }] } },
+          { key: { text: "Initial benefit week" }, value: { text: ((data.initialBenefitWeek if data.initialBenefitWeek else notGiven) + (", " + data.benefitWeekType if data.benefitWeekType else "")) }, actions: { items: [{ href: "/customer-details/benefits-details#initial-benefit-week", text: "Change", visuallyHiddenText: "initial benefit week" }] } }
+        ]
+      }) }}
 
       <form action="/onboarding/case-overview-confirmation" method="post" novalidate>
-
         {{ govukButton({
-          text: "Confirm and create case"
+          text: "Confirm and create case",
+          type: "submit",
+          preventDoubleClick: true
         }) }}
-
       </form>
 
     </div>

@@ -37,7 +37,7 @@
 {% block containerStart %}
   {{ govukBackLink({
     text: "Back",
-    href: "/deleteacase"
+    href: "/onboarding/landing-page"
   }) }}
 {% endblock %}
 
@@ -47,7 +47,7 @@
     <div class="govuk-grid-column-two-thirds">
 
       <h1 class="govuk-heading-l">
-        Do you wish to delete the selected item?
+        Are you sure you want to delete this case?
       </h1>
 
       {{ govukWarningText({
@@ -55,7 +55,7 @@
         iconFallbackText: "Warning"
       }) }}
 
-      <form action="/onboarding/landing-page" method="post">
+      <form action="/case-delete" method="post">
 
         <div class="govuk-button-group">
           {{ govukButton({

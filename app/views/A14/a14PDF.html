@@ -95,7 +95,7 @@
           rows: [
             { key: { text: "NINO" }, value: { text: data.nino if data.nino else "AB 12 34 56 C" } },
             { key: { text: "Name" }, value: { text: "Mr Max Martin" } },
-            { key: { text: "Printed on" }, value: { text: "6 August 2026" } }
+            { key: { text: "Printed on" }, value: { text: "" | todayDate } }
           ]
         }) }}
 
@@ -113,6 +113,18 @@
             { key: { text: "Applicable amount" }, value: { text: "£124.05" } },
             { key: { text: "Less weekly income" }, value: { text: "£0.00" } },
             { key: { text: "Weekly total" }, value: { text: "£124.05" } }
+          ]
+        }) }}
+
+        {# On every A14. David: "we've got to go through putting a name and
+           date at the bottom of each of the assessments before we upload it,
+           and that's for appeals purposes." The name comes from the print
+           page. #}
+        {{ govukSummaryList({
+          classes: "govuk-summary-list--no-border govuk-body-s opcalc-pdf__signoff",
+          rows: [
+            { key: { text: "Completed by" }, value: { text: data.officerName if data.officerName else "Not given" } },
+            { key: { text: "Date completed" }, value: { text: "" | todayDate } }
           ]
         }) }}
 

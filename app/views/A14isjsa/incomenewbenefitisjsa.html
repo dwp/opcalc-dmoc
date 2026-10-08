@@ -59,6 +59,18 @@
 
         <p class="govuk-body">Record a benefit the customer or their partner received.</p>
 
+        {# Same as the Pension Credit form: users type the benefit number. #}
+        {{ govukInput({
+          id: "benefit-type-code",
+          name: "benefitTypeCode",
+          classes: "govuk-input--width-3",
+          inputmode: "numeric",
+          label: { text: "Benefit type number" },
+          hint: { text: "For example, 15 for State Pension. If you do not know it, choose the benefit from the list instead." },
+          attributes: { "data-code-lookup": "benefit-name" },
+          value: data.benefitTypeCode
+        }) }}
+
         {{ govukSelect({
           id: "benefit-name",
           name: "benefitName",
@@ -77,7 +89,7 @@
             { value: "Maternity Allowance", text: "Maternity Allowance", selected: data.benefitName == "Maternity Allowance" },
             { value: "Pension Credit", text: "Pension Credit", selected: data.benefitName == "Pension Credit" },
             { value: "Severe Disablement Allowance", text: "Severe Disablement Allowance", selected: data.benefitName == "Severe Disablement Allowance" },
-            { value: "State Pension", text: "State Pension", selected: data.benefitName == "State Pension" }
+            { value: "State Pension", text: "State Pension", selected: data.benefitName == "State Pension", attributes: { "data-code": "15" } }
           ]
         }) }}
 
@@ -167,9 +179,6 @@
 
       </form>
 
-      <p>
-        <a href="#">Get help with benefit details</a>
-      </p>
 
     </div>
   </div>

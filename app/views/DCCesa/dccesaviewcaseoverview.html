@@ -80,10 +80,9 @@
         ]
       }) }}
 
-      {{ govukWarningText({
-        text: "The original report was blurred in the screenshot, so the columns above are taken from the IS/JSA version. Confirm the real PC/ISPC column set before this goes into testing.",
-        iconFallbackText: "Warning"
-      }) }}
+      {# A note for the design team ("the original report was blurred in the
+         screenshot...") was showing to users. Removed. The column set still
+         needs confirming for PC/ISPC. #}
 
       <ul class="govuk-list">
         <li><a class="govuk-link" href="/dccPDF">Print PDF</a></li>
