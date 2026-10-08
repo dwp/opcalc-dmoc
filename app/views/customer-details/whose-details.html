@@ -1,0 +1,94 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  {{ "Error: " if data.whoseDetailsError }}Whose details are you entering? – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "javascript:window.history.back()"
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+{#
+  Whose details are you entering? New first screen of a new case
+  (meeting with Viktoria, 8 Oct 2026).
+
+  In the old OpCalc, ticking "Third party" on personal details means the
+  details typed there are the third party's own, so the "Appointee or
+  other details" screen does not apply and is greyed out. Asking this on
+  its own screen first means:
+  - the next page can say whose details it wants, so nobody types the
+    customer's details into a third party's page or the other way round
+  - The customer's   - personal details, then the optional appointee page
+  - A third party's  - personal details, then straight to the benefit
+#}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      {% if data.whoseDetailsError %}
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: [{ text: "Select whose details you are entering", href: "#details-for" }]
+        }) }}
+      {% endif %}
+
+      <form action="/whose-details-continue" method="post" novalidate>
+
+        <span class="govuk-caption-l">Customer details</span>
+        {{ govukRadios({
+          idPrefix: "details-for",
+          name: "detailsFor",
+          fieldset: {
+            legend: { text: "Are you entering details for the customer or a third party?", isPageHeading: true, classes: "govuk-fieldset__legend--l" }
+          },
+          hint: { text: "A third party acts for the customer, such as an appointee, someone with power of attorney or an organisation." },
+          errorMessage: { text: "Select whose details you are entering" } if data.whoseDetailsError else false,
+          items: [
+            { value: "customer", text: "The customer", checked: data.detailsFor == "customer" },
+            { value: "thirdParty", text: "A third party", checked: data.detailsFor == "thirdParty" }
+          ]
+        }) }}
+
+        {{ govukButton({ text: "Continue", type: "submit", preventDoubleClick: true }) }}
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

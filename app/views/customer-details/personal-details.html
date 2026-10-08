@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-  Personal details – OpCalc – GOV.UK Prototype Kit
+  {{ "Error: " if data.personalDetailsErrors }}{{ "Third party's details" if data.detailsFor == "thirdParty" else "Customer's details" }} – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
@@ -47,51 +47,45 @@
   Personal details.
 
   Changes after user research (Oct 2026):
-  - The third party question is first and says what a third party is
-    (Emma's content review). Yes goes to third party details, No skips
-    that page. Lynn has never filled in appointee details because they do
-    not show on the A14 panels, and being sent through the page every time
-    slowed her down. CHECK with Viktoria that this matches what the legacy
-    Third party checkbox did.
   - Every field has its own name. Surname and Forenames were both saved as
-    "fullName", and Title and Sex were both saved as "sort", so the second
-    answer overwrote the first. The names now match what the case overview
-    and check your answers pages read (nino, surname, firstName).
-  - Address and telephone are optional. David never fills them in and types
-    A11AA just to get past the postcode, because the address is not used
-    anywhere in the calculation.
-  - Clear was a submit button, so pressing it went to the next page. Nobody
-    we spoke to has used it, so it is now a link that empties the page.
-  - Only one h1 on the page. The legends were each marked up as an h1.
+    "fullName", and Title and Sex were both saved as "sort".
+
+  Changes after the design clinic (6 Oct 2026):
+  - No Clear link (Steven Killen, Ross Brown, Joanne, Lynn).
+
+  Changes after the meeting with Viktoria (8 Oct 2026):
+  - "Whose details?" is now its own screen before this one. The heading
+    here says whose details to type: "Customer's details" or "Third
+    party's details", so it is clear the boxes below are the third party's.
+  - No hint text anywhere on the page.
+  - Every box is optional apart from the postcode. Continue with no
+    postcode shows an error.
+    NOTE: David types a made up postcode today just to get past this
+    (session 2, 45:03). Worth checking why the postcode is needed.
 #}
+
+{% set isThirdParty = data.detailsFor == "thirdParty" %}
+{% set postcodeError = data.personalDetailsErrors and data.personalDetailsErrors.postcode %}
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
 
+      {% if postcodeError %}
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: [{ text: postcodeError, href: "#address-postcode" }]
+        }) }}
+      {% endif %}
+
       <span class="govuk-caption-l">Customer details</span>
-      <h1 class="govuk-heading-l">Personal details</h1>
+      <h1 class="govuk-heading-l">{{ "Third party's details" if isThirdParty else "Customer's details" }}</h1>
 
       <form class="form" action="/personal-details-continue" method="post" novalidate>
-
-        {{ govukRadios({
-          idPrefix: "third-party",
-          name: "thirdParty",
-          classes: "govuk-radios--inline",
-          fieldset: {
-            legend: { text: "Does the customer have a third party acting for them?", classes: "govuk-fieldset__legend--s" }
-          },
-          hint: { text: "For example, an appointee, someone with power of attorney, or a corporate acting body such as a local council" },
-          items: [
-            { value: "yes", text: "Yes", checked: data.thirdParty == "yes" },
-            { value: "no", text: "No", checked: data.thirdParty == "no" }
-          ]
-        }) }}
 
         {{ govukInput({
           id: "nino",
           name: "nino",
           label: { text: "National Insurance number", classes: "govuk-label--s" },
-          hint: { text: "For example, QQ 12 34 56 C" },
           classes: "govuk-input--width-10 govuk-input--extra-letter-spacing",
           spellcheck: false,
           value: data.nino
@@ -101,7 +95,6 @@
           id: "date-of-birth",
           namePrefix: "dateOfBirth",
           fieldset: { legend: { text: "Date of birth", classes: "govuk-fieldset__legend--s" } },
-          hint: { text: "For example, 27 3 1950" },
           items: [
             { name: "day", classes: "govuk-input--width-2", value: data["dateOfBirth-day"] },
             { name: "month", classes: "govuk-input--width-2", value: data["dateOfBirth-month"] },
@@ -153,17 +146,16 @@
           ]
         }) }}
 
-        <h2 class="govuk-heading-m">Address (optional)</h2>
+        <h2 class="govuk-heading-m">Address</h2>
 
         {{ govukInput({ id: "address-line-1", name: "addressLine1", label: { text: "Address line 1" }, autocomplete: "address-line1", value: data.addressLine1 }) }}
         {{ govukInput({ id: "address-line-2", name: "addressLine2", label: { text: "Address line 2" }, autocomplete: "address-line2", value: data.addressLine2 }) }}
         {{ govukInput({ id: "address-town", name: "addressTown", label: { text: "Town or city" }, classes: "govuk-!-width-two-thirds", autocomplete: "address-level2", value: data.addressTown }) }}
-        {{ govukInput({ id: "address-postcode", name: "addressPostcode", label: { text: "Postcode" }, classes: "govuk-input--width-10", autocomplete: "postal-code", value: data.addressPostcode }) }}
-        {{ govukInput({ id: "telephone", name: "telephone", label: { text: "Telephone (optional)" }, classes: "govuk-input--width-20", type: "tel", autocomplete: "tel", value: data.telephone }) }}
+        {{ govukInput({ id: "address-postcode", name: "addressPostcode", label: { text: "Postcode" }, classes: "govuk-input--width-10", autocomplete: "postal-code", value: data.addressPostcode, errorMessage: { text: postcodeError } if postcodeError else false }) }}
+        {{ govukInput({ id: "telephone", name: "telephone", label: { text: "Telephone" }, classes: "govuk-input--width-20", type: "tel", autocomplete: "tel", value: data.telephone }) }}
 
         <div class="govuk-button-group">
           {{ govukButton({ text: "Continue", type: "submit", preventDoubleClick: true }) }}
-          <a class="govuk-link js-clear-form" href="#">Clear this page</a>
         </div>
 
       </form>

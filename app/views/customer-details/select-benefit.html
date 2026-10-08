@@ -8,9 +8,8 @@
 {# and which DCC open later, so these codes must match the benefits object   #}
 {# at the top of the A14 section in routes.js.                               #}
 {#                                                                           #}
-{# available: false greys the option out. Only the three benefits with an    #}
-{# A14 form built are selectable. To turn one on, set it to true here and    #}
-{# set available: true against the same code in routes.js.                   #}
+{# Every benefit can be chosen (meeting with Viktoria, 8 Oct 2026). routes.js #}
+{# explains, if the A14 forms are opened for one that has no form yet.       #}
 
 {% set benefits = [
   { value: "AA",      text: "Attendance Allowance (AA)",                     available: true },
@@ -35,16 +34,41 @@
   { value: "WP",      text: "Widow’s Pension (WP)",                          available: true }
 ] %}
 
-{% set benefitItems = [] %}
+{% set benefitItems = [{ value: "", text: "" }] %}
 
 {% for benefit in benefits %}
   {% set _ = benefitItems.push({
     value: benefit.value,
     text: benefit.text,
-    checked: data.benefit == benefit.value,
-    disabled: not benefit.available
+    selected: data.benefit == benefit.value
   }) %}
 {% endfor %}
+
+{% block stylesheets %}
+  {{ super() }}
+  <link rel="stylesheet" href="/public/javascripts/vendor/accessible-autocomplete.min.css">
+{% endblock %}
+
+{% block pageScripts %}
+  <script src="/public/javascripts/vendor/accessible-autocomplete.min.js"></script>
+  <script>
+    // Turn the list into a type ahead box. Type "jobs" and only the matching
+    // benefits show. Pressing the arrow or clicking the box shows them all,
+    // so any benefit can still be picked by scrolling. Without JavaScript the
+    // plain list still works.
+    (function () {
+      var select = document.getElementById('benefit')
+      if (!select || !window.accessibleAutocomplete) { return }
+      window.accessibleAutocomplete.enhanceSelectElement({
+        selectElement: select,
+        defaultValue: '',
+        showAllValues: true,
+        dropdownArrow: function () { return '<svg class="autocomplete__dropdown-arrow-down" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M256,298.3L256,298.3L256,298.3l174.2-167.2c4.3-4.2,11.4-4.1,15.8,0.2l30.6,29.9c4.4,4.3,4.5,11.3,0.2,15.5L264.1,380.9  c-2.2,2.2-5.2,3.2-8.1,3c-3,0.1-5.9-0.9-8.1-3L35.2,176.7c-4.3-4.2-4.2-11.2,0.2-15.5L66,131.3c4.4-4.3,11.5-4.4,15.8-0.2L256,298.3  z"/></svg>' },
+        tNoResults: function () { return 'No benefits match. Try fewer letters.' }
+      })
+    })()
+  </script>
+{% endblock %}
 
 {% block pageTitle %}
   {{ "Error: " if data.benefitError }}Which benefit is this case for? – OpCalc – GOV.UK Prototype Kit
@@ -104,30 +128,30 @@
         }) }}
       {% endif %}
 
-      {# The question is the only thing on the page, so the legend is the
-         heading rather than sitting above one. #}
+      {# Design clinic (6 Oct 2026): 20 radio buttons made a long, tiring page
+         (Ross Brown, Steven Killen). After the meeting with Viktoria (8 Oct
+         2026) this is a type ahead box, as Emma Cuthbert suggested. It is
+         the GOV.UK accessible autocomplete, built on a plain list, so it
+         avoids the dropdown jumping to the wrong benefit that Lynn
+         described: you type part of the name and pick from what matches. #}
       <form action="/select-benefit-continue" method="post" novalidate>
 
-        {{ govukRadios({
-          idPrefix: "benefit",
+        <span class="govuk-caption-l">Customer details</span>
+        {{ govukSelect({
+          id: "benefit",
           name: "benefit",
-          fieldset: {
-            legend: {
-              text: "Which benefit is this case for?",
-              isPageHeading: true,
-              classes: "govuk-fieldset__legend--l"
-            }
+          label: {
+            text: "Which benefit is this case for?",
+            isPageHeading: true,
+            classes: "govuk-label--l"
           },
           hint: {
-            text: "This sets the tabs, calculations and forms available for the rest of the case."
+            text: "Start typing the benefit name, then choose it from the list. This sets the tabs, calculations and forms for the rest of the case."
           },
           errorMessage: { text: data.benefitError } if data.benefitError else false,
           items: benefitItems
         }) }}
 
-        {# No href here. A button with an href becomes a plain link and skips
-           the form, so the chosen benefit would never be saved. routes.js
-           decides where to go next after saving it. #}
         {{ govukButton({
           text: "Continue",
           type: "submit",

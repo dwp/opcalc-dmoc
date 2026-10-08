@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-  Third party details – OpCalc – GOV.UK Prototype Kit
+  Appointee or other details – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
@@ -44,103 +44,103 @@
 {% block content %}
 
 {#
-  Third party details (was "Appointee or Other Details").
+  Appointee or other details.
 
-  Only reached when "Does the customer have a third party acting for
-  them?" is Yes on personal details.
+  Only shown when "Whose details are you entering?" is "The customer's" on
+  personal details. If the third party's own details were entered there,
+  this screen does not apply and is skipped, as in the old OpCalc where it
+  is greyed out.
 
-  Changes after user research (Oct 2026):
-  - Heading is "Third party details" and the first question asks which
-    kind of third party, with two choices instead of "Is it a Corporate
-    Body?" Yes / No (Emma's content review). Lynn's team describes these as
-    a power of attorney or appointee (a personal acting body) or a
-    corporate acting body.
-  - Each choice reveals only the fields it needs. A corporate acting body
-    has one name; a person has surname, forenames and title.
-  - The address only shows when the third party does not live with the
-    customer.
-  - Fields have their own names. Surname and Forenames were both "fullName"
-    and the organisation name was an email field.
-  - Clear is a link that empties the page instead of a second submit
-    button.
+  Everything here is optional. Most of the time nobody acts for the
+  customer, so the answer is No and you press Continue.
+
+  Changes after the design clinic (6 Oct 2026):
+  - Back to the old name, "Appointee or other details", because "third
+    party" now means something else (see personal details).
+  - One question with three answers instead of "Is it a Corporate Body?"
+    Yes or No. Emma Cuthbert explained the two kinds: a personal acting
+    body is a person, such as a parent or partner, who may well live with
+    the customer; a corporate acting body is an organisation, such as a
+    firm of solicitors or a care home.
+  - "Lives at the same address as the customer" only appears for a person.
+    In the old OpCalc that checkbox disappears for a corporate body, which
+    always needs its address typed in.
+  - Normal size radios, not small ones (Ross Brown).
+  - No Clear link (Steven Killen, Ross Brown).
 #}
 
   {% set personHtml %}
-    {{ govukInput({ id: "third-party-surname", name: "thirdPartySurname", label: { text: "Surname" }, classes: "govuk-!-width-two-thirds", spellcheck: false, value: data.thirdPartySurname }) }}
-    {{ govukInput({ id: "third-party-forenames", name: "thirdPartyForenames", label: { text: "Forenames" }, classes: "govuk-!-width-two-thirds", spellcheck: false, value: data.thirdPartyForenames }) }}
+    {{ govukInput({ id: "appointee-surname", name: "appointeeSurname", label: { text: "Surname" }, classes: "govuk-!-width-two-thirds", spellcheck: false, value: data.appointeeSurname }) }}
+    {{ govukInput({ id: "appointee-forenames", name: "appointeeForenames", label: { text: "Forenames" }, classes: "govuk-!-width-two-thirds", spellcheck: false, value: data.appointeeForenames }) }}
     {{ govukSelect({
-      id: "third-party-title",
-      name: "thirdPartyTitle",
+      id: "appointee-title",
+      name: "appointeeTitle",
       label: { text: "Title" },
       items: [
-        { value: "Mr", text: "Mr", selected: data.thirdPartyTitle == "Mr" or not data.thirdPartyTitle },
-        { value: "Mrs", text: "Mrs", selected: data.thirdPartyTitle == "Mrs" },
-        { value: "Miss", text: "Miss", selected: data.thirdPartyTitle == "Miss" },
-        { value: "Ms", text: "Ms", selected: data.thirdPartyTitle == "Ms" },
-        { value: "Dr", text: "Dr", selected: data.thirdPartyTitle == "Dr" }
+        { value: "Mr", text: "Mr", selected: data.appointeeTitle == "Mr" or not data.appointeeTitle },
+        { value: "Mrs", text: "Mrs", selected: data.appointeeTitle == "Mrs" },
+        { value: "Miss", text: "Miss", selected: data.appointeeTitle == "Miss" },
+        { value: "Ms", text: "Ms", selected: data.appointeeTitle == "Ms" },
+        { value: "Dr", text: "Dr", selected: data.appointeeTitle == "Dr" }
       ]
     }) }}
+    {{ govukCheckboxes({
+      idPrefix: "appointee-same-address",
+      name: "appointeeSameAddress",
+      items: [{ value: "yes", text: "Lives at the same address as the customer", checked: data.appointeeSameAddress == "yes" or (data.appointeeSameAddress and "yes" in data.appointeeSameAddress) }]
+    }) }}
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-2">Their address</p>
+    <div class="govuk-hint">Leave blank if they live at the same address as the customer</div>
+    {{ govukInput({ id: "appointee-address-line-1", name: "appointeeAddressLine1", label: { text: "Address line 1" }, autocomplete: "address-line1", value: data.appointeeAddressLine1 }) }}
+    {{ govukInput({ id: "appointee-address-line-2", name: "appointeeAddressLine2", label: { text: "Address line 2 (optional)" }, autocomplete: "address-line2", value: data.appointeeAddressLine2 }) }}
+    {{ govukInput({ id: "appointee-town", name: "appointeeTown", label: { text: "Town or city" }, classes: "govuk-!-width-two-thirds", autocomplete: "address-level2", value: data.appointeeTown }) }}
+    {{ govukInput({ id: "appointee-postcode", name: "appointeePostcode", label: { text: "Postcode" }, classes: "govuk-input--width-10", autocomplete: "postal-code", value: data.appointeePostcode }) }}
+    {{ govukInput({ id: "appointee-telephone", name: "appointeeTelephone", label: { text: "Telephone (optional)" }, classes: "govuk-input--width-20", type: "tel", value: data.appointeeTelephone }) }}
   {% endset %}
 
   {% set organisationHtml %}
-    {{ govukInput({ id: "third-party-organisation", name: "thirdPartyOrganisation", label: { text: "Name of the organisation" }, hint: { text: "For example, Sunderland City Council" }, spellcheck: false, value: data.thirdPartyOrganisation }) }}
-  {% endset %}
-
-  {% set addressHtml %}
-    {{ govukInput({ id: "third-party-address-line-1", name: "thirdPartyAddressLine1", label: { text: "Address line 1" }, autocomplete: "address-line1", value: data.thirdPartyAddressLine1 }) }}
-    {{ govukInput({ id: "third-party-address-line-2", name: "thirdPartyAddressLine2", label: { text: "Address line 2 (optional)" }, autocomplete: "address-line2", value: data.thirdPartyAddressLine2 }) }}
-    {{ govukInput({ id: "third-party-town", name: "thirdPartyTown", label: { text: "Town or city" }, classes: "govuk-!-width-two-thirds", autocomplete: "address-level2", value: data.thirdPartyTown }) }}
-    {{ govukInput({ id: "third-party-postcode", name: "thirdPartyPostcode", label: { text: "Postcode" }, classes: "govuk-input--width-10", autocomplete: "postal-code", value: data.thirdPartyPostcode }) }}
+    {{ govukInput({ id: "organisation-name", name: "organisationName", label: { text: "Name of the organisation" }, hint: { text: "For example, a firm of solicitors or a care home" }, spellcheck: false, value: data.organisationName }) }}
+    {{ govukInput({ id: "organisation-address-line-1", name: "organisationAddressLine1", label: { text: "Address line 1" }, value: data.organisationAddressLine1 }) }}
+    {{ govukInput({ id: "organisation-address-line-2", name: "organisationAddressLine2", label: { text: "Address line 2 (optional)" }, value: data.organisationAddressLine2 }) }}
+    {{ govukInput({ id: "organisation-town", name: "organisationTown", label: { text: "Town or city" }, classes: "govuk-!-width-two-thirds", value: data.organisationTown }) }}
+    {{ govukInput({ id: "organisation-postcode", name: "organisationPostcode", label: { text: "Postcode" }, classes: "govuk-input--width-10", value: data.organisationPostcode }) }}
+    {{ govukInput({ id: "organisation-telephone", name: "organisationTelephone", label: { text: "Telephone (optional)" }, classes: "govuk-input--width-20", type: "tel", value: data.organisationTelephone }) }}
   {% endset %}
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
 
-      <span class="govuk-caption-l">Customer details</span>
-      <h1 class="govuk-heading-l">Third party details</h1>
-
       <form class="form" action="/customer-details/select-benefit" method="post" novalidate>
 
+        <span class="govuk-caption-l">Customer details</span>
         {{ govukRadios({
-          idPrefix: "third-party-type",
-          name: "thirdPartyType",
+          idPrefix: "appointee-type",
+          name: "appointeeType",
           fieldset: {
-            legend: { text: "Who is acting for the customer?", classes: "govuk-fieldset__legend--m" }
+            legend: { text: "Does anyone act for the customer?", isPageHeading: true, classes: "govuk-fieldset__legend--l" }
           },
+          hint: { text: "This page is optional. If nobody acts for the customer, choose No or just press Continue." },
           items: [
+            { value: "none", text: "No", checked: data.appointeeType == "none" },
             {
               value: "personal",
-              text: "A person (personal acting body)",
+              text: "Yes, a person (personal acting body)",
               hint: { text: "For example, an appointee or someone with power of attorney" },
-              checked: data.thirdPartyType == "personal",
+              checked: data.appointeeType == "personal",
               conditional: { html: personHtml }
             },
             {
               value: "corporate",
-              text: "An organisation (corporate acting body)",
-              hint: { text: "For example, a local council or a care home" },
-              checked: data.thirdPartyType == "corporate",
+              text: "Yes, an organisation (corporate acting body)",
+              hint: { text: "For example, a firm of solicitors or a care home" },
+              checked: data.appointeeType == "corporate",
               conditional: { html: organisationHtml }
             }
           ]
         }) }}
 
-        {{ govukRadios({
-          idPrefix: "third-party-same-address",
-          name: "thirdPartySameAddress",
-          classes: "govuk-radios--inline",
-          fieldset: { legend: { text: "Do they have the same address as the customer?", classes: "govuk-fieldset__legend--s" } },
-          items: [
-            { value: "yes", text: "Yes", checked: data.thirdPartySameAddress == "yes" },
-            { value: "no", text: "No", checked: data.thirdPartySameAddress == "no", conditional: { html: addressHtml } }
-          ]
-        }) }}
-
-        {{ govukInput({ id: "third-party-telephone", name: "thirdPartyTelephone", label: { text: "Telephone (optional)", classes: "govuk-label--s" }, classes: "govuk-input--width-20", type: "tel", autocomplete: "tel", value: data.thirdPartyTelephone }) }}
-
         <div class="govuk-button-group">
           {{ govukButton({ text: "Continue", type: "submit", preventDoubleClick: true }) }}
-          <a class="govuk-link js-clear-form" href="#">Clear this page</a>
         </div>
 
       </form>

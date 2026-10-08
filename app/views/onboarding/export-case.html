@@ -48,88 +48,78 @@
 
   Changes after user research (Oct 2026):
   - You can tick several cases and export them in one go. David exports in
-    a batch every week or two by Ctrl-clicking a list of cases.
-  - Each saved calculation is its own row. Today, when one National
-    Insurance number holds several calculations, OpCalc asks which one to
-    export and David has to go back in for each of the others. Listing them
-    separately means they can all be ticked at once.
-  - "Export to another office" now says what it is for. None of the three
-    users had ever used it. The wording needs checking with Viktoria.
-  - Fixed the class typo on the links, the page title, and the checkbox
-    that was named "waste" with the value "carcasses" (left over from the
-    GOV.UK example).
+    a batch every week or two by Ctrl clicking a list of cases.
+  - Each saved calculation is listed on its own, so they can all be ticked
+    at once instead of OpCalc asking about each one in turn.
+
+  Changes after the design clinic (6 Oct 2026):
+  - Plain checkboxes instead of checkboxes inside a table. Tables are for
+    comparing information, not for choosing (Ross Brown).
+  - A link can tick a case before the page opens, with ?exportCase= and the
+    row number. After the 8 Oct meeting, Export moved back under More
+    actions on Your cases, so nothing uses this yet.
+  - "Export to another office" is a yes or no question, as Viktoria had it
+    in her second version, instead of an easily missed checkbox.
+  - No benefit, to match Your cases.
 #}
 
 {% set exportRows = [
-  { nino: "AB 12 34 56 C", benefit: "Income Support", period: "10/07/2015 to 16/07/2026" },
-  { nino: "CD 12 34 56 C", benefit: "Pension Credit", period: "01/04/2023 to 04/11/2025" },
-  { nino: "CD 12 34 56 C", benefit: "Pension Credit", period: "05/11/2025 to 16/07/2026" },
-  { nino: "EF 12 34 56 C", benefit: "Employment and Support Allowance", period: "27/10/2008 to 16/07/2026" },
-  { nino: "WX 12 34 56 C", benefit: "Pension Credit", period: "13/08/2024 to 02/09/2025" },
-  { nino: "WX 12 34 56 C", benefit: "Pension Credit", period: "03/09/2025 to 16/07/2026" }
+  { nino: "AB 12 34 56 C", period: "10/07/2015 to 16/07/2026" },
+  { nino: "CD 12 34 56 C", period: "01/04/2023 to 04/11/2025" },
+  { nino: "CD 12 34 56 C", period: "05/11/2025 to 16/07/2026" },
+  { nino: "EF 12 34 56 C", period: "27/10/2008 to 16/07/2026" },
+  { nino: "GH 12 34 56 C", period: "03/03/2006 to 13/07/2026" },
+  { nino: "WX 12 34 56 C", period: "13/08/2024 to 02/09/2025" },
+  { nino: "WX 12 34 56 C", period: "03/09/2025 to 16/07/2026" }
 ] %}
 
+{% set exportItems = [] %}
+{% for row in exportRows %}
+  {% set _ = exportItems.push({
+    value: loop.index0 | string,
+    text: row.nino,
+    hint: { text: row.period },
+    checked: (data.exportCase and data.exportCase == loop.index0) | default(false)
+  }) %}
+{% endfor %}
+
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-full">
-
-      <h1 class="govuk-heading-l">Export cases</h1>
-
-      <p class="govuk-body">Select the cases you want to export. Colleagues can then import them.</p>
+    <div class="govuk-grid-column-two-thirds">
 
       <form action="/onboarding/landing-page" method="post" novalidate>
 
-        <div class="govuk-form-group">
-          <fieldset class="govuk-fieldset" aria-describedby="export-hint">
-            <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">Which cases do you want to export?</legend>
-            <div id="export-hint" class="govuk-hint">Where a National Insurance number has more than one calculation, each one is listed separately.</div>
+        {{ govukCheckboxes({
+          name: "casesToExport",
+          fieldset: {
+            legend: {
+              text: "Which cases do you want to export?",
+              isPageHeading: true,
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          hint: { text: "Colleagues can then import them. Where a National Insurance number has more than one calculation, each one is listed separately." },
+          items: exportItems
+        }) }}
 
-            <table class="govuk-table">
-              <caption class="govuk-table__caption govuk-visually-hidden">Your saved cases</caption>
-              <thead class="govuk-table__head">
-                <tr class="govuk-table__row">
-                  <th scope="col" class="govuk-table__header"><span class="govuk-visually-hidden">Select</span></th>
-                  <th scope="col" class="govuk-table__header">National Insurance number</th>
-                  <th scope="col" class="govuk-table__header">Benefit</th>
-                  <th scope="col" class="govuk-table__header">Discrepancy period</th>
-                </tr>
-              </thead>
-              <tbody class="govuk-table__body">
-                {% for row in exportRows %}
-                  <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">
-                      <div class="govuk-checkboxes govuk-checkboxes--small" data-module="govuk-checkboxes">
-                        <div class="govuk-checkboxes__item">
-                          <input class="govuk-checkboxes__input" id="export-{{ loop.index }}" name="casesToExport" type="checkbox" value="{{ loop.index0 }}">
-                          <label class="govuk-label govuk-checkboxes__label" for="export-{{ loop.index }}">
-                            <span class="govuk-visually-hidden">Export {{ row.nino }}, {{ row.period }}</span>
-                          </label>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="govuk-table__cell">{{ row.nino }}</td>
-                    <td class="govuk-table__cell">{{ row.benefit }}</td>
-                    <td class="govuk-table__cell">{{ row.period }}</td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </fieldset>
-        </div>
-
-        <div class="govuk-form-group">
-          <div class="govuk-checkboxes govuk-checkboxes--small" data-module="govuk-checkboxes">
-            <div class="govuk-checkboxes__item">
-              <input class="govuk-checkboxes__input" id="export-other-office" name="exportOtherOffice" type="checkbox" value="yes" aria-describedby="export-other-office-hint">
-              <label class="govuk-label govuk-checkboxes__label" for="export-other-office">Export to another office</label>
-              <div id="export-other-office-hint" class="govuk-hint govuk-checkboxes__hint">Only if the case is moving to an office outside your network. It will appear in their External cases list.</div>
-            </div>
-          </div>
-        </div>
+        {{ govukRadios({
+          name: "exportOtherOffice",
+          classes: "govuk-radios--inline",
+          fieldset: {
+            legend: {
+              text: "Are you sending these cases to another office?",
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          hint: { text: "Only if the case is moving to an office outside your network. It will show as an External case for them." },
+          items: [
+            { value: "yes", text: "Yes" },
+            { value: "no", text: "No", checked: true }
+          ]
+        }) }}
 
         <div class="govuk-button-group">
           {{ govukButton({
-            text: "Export selected cases",
-            type: "submit"
+            text: "Export selected cases"
           }) }}
 
           <a class="govuk-link" href="/onboarding/landing-page">Cancel</a>

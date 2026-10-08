@@ -236,7 +236,7 @@
           {{ govukRadios({
             idPrefix: "claim-before-2004",
             name: "claimBefore2004",
-            classes: "govuk-radios--inline govuk-radios--small",
+            classes: "govuk-radios--inline",
             fieldset: { legend: { text: "Is the date of claim before 6 April 2004?", classes: "govuk-fieldset__legend--s" } },
             items: [
               { value: "yes", text: "Yes", checked: data.claimBefore2004 == "yes" },

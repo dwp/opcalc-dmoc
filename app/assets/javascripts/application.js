@@ -1216,38 +1216,103 @@ window.GOVUKPrototypeKit.documentReady(() => {
     })
   })
 
+  // Hide or show a row. GOV.UK styles give summary list rows and radio items
+  // their own display value, which beats the plain hidden attribute, so the
+  // GOV.UK "display none" class is set as well.
+  function hide (el, hidden) {
+    el.hidden = hidden
+    el.classList.toggle('govuk-!-display-none', hidden)
+  }
+
   // ---- Find a case by National Insurance number -------------------------------
   // Saved and importable cases are sorted by National Insurance number and
   // the lists are long (Lynn keeps 200 to 300, David's import list holds
-  // 18,487), so pension credit cases starting W, X, Y or Z meant scrolling to
-  // the end. Type part of the number to narrow the list.
-  document.querySelectorAll('input[type="search"][aria-controls]').forEach(function (input) {
-    const tableId = input.getAttribute('aria-controls')
-    const table = document.getElementById(tableId)
-    if (!table) { return }
+  // 18,487). Type part of the number to narrow the list.
+  //
+  // The list is any element with an id, holding rows marked data-nino.
+  // Optional extras, all keyed off the list's id:
+  //   radios with data-source-filter="<id>"  show only internal or external
+  //   data-page-size="25" on the list        split into pages
+  //   #<id>-count, #<id>-none, #<id>-pages   count, empty message, page links
+  document.querySelectorAll('[data-case-list]').forEach(function (list) {
+    const id = list.id
+    const rows = Array.prototype.slice.call(list.querySelectorAll('[data-nino]'))
+    const search = document.querySelector('input[type="search"][aria-controls="' + id + '"]')
+    const sources = document.querySelectorAll('input[type="radio"][data-source-filter="' + id + '"]')
+    const count = document.getElementById(id + '-count')
+    const none = document.getElementById(id + '-none')
+    const pages = document.getElementById(id + '-pages')
+    const pageSize = parseInt(list.getAttribute('data-page-size'), 10) || 0
+    const noun = list.getAttribute('data-noun') || 'cases'
+    let page = 1
 
-    const rows = table.querySelectorAll('tbody tr[data-nino]')
-    const count = document.getElementById(tableId + '-count')
-    const none = document.getElementById(tableId + '-none')
-    const original = count ? count.textContent : ''
+    function source () {
+      let chosen = 'all'
+      sources.forEach(function (r) { if (r.checked) { chosen = r.value } })
+      return chosen
+    }
 
-    input.addEventListener('input', function () {
-      const wanted = input.value.replace(/\s+/g, '').toUpperCase()
-      let shown = 0
+    function pageLink (label, number, extra) {
+      const li = document.createElement('li')
+      li.className = 'govuk-pagination__item' + (number === page ? ' govuk-pagination__item--current' : '')
+      const a = document.createElement('a')
+      a.className = 'govuk-link govuk-pagination__link'
+      a.href = '#' + id
+      a.textContent = label
+      a.setAttribute('aria-label', extra || 'Page ' + number)
+      if (number === page) { a.setAttribute('aria-current', 'page') }
+      a.addEventListener('click', function (event) {
+        event.preventDefault()
+        page = number
+        apply()
+        list.scrollIntoView()
+      })
+      li.appendChild(a)
+      return li
+    }
 
-      rows.forEach(function (row) {
-        const match = !wanted || row.getAttribute('data-nino').toUpperCase().indexOf(wanted) !== -1
-        row.hidden = !match
-        if (match) { shown += 1 }
+    function apply () {
+      const wanted = search ? search.value.replace(/\s+/g, '').toUpperCase() : ''
+      const from = source()
+      const matching = rows.filter(function (row) {
+        const ninoOk = !wanted || row.getAttribute('data-nino').toUpperCase().indexOf(wanted) !== -1
+        const sourceOk = from === 'all' || row.getAttribute('data-source') === from
+        return ninoOk && sourceOk
+      })
+
+      const totalPages = pageSize ? Math.max(1, Math.ceil(matching.length / pageSize)) : 1
+      if (page > totalPages) { page = totalPages }
+
+      rows.forEach(function (row) { hide(row, true) })
+      matching.forEach(function (row, i) {
+        hide(row, pageSize ? Math.floor(i / pageSize) + 1 !== page : false)
       })
 
       if (count) {
-        count.textContent = wanted
-          ? shown + (shown === 1 ? ' case matches' : ' cases match') + ' "' + input.value.trim() + '"'
-          : original
+        let text = matching.length + ' ' + (matching.length === 1 ? noun.replace(/s$/, '') : noun)
+        if (wanted) { text += ' match "' + search.value.trim() + '"' }
+        if (pageSize && totalPages > 1) {
+          text += '. Showing ' + (Math.min((page - 1) * pageSize + 1, matching.length)) + ' to ' + Math.min(page * pageSize, matching.length)
+        }
+        count.textContent = text + '.'
       }
-      if (none) { none.classList.toggle('govuk-!-display-none', shown !== 0 || !wanted) }
-    })
+      if (none) { none.classList.toggle('govuk-!-display-none', matching.length !== 0) }
+
+      if (pages) {
+        pages.replaceChildren()
+        pages.hidden = totalPages < 2
+        if (totalPages > 1) {
+          const ul = document.createElement('ul')
+          ul.className = 'govuk-pagination__list'
+          for (let n = 1; n <= totalPages; n++) { ul.appendChild(pageLink(String(n), n)) }
+          pages.appendChild(ul)
+        }
+      }
+    }
+
+    if (search) { search.addEventListener('input', function () { page = 1; apply() }) }
+    sources.forEach(function (r) { r.addEventListener('change', function () { page = 1; apply() }) })
+    apply()
   })
 
   // ---- Copy a table for Excel -------------------------------------------------

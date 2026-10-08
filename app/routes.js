@@ -1283,33 +1283,34 @@ router.post('/return-to-tab', function (req, res) {
 // The keys are the values posted by the radios on /selectbenefit, so the two
 // lists have to agree. If you add a benefit in one place, add it in the other.
 //
-// available: false greys the radio out on /selectbenefit. The a14 path is
-// still recorded for IS, JSA and PC because those forms would serve them -
-// turning one on is a matter of setting available to true in both files.
+// Every benefit can be chosen (meeting with Viktoria, 8 Oct 2026). Only the
+// ones with an a14 address have an A14 form in this prototype. Opening the
+// A14 forms for any other benefit explains that, rather than failing.
+// available: false would still block a benefit, if one ever needs to be.
 //
 // benefitWeek and weekType come from the inset text on each A14 form, and are
 // set as the starting point on the benefit details page.
 const benefits = {
-  AA: { label: 'Attendance Allowance (AA)', a14: null, available: false },
-  BA: { label: 'Bereavement Allowance (BA)', a14: null, available: false },
-  DLA: { label: 'Disability Living Allowance (DLA)', a14: null, available: false },
+  AA: { label: 'Attendance Allowance (AA)', a14: null, available: true },
+  BA: { label: 'Bereavement Allowance (BA)', a14: null, available: true },
+  DLA: { label: 'Disability Living Allowance (DLA)', a14: null, available: true },
   ESA: { label: 'Employment and Support Allowance (ESA)', a14: '/a14esa', available: true, benefitWeek: 'Thursday', weekType: 'BWE' },
-  IB: { label: 'Incapacity Benefit (IB)', a14: null, available: false },
-  IS: { label: 'Income Support (IS)', a14: '/a14isjsa', available: false, benefitWeek: 'Monday', weekType: 'BWC' },
+  IB: { label: 'Incapacity Benefit (IB)', a14: null, available: true },
+  IS: { label: 'Income Support (IS)', a14: '/a14isjsa', available: true, benefitWeek: 'Monday', weekType: 'BWC' },
   'IS-JSA': { label: 'Income Support/Jobseeker’s Allowance (IS/JSA)', a14: '/a14isjsa', available: true, benefitWeek: 'Monday', weekType: 'BWC' },
   'IS-PC': { label: 'Income Support/Pension Credit (IS/PC)', a14: '/a14', available: true, benefitWeek: 'Tuesday', weekType: 'BWC' },
-  IVB: { label: 'Invalidity Benefit (IVB)', a14: null, available: false },
-  'IVB-IB': { label: 'Invalidity/Incapacity Benefit (IVB/IB)', a14: null, available: false },
-  JSA: { label: 'Jobseeker’s Allowance (JSA)', a14: '/a14isjsa', available: false, benefitWeek: 'Monday', weekType: 'BWC' },
-  MA: { label: 'Maternity Allowance (MA)', a14: null, available: false },
-  PIB: { label: 'Passported Incapacity Benefit (PIB)', a14: null, available: false },
-  PC: { label: 'Pension Credit (PC)', a14: '/a14', available: false, benefitWeek: 'Tuesday', weekType: 'BWC' },
-  RP: { label: 'Retirement Pension (RP)', a14: null, available: false },
-  SDA: { label: 'Severe Disablement Allowance (SDA)', a14: null, available: false },
-  SB: { label: 'Sickness Benefit (SB)', a14: null, available: false },
-  WMA: { label: 'Widowed Mother’s Allowance (WMA)', a14: null, available: false },
-  WPA: { label: 'Widowed Parent’s Allowance (WPA)', a14: null, available: false },
-  WP: { label: 'Widow’s Pension (WP)', a14: null, available: false }
+  IVB: { label: 'Invalidity Benefit (IVB)', a14: null, available: true },
+  'IVB-IB': { label: 'Invalidity/Incapacity Benefit (IVB/IB)', a14: null, available: true },
+  JSA: { label: 'Jobseeker’s Allowance (JSA)', a14: '/a14isjsa', available: true, benefitWeek: 'Monday', weekType: 'BWC' },
+  MA: { label: 'Maternity Allowance (MA)', a14: null, available: true },
+  PIB: { label: 'Passported Incapacity Benefit (PIB)', a14: null, available: true },
+  PC: { label: 'Pension Credit (PC)', a14: '/a14', available: true, benefitWeek: 'Tuesday', weekType: 'BWC' },
+  RP: { label: 'Retirement Pension (RP)', a14: null, available: true },
+  SDA: { label: 'Severe Disablement Allowance (SDA)', a14: null, available: true },
+  SB: { label: 'Sickness Benefit (SB)', a14: null, available: true },
+  WMA: { label: 'Widowed Mother’s Allowance (WMA)', a14: null, available: true },
+  WPA: { label: 'Widowed Parent’s Allowance (WPA)', a14: null, available: true },
+  WP: { label: 'Widow’s Pension (WP)', a14: null, available: true }
 }
 
 // ---------------------------------------------------------------------------
@@ -1602,7 +1603,7 @@ router.use(function (req, res, next) {
     // one of the three appears and there is no way to tell it was a fallback
     // rather than a choice. Go back and ask instead.
     if (!record || !record.a14) {
-      data.benefitError = 'Select which benefit this case is for before opening an A14 form'
+      data.benefitError = noA14Message(record)
       return res.redirect(SELECT_BENEFIT_PAGE)
     }
 
@@ -1807,6 +1808,14 @@ console.log('')
 // instead of quietly picking the wrong form.
 // The address a form really lives at, worked out from where the file is -
 // so the IS/PC form in A14pcispc lands on /A14pcispc/a14 rather than /a14.
+// What to say when the A14 forms are opened for a benefit that has none.
+function noA14Message (record) {
+  if (!record) {
+    return 'Select which benefit this case is for before opening an A14 form'
+  }
+  return 'There is no A14 form for ' + record.label + ' in this prototype yet. To try the A14 forms, choose Employment and Support Allowance, Income Support, Jobseeker’s Allowance or Pension Credit.'
+}
+
 function realAddress (canonical) {
   const view = a14Views[canonical]
   return view ? '/' + view.replace(/\.html$/i, '') : canonical
@@ -1816,7 +1825,7 @@ function openA14 (req, res) {
   const record = benefits[req.session.data.benefit]
 
   if (!record || !record.a14) {
-    req.session.data.benefitError = 'Select which benefit this case is for before opening an A14 form'
+    req.session.data.benefitError = noA14Message(record)
     return res.redirect(SELECT_BENEFIT_PAGE)
   }
 
@@ -1841,7 +1850,7 @@ function selectBenefitContinue (req, res) {
   }
 
   if (!benefits[chosen] || !benefits[chosen].available) {
-    data.benefitError = 'That benefit is not part of this prototype. Select Employment and Support Allowance, Income Support/Jobseeker’s Allowance, or Income Support/Pension Credit.'
+    data.benefitError = 'Select a benefit from the list'
     return res.redirect(SELECT_BENEFIT_PAGE)
   }
 
@@ -3418,22 +3427,43 @@ router.post('/case-delete', function (req, res) {
 // Added after the user research round (October 2026)
 // ===========================================================================
 
-// Personal details: "Does the customer have a third party acting for them?"
+// Whose details are you entering? (new first screen, 8 Oct 2026)
 //
-// Yes - go to the third party details page.
-// No  - skip it and go straight to choosing the benefit.
+// In the old OpCalc, ticking "Third party" on personal details means the
+// details typed there are the third party's own, and the "Appointee or
+// other details" screen is greyed out. This is now asked first, on its own,
+// so personal details can say whose details it wants.
+router.post('/whose-details-continue', function (req, res) {
+  const data = req.session.data || {}
+
+  if (data.detailsFor !== 'customer' && data.detailsFor !== 'thirdParty') {
+    data.whoseDetailsError = true
+    return res.redirect('/customer-details/whose-details')
+  }
+
+  delete data.whoseDetailsError
+  res.redirect('/customer-details/personal-details')
+})
+
+// Personal details. Everything is optional apart from the postcode.
 //
-// Lynn has never filled in appointee details in 20 years, because they do
-// not show on the A14 panels, so being sent through that page every time
-// only slowed her down. Emma's content review asked for the same question.
+// Third party  - skip the appointee screen, go straight to the benefit.
+// Customer     - show the appointee screen. Everything on it is optional.
 router.post('/personal-details-continue', function (req, res) {
   const data = req.session.data || {}
 
-  if (data.thirdParty === 'yes') {
-    return res.redirect('/customer-details/appointee-other-details')
+  if (!String(data.addressPostcode || '').trim()) {
+    data.personalDetailsErrors = { postcode: 'Enter a postcode' }
+    return res.redirect('/customer-details/personal-details')
   }
 
-  res.redirect('/customer-details/select-benefit')
+  delete data.personalDetailsErrors
+
+  if (data.detailsFor === 'thirdParty') {
+    return res.redirect('/customer-details/select-benefit')
+  }
+
+  res.redirect('/customer-details/appointee-other-details')
 })
 
 // Closing a case asks whether to save it first, the same way OpCalc does

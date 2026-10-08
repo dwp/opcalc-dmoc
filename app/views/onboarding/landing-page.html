@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-  Saved cases – OpCalc – GOV.UK Prototype Kit
+  Your cases – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
@@ -13,10 +13,7 @@
 {% endblock %}
 
 {% block containerStart %}
-  {{ govukBackLink({
-    text: "Back",
-    href: "javascript:window.history.back()"
-  }) }}
+
 {% endblock %}
 
 {% block footer %}
@@ -44,109 +41,85 @@
 {% block content %}
 
 {#
-  Saved cases.
+  Your cases (was "Saved cases"). The page you land on after Start.
 
   Changes after user research (Oct 2026):
   - Column says "National Insurance number" in full (Emma's content review).
   - A "Find a case" box filters the list as you type. Lynn keeps 200 to 300
-    cases and the list is sorted by National Insurance number, so a case
-    starting with W, X, Y or Z means paging to the end every time.
+    cases and the list is sorted by National Insurance number.
   - Each saved calculation has its own row with its period. David and Lynn
-    both keep several calculations under one National Insurance number and
-    choose between them by date.
-  - Start a new case is a normal button rather than a start button, so it
-    is not more prominent than Open (Emma's content review).
-  - The links had a typo in their class (class=gov"govuk-link") which
-    stopped them being styled as links.
+    both keep several calculations under one National Insurance number.
+
+  Changes after the design clinic (6 Oct 2026):
+  - A summary list instead of a table, as tables are for comparing, not
+    for actions (Ross Brown). Hidden text on every link names the case.
+  - No benefit column and no pagination.
+
+  Changes after the meeting with Viktoria (8 Oct 2026):
+  - Renamed "Your cases". It holds your saved cases and everything you can
+    do with them, and comes straight after the Start page.
+  - Open, Edit and Delete next to each case. Open goes to the case
+    overview. Edit goes straight to the customer details to change them.
+  - Export moves back under More actions.
+  - The New case button sits at the bottom of the page.
 #}
 
 {% set savedRows = [
-  { nino: "AB 12 34 56 C", benefit: "Income Support", period: "10/07/2015 to 16/07/2026" },
-  { nino: "CD 12 34 56 C", benefit: "Pension Credit", period: "01/04/2023 to 04/11/2025" },
-  { nino: "CD 12 34 56 C", benefit: "Pension Credit", period: "05/11/2025 to 16/07/2026" },
-  { nino: "EF 12 34 56 C", benefit: "Employment and Support Allowance", period: "27/10/2008 to 16/07/2026" },
-  { nino: "GH 12 34 56 C", benefit: "Invalidity Benefit", period: "03/03/2006 to 13/07/2026" },
-  { nino: "WX 12 34 56 C", benefit: "Pension Credit", period: "13/08/2024 to 02/09/2025" },
-  { nino: "WX 12 34 56 C", benefit: "Pension Credit", period: "03/09/2025 to 16/07/2026" }
+  { nino: "AB 12 34 56 C", period: "10/07/2015 to 16/07/2026" },
+  { nino: "CD 12 34 56 C", period: "01/04/2023 to 04/11/2025" },
+  { nino: "CD 12 34 56 C", period: "05/11/2025 to 16/07/2026" },
+  { nino: "EF 12 34 56 C", period: "27/10/2008 to 16/07/2026" },
+  { nino: "GH 12 34 56 C", period: "03/03/2006 to 13/07/2026" },
+  { nino: "WX 12 34 56 C", period: "13/08/2024 to 02/09/2025" },
+  { nino: "WX 12 34 56 C", period: "03/09/2025 to 16/07/2026" }
 ] %}
 
 <div class="govuk-grid-row">
-  <div class="govuk-grid-column-full">
+  <div class="govuk-grid-column-two-thirds">
 
-    <h1 class="govuk-heading-l">Saved cases</h1>
-
-    <div class="govuk-button-group">
-      {{ govukButton({
-        text: "Start a new case",
-        href: "/customer-details/personal-details"
-      }) }}
-    </div>
+    <h1 class="govuk-heading-l">Your cases</h1>
 
     <div class="govuk-form-group">
       <label class="govuk-label govuk-label--s" for="find-case">Find a case</label>
       <div id="find-case-hint" class="govuk-hint">Enter all or part of a National Insurance number</div>
-      <input class="govuk-input govuk-input--width-10 govuk-input--extra-letter-spacing" id="find-case" type="search" spellcheck="false" autocomplete="off" aria-describedby="find-case-hint" aria-controls="saved-cases-table">
+      <input class="govuk-input govuk-input--width-10 govuk-input--extra-letter-spacing" id="find-case" type="search" spellcheck="false" autocomplete="off" aria-describedby="find-case-hint" aria-controls="saved-cases">
     </div>
 
-    <p class="govuk-body govuk-hint" id="saved-cases-table-count" aria-live="polite">Sorted by National Insurance number.</p>
+    <p class="govuk-body govuk-!-margin-bottom-1" id="saved-cases-count" aria-live="polite">{{ savedRows | length }} saved cases.</p>
+    <p class="govuk-hint">Sorted by National Insurance number.</p>
 
-    <table class="govuk-table" id="saved-cases-table">
-      <caption class="govuk-table__caption govuk-visually-hidden">Saved cases</caption>
-      <thead class="govuk-table__head">
-        <tr class="govuk-table__row">
-          <th scope="col" class="govuk-table__header">National Insurance number</th>
-          <th scope="col" class="govuk-table__header">Benefit</th>
-          <th scope="col" class="govuk-table__header">Discrepancy period</th>
-          <th scope="col" class="govuk-table__header">Actions</th>
-        </tr>
-      </thead>
-      <tbody class="govuk-table__body">
-        {% for row in savedRows %}
-          <tr class="govuk-table__row" data-nino="{{ row.nino | replace(' ', '') }}">
-            <td class="govuk-table__cell">{{ row.nino }}</td>
-            <td class="govuk-table__cell">{{ row.benefit }}</td>
-            <td class="govuk-table__cell">{{ row.period }}</td>
-            <td class="govuk-table__cell">
-              <a class="govuk-link" href="/onboarding/case-overview">Open<span class="govuk-visually-hidden"> case {{ row.nino }}, {{ row.period }}</span></a>
-              |
-              <a class="govuk-link" href="/onboarding/deletecase">Delete<span class="govuk-visually-hidden"> case {{ row.nino }}, {{ row.period }}</span></a>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <dl class="govuk-summary-list opcalc-case-list" id="saved-cases" data-case-list data-noun="saved cases">
+      {% for row in savedRows %}
+        {% set hidden %}<span class="govuk-visually-hidden"> {{ row.nino }}, {{ row.period }}</span>{% endset %}
+        <div class="govuk-summary-list__row" data-nino="{{ row.nino | replace(' ', '') }}">
+          <dt class="govuk-summary-list__key">{{ row.nino }}</dt>
+          <dd class="govuk-summary-list__value">{{ row.period }}</dd>
+          <dd class="govuk-summary-list__actions">
+            <ul class="govuk-summary-list__actions-list">
+              <li class="govuk-summary-list__actions-list-item"><a class="govuk-link" href="/onboarding/case-overview">Open{{ hidden | safe }}</a></li>
+              <li class="govuk-summary-list__actions-list-item"><a class="govuk-link" href="/customer-details/personal-details">Edit{{ hidden | safe }}</a></li>
+              <li class="govuk-summary-list__actions-list-item"><a class="govuk-link" href="/onboarding/deletecase">Delete{{ hidden | safe }}</a></li>
+            </ul>
+          </dd>
+        </div>
+      {% endfor %}
+    </dl>
 
-    <p class="govuk-body govuk-!-display-none" id="saved-cases-table-none">No saved cases match that National Insurance number.</p>
-
-    <nav class="govuk-pagination" aria-label="Pagination">
-      <ul class="govuk-pagination__list">
-        <li class="govuk-pagination__item govuk-pagination__item--current">
-          <a class="govuk-link govuk-pagination__link" href="#" aria-label="Page 1" aria-current="page">1</a>
-        </li>
-        <li class="govuk-pagination__item">
-          <a class="govuk-link govuk-pagination__link" href="#" aria-label="Page 2">2</a>
-        </li>
-        <li class="govuk-pagination__item">
-          <a class="govuk-link govuk-pagination__link" href="#" aria-label="Page 3">3</a>
-        </li>
-      </ul>
-      <div class="govuk-pagination__next">
-        <a class="govuk-link govuk-pagination__link" href="#" rel="next">
-          <span class="govuk-pagination__link-title">Next<span class="govuk-visually-hidden"> page</span></span>
-          <svg class="govuk-pagination__icon govuk-pagination__icon--next" xmlns="http://www.w3.org/2000/svg" height="13" width="15" aria-hidden="true" focusable="false" viewBox="0 0 15 13">
-            <path d="m8.107-0.0078125-1.4136 1.414 4.2926 4.293h-12.986v2h12.896l-4.1855 3.9766 1.377 1.4492 6.7441-6.4062-6.7246-6.7266z"></path>
-          </svg>
-        </a>
-      </div>
-    </nav>
+    <p class="govuk-body govuk-!-display-none" id="saved-cases-none">No saved cases match that National Insurance number.</p>
 
     <h2 class="govuk-heading-m">More actions</h2>
 
     <ul class="govuk-list">
       <li><a href="/onboarding/import-case" class="govuk-link govuk-link--no-visited-state">Import a case</a></li>
-      <li><a href="/onboarding/export-case" class="govuk-link govuk-link--no-visited-state">Export cases</a></li>
+      <li><a href="/onboarding/export-case?exportCase=" class="govuk-link govuk-link--no-visited-state">Export cases</a></li>
       <li><a href="/onboarding/print-setup" class="govuk-link govuk-link--no-visited-state">Print setup</a></li>
     </ul>
+
+    {{ govukButton({
+      text: "New case",
+      href: "/customer-details/whose-details",
+      classes: "govuk-button--secondary govuk-!-margin-top-4"
+    }) }}
 
   </div>
 </div>

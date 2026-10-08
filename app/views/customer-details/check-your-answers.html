@@ -71,13 +71,13 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
 
-      <h1 class="govuk-heading-l">Check your answers before creating the case</h1>
+      <h1 class="govuk-heading-l">Check your answers</h1>
 
-      <h2 class="govuk-heading-m">Personal details</h2>
+      <h2 class="govuk-heading-m">{{ "Third party's details" if data.detailsFor == "thirdParty" else "Customer's details" }}</h2>
 
       {{ govukSummaryList({
         rows: [
-          { key: { text: "Third party acting for the customer" }, value: { text: "Yes" if data.thirdParty == "yes" else ("No" if data.thirdParty == "no" else notGiven) }, actions: { items: [{ href: "/customer-details/personal-details#third-party", text: "Change", visuallyHiddenText: "whether there is a third party" }] } },
+          { key: { text: "Details entered for" }, value: { text: "A third party" if data.detailsFor == "thirdParty" else ("The customer" if data.detailsFor == "customer" else notGiven) }, actions: { items: [{ href: "/customer-details/whose-details", text: "Change", visuallyHiddenText: "whose details these are" }] } },
           { key: { text: "National Insurance number" }, value: { text: data.nino if data.nino else notGiven }, actions: { items: [{ href: "/customer-details/personal-details#nino", text: "Change", visuallyHiddenText: "National Insurance number" }] } },
           { key: { text: "Date of birth" }, value: { text: dateText("dateOfBirth") | trim }, actions: { items: [{ href: "/customer-details/personal-details#date-of-birth-day", text: "Change", visuallyHiddenText: "date of birth" }] } },
           { key: { text: "Name" }, value: { text: ([data.title, data.firstName, data.surname] | select | join(" ")) if data.surname else notGiven }, actions: { items: [{ href: "/customer-details/personal-details#surname", text: "Change", visuallyHiddenText: "name" }] } },
@@ -86,18 +86,26 @@
         ]
       }) }}
 
-      {% if data.thirdParty == "yes" %}
-        <h2 class="govuk-heading-m">Third party details</h2>
+      {% if data.detailsFor != "thirdParty" %}
+        <h2 class="govuk-heading-m">Appointee or other details</h2>
 
-        {% set thirdPartyName = data.thirdPartyOrganisation if data.thirdPartyType == "corporate" else ([data.thirdPartyTitle, data.thirdPartyForenames, data.thirdPartySurname] | select | join(" ")) %}
+        {% if data.appointeeType == "personal" %}
+          {% set appointeeName = [data.appointeeTitle, data.appointeeForenames, data.appointeeSurname] | select | join(" ") %}
+          {% set appointeeAddress = "Same as the customer" if (data.appointeeSameAddress and "yes" in data.appointeeSameAddress) else ([data.appointeeAddressLine1, data.appointeeAddressLine2, data.appointeeTown, data.appointeePostcode] | select | join(", ")) %}
+        {% elif data.appointeeType == "corporate" %}
+          {% set appointeeName = data.organisationName %}
+          {% set appointeeAddress = [data.organisationAddressLine1, data.organisationAddressLine2, data.organisationTown, data.organisationPostcode] | select | join(", ") %}
+        {% endif %}
 
-        {{ govukSummaryList({
-          rows: [
-            { key: { text: "Type" }, value: { text: "Organisation (corporate acting body)" if data.thirdPartyType == "corporate" else ("Person (personal acting body)" if data.thirdPartyType == "personal" else notGiven) }, actions: { items: [{ href: "/customer-details/appointee-other-details", text: "Change", visuallyHiddenText: "type of third party" }] } },
-            { key: { text: "Name" }, value: { text: thirdPartyName if (data.thirdPartySurname or data.thirdPartyOrganisation) else notGiven }, actions: { items: [{ href: "/customer-details/appointee-other-details", text: "Change", visuallyHiddenText: "third party name" }] } },
-            { key: { text: "Address" }, value: { text: "Same as the customer" if data.thirdPartySameAddress == "yes" else ([data.thirdPartyAddressLine1, data.thirdPartyAddressLine2, data.thirdPartyTown, data.thirdPartyPostcode] | select | join(", ") or notGiven) }, actions: { items: [{ href: "/customer-details/appointee-other-details", text: "Change", visuallyHiddenText: "third party address" }] } }
-          ]
-        }) }}
+        {% set appointeeRows = [
+          { key: { text: "Someone acts for the customer" }, value: { text: "Yes, a person (personal acting body)" if data.appointeeType == "personal" else ("Yes, an organisation (corporate acting body)" if data.appointeeType == "corporate" else "No") }, actions: { items: [{ href: "/customer-details/appointee-other-details", text: "Change", visuallyHiddenText: "whether someone acts for the customer" }] } }
+        ] %}
+        {% if data.appointeeType == "personal" or data.appointeeType == "corporate" %}
+          {% set _ = appointeeRows.push({ key: { text: "Name" }, value: { text: appointeeName if appointeeName else notGiven }, actions: { items: [{ href: "/customer-details/appointee-other-details", text: "Change", visuallyHiddenText: "appointee name" }] } }) %}
+          {% set _ = appointeeRows.push({ key: { text: "Address" }, value: { text: appointeeAddress if appointeeAddress else notGiven }, actions: { items: [{ href: "/customer-details/appointee-other-details", text: "Change", visuallyHiddenText: "appointee address" }] } }) %}
+        {% endif %}
+
+        {{ govukSummaryList({ rows: appointeeRows }) }}
       {% endif %}
 
       <h2 class="govuk-heading-m">Benefit details</h2>

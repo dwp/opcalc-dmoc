@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-  Saved cases – OpCalc – GOV.UK Prototype Kit
+  Your cases – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
@@ -46,7 +46,7 @@
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
 
- <h1 class="govuk-heading-l">Saved cases</h1>
+ <h1 class="govuk-heading-l">Your cases</h1>
 
  <!-- <p class="govuk-body">No saved cases</p> -->
 
@@ -57,8 +57,9 @@
 {% from "govuk/components/button/macro.njk" import govukButton %}
  
 {{ govukButton({
-        text: "Start a new case",
-        href: "/customer-details/personal-details"
+        text: "New case",
+        href: "/customer-details/whose-details",
+        classes: "govuk-button--secondary"
       }) }}
 
 <!-- {{ govukButton({

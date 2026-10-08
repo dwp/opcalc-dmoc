@@ -16,7 +16,9 @@
   green when the thing it names has actually been done.
 #}
 
-{% set customerName = data.firstName + " " + data.surname if data.surname else "Mr Max Martin" %}
+{# Only the first letter of the first name, then the surname, for example
+   "M Martin" (meeting with Viktoria, 8 Oct 2026). #}
+{% set customerName = (((data.firstName | trim | first | upper) + " ") if (data.firstName | trim) else "") + data.surname if data.surname else "M Martin" %}
 {% set caseRef = data.nino if data.nino else "AB 12 34 56 C" %}
 
 {# Written as single expressions rather than if blocks: a block at the top
@@ -190,8 +192,9 @@
       {% endif %}
 
       {# The heading names the customer so it is clear which case is open
-         (Emma's content review). The National Insurance number, benefit and
-         period sit underneath. #}
+         (Emma's content review). After the meeting with Viktoria (8 Oct
+         2026) it shows only the first letter of the first name, and the
+         benefit is no longer listed underneath. #}
       <span class="govuk-caption-l">Case overview</span>
       <h1 class="govuk-heading-l">{{ customerName }}</h1>
 
@@ -199,14 +202,9 @@
         classes: "govuk-summary-list--no-border",
         rows: [
           { key: { text: "National Insurance number" }, value: { text: caseRef } },
-          { key: { text: "Benefit" }, value: { text: data.benefitLabel if data.benefitLabel else "Not chosen yet" } },
           { key: { text: "Discrepancy period" }, value: { text: discrepancyPeriod if discrepancyPeriod else "Not entered yet" } }
         ]
       }) }}
-
-      <h2 class="govuk-heading-m">Forms and calculations</h2>
-
-      <p class="govuk-body">Complete the ones this case needs, in any order. Ones that do not apply to this benefit are shown as inactive.</p>
 
       {#
         Every row is described the same way, so the table below is built from
@@ -228,7 +226,7 @@
           ref: customerName,
           view: "/customer-details/check-your-answers",
           edit: "/customer-details/personal-details",
-          start: "/customer-details/personal-details"
+          start: "/customer-details/whose-details"
         },
         {
           name: "A14 forms",
@@ -351,13 +349,16 @@
       }) }}
 
       {# One link instead of four. Lynn preferred picking what to print on
-         the next page, and Viktoria had planned to simplify this. #}
-      <h2 class="govuk-heading-m">This case</h2>
+         the next page. Heading is "Print" (meeting with Viktoria, 8 Oct
+         2026). Export this case sits on its own underneath, as it is not
+         printing. #}
+      <h2 class="govuk-heading-m">Print</h2>
 
       <ul class="govuk-list">
         <li><a class="govuk-link" href="/qb16caseprintselection">Print PDFs for this case</a></li>
-        <li><a class="govuk-link" href="/onboarding/export-case">Export this case</a></li>
       </ul>
+
+      <p class="govuk-body"><a class="govuk-link" href="/onboarding/export-case">Export this case</a></p>
 
       {# Close case now asks whether to save first, the same as OpCalc does
          today. Lynn always saves; closing without saving loses the case. #}
