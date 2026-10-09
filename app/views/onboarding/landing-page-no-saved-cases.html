@@ -47,10 +47,10 @@
    team's CASA template, with the same search and buttons as when there are
    cases (9 Oct 2026). #}
 
-<div class="govuk-grid-row">
-  <div class="govuk-grid-column-full">
+<h1 class="govuk-heading-xl">Saved Cases</h1>
 
-    <h1 class="govuk-heading-xl">Saved Cases</h1>
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
 
     <div class="app-search">
       <form class="app-search__form" action="/onboarding/landing-page-no-saved-cases" method="get" novalidate>
@@ -62,17 +62,19 @@
       </form>
     </div>
 
-    {{ govukInsetText({ text: "No saved cases" }) }}
-
-    <div class="app-saved-cases-actions govuk-!-margin-top-6">
-      <div class="govuk-button-group app-saved-cases-actions__buttons">
-        {{ govukButton({ text: "New Case", href: "/customer-details/personal-details" }) }}
-        {{ govukButton({ text: "Import a Case", href: "/onboarding/import-case", classes: "govuk-button--secondary" }) }}
-        {{ govukButton({ text: "Print setup", href: "/onboarding/print-setup", classes: "govuk-button--secondary" }) }}
-      </div>
-    </div>
-
   </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    {{ govukInsetText({ text: "No saved cases" }) }}
+  </div>
+</div>
+
+<div class="govuk-button-group govuk-!-margin-top-4">
+  {{ govukButton({ text: "New Case", href: "/customer-details/personal-details" }) }}
+  {{ govukButton({ text: "Import a Case", href: "/onboarding/import-case", classes: "govuk-button--secondary" }) }}
+  {{ govukButton({ text: "Print setup", href: "/onboarding/print-setup", classes: "govuk-button--secondary" }) }}
 </div>
 
 {% endblock %}

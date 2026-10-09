@@ -96,10 +96,20 @@
   This follows the CASA screen instead, so check which name stays.
 #}
 
-<div class="govuk-grid-row">
-  <div class="govuk-grid-column-full">
+{#
+  Saved Cases (9 Oct 2026, 13:19): laid out like the team's latest CASA
+  template that Maisie shared.
+  - Heading on its own, then the search in a two thirds column.
+  - The list, "No saved cases" and the page numbers in a two thirds column,
+    so on narrower screens Export and Delete sit one above the other.
+  - The page numbers sit under the list, and the New Case, Import a Case and
+    Print setup buttons sit in their own row underneath.
+#}
 
-    <h1 class="govuk-heading-xl">Saved Cases</h1>
+<h1 class="govuk-heading-xl">Saved Cases</h1>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
 
     <div class="app-search">
       <form class="app-search__form" action="/onboarding/landing-page" method="get" novalidate data-search-for="saved-cases">
@@ -110,6 +120,12 @@
         </div>
       </form>
     </div>
+
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
 
     <p class="govuk-visually-hidden" id="saved-cases-count" aria-live="polite">{{ savedRows | length }} saved cases.</p>
 
@@ -122,7 +138,7 @@
         </div>
       </dl>
 
-      <dl class="govuk-summary-list" id="saved-cases" data-case-list data-page-size="5" data-noun="saved cases" data-search-live="false">
+      <dl class="govuk-summary-list app-saved-cases-list" id="saved-cases" data-case-list data-page-size="5" data-noun="saved cases" data-search-live="false">
         {% for row in savedRows %}
           {% set hidden %}<span class="govuk-visually-hidden"> {{ row.nino }}</span>{% endset %}
           <div class="govuk-summary-list__row" data-nino="{{ row.nino }}">
@@ -144,19 +160,15 @@
       {{ govukInsetText({ text: "No saved cases" }) }}
     {% endif %}
 
-    <div class="app-saved-cases-actions govuk-!-margin-top-6">
-      <div class="app-saved-cases-actions__pagination">
-        <nav class="govuk-pagination" id="saved-cases-pages" aria-label="Pages of saved cases" hidden></nav>
-      </div>
-
-      <div class="govuk-button-group app-saved-cases-actions__buttons">
-        {{ govukButton({ text: "New Case", href: "/customer-details/personal-details" }) }}
-        {{ govukButton({ text: "Import a Case", href: "/onboarding/import-case", classes: "govuk-button--secondary" }) }}
-        {{ govukButton({ text: "Print setup", href: "/onboarding/print-setup", classes: "govuk-button--secondary" }) }}
-      </div>
-    </div>
+    <nav class="govuk-pagination" id="saved-cases-pages" aria-label="Pages of saved cases" hidden></nav>
 
   </div>
+</div>
+
+<div class="govuk-button-group govuk-!-margin-top-4">
+  {{ govukButton({ text: "New Case", href: "/customer-details/personal-details" }) }}
+  {{ govukButton({ text: "Import a Case", href: "/onboarding/import-case", classes: "govuk-button--secondary" }) }}
+  {{ govukButton({ text: "Print setup", href: "/onboarding/print-setup", classes: "govuk-button--secondary" }) }}
 </div>
 
 {% endblock %}

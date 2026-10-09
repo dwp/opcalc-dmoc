@@ -188,3 +188,28 @@
 
 // Not in the CASA styles: the autocomplete and Your cases column widths
 // above are prototype only.
+
+// Saved Cases (9 Oct 2026, Maisie): Export and Delete always sit one above
+// the other, lined up on the right, with no dividing line between them.
+.app-saved-cases-list .govuk-summary-list__actions-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  width: auto;
+}
+
+.app-saved-cases-list .govuk-summary-list__actions-list-item {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.app-saved-cases-list .govuk-summary-list__actions-list-item + .govuk-summary-list__actions-list-item {
+  margin-top: 5px;
+}
+
+@media (max-width: 40.0525em) {
+  .app-saved-cases-list .govuk-summary-list__actions-list {
+    align-items: flex-start;
+  }
+}
