@@ -1,0 +1,93 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  {{ "Error: " if data.appointeeError }}Does the customer have an appointee? – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "javascript:window.history.back()"
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+{#
+  Does the customer have an appointee? New screen from Max's multistep
+  journey (9 Oct 2026). Only reached when "The customer" was chosen on the
+  whose details screen. If the details entered were a third party's, the
+  old OpCalc greys appointee details out, so this screen is skipped.
+
+  Yes, a corporate body       - Corporate appointee details
+  Yes, a personal acting body - Appointee name, then Appointee address
+  No, or Skip                 - Which benefit is this case for?
+#}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      {% if data.appointeeError %}
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: [{ text: "Select whether the customer has an appointee", href: "#appointee-type" }]
+        }) }}
+      {% endif %}
+
+      <form action="/appointee-continue" method="post" novalidate>
+
+        <span class="govuk-caption-l">Customer details</span>
+        {{ govukRadios({
+          idPrefix: "appointee-type",
+          name: "appointeeType",
+          fieldset: {
+            legend: { text: "Does the customer have an appointee?", isPageHeading: true, classes: "govuk-fieldset__legend--l" }
+          },
+          errorMessage: { text: "Select whether the customer has an appointee" } if data.appointeeError else false,
+          items: [
+            { value: "corporate", text: "Yes, a corporate body", hint: { text: "For example, a solicitor, local authority, or other organisation." }, checked: data.appointeeType == "corporate" },
+            { value: "personal", text: "Yes, a personal acting body", hint: { text: "For example, an appointee or someone with power of attorney." }, checked: data.appointeeType == "personal" },
+            { value: "none", text: "No", checked: data.appointeeType == "none" }
+          ]
+        }) }}
+
+        <p class="govuk-body"><a class="govuk-link" href="/customer-details/select-benefit">Skip to benefit details</a></p>
+
+        {{ govukButton({ text: "Continue", type: "submit", preventDoubleClick: true }) }}
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

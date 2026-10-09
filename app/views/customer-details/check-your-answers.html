@@ -89,20 +89,28 @@
       {% if data.detailsFor != "thirdParty" %}
         <h2 class="govuk-heading-m">Appointee or other details</h2>
 
+        {% set customerAddress2 = [data.addressLine1, data.addressLine2, data.addressTown, data.addressPostcode] | select | join(", ") %}
         {% if data.appointeeType == "personal" %}
           {% set appointeeName = [data.appointeeTitle, data.appointeeForenames, data.appointeeSurname] | select | join(" ") %}
-          {% set appointeeAddress = "Same as the customer" if (data.appointeeSameAddress and "yes" in data.appointeeSameAddress) else ([data.appointeeAddressLine1, data.appointeeAddressLine2, data.appointeeTown, data.appointeePostcode] | select | join(", ")) %}
+          {% set appointeeAddress = ("Same as the customer" + (": " + customerAddress2 if customerAddress2 else "")) if data.appointeeSameAddress == "yes" else ([data.appointeeAddressLine1, data.appointeeAddressLine2, data.appointeeTown, data.appointeePostcode] | select | join(", ")) %}
+          {% set appointeePhone = data.telephone if data.appointeeSameAddress == "yes" else data.appointeeTelephone %}
+          {% set nameHref = "/customer-details/appointee-name" %}
+          {% set addressHref = "/customer-details/appointee-address" %}
         {% elif data.appointeeType == "corporate" %}
           {% set appointeeName = data.organisationName %}
           {% set appointeeAddress = [data.organisationAddressLine1, data.organisationAddressLine2, data.organisationTown, data.organisationPostcode] | select | join(", ") %}
+          {% set appointeePhone = data.organisationTelephone %}
+          {% set nameHref = "/customer-details/corporate-appointee-details" %}
+          {% set addressHref = "/customer-details/corporate-appointee-details" %}
         {% endif %}
 
         {% set appointeeRows = [
-          { key: { text: "Someone acts for the customer" }, value: { text: "Yes, a person (personal acting body)" if data.appointeeType == "personal" else ("Yes, an organisation (corporate acting body)" if data.appointeeType == "corporate" else "No") }, actions: { items: [{ href: "/customer-details/appointee-other-details", text: "Change", visuallyHiddenText: "whether someone acts for the customer" }] } }
+          { key: { text: "Appointee" }, value: { text: "Yes, a corporate body" if data.appointeeType == "corporate" else ("Yes, a personal acting body" if data.appointeeType == "personal" else "No") }, actions: { items: [{ href: "/customer-details/appointee", text: "Change", visuallyHiddenText: "whether the customer has an appointee" }] } }
         ] %}
         {% if data.appointeeType == "personal" or data.appointeeType == "corporate" %}
-          {% set _ = appointeeRows.push({ key: { text: "Name" }, value: { text: appointeeName if appointeeName else notGiven }, actions: { items: [{ href: "/customer-details/appointee-other-details", text: "Change", visuallyHiddenText: "appointee name" }] } }) %}
-          {% set _ = appointeeRows.push({ key: { text: "Address" }, value: { text: appointeeAddress if appointeeAddress else notGiven }, actions: { items: [{ href: "/customer-details/appointee-other-details", text: "Change", visuallyHiddenText: "appointee address" }] } }) %}
+          {% set _ = appointeeRows.push({ key: { text: "Name" }, value: { text: appointeeName if appointeeName else notGiven }, actions: { items: [{ href: nameHref, text: "Change", visuallyHiddenText: "appointee name" }] } }) %}
+          {% set _ = appointeeRows.push({ key: { text: "Address" }, value: { text: appointeeAddress if appointeeAddress else notGiven }, actions: { items: [{ href: addressHref, text: "Change", visuallyHiddenText: "appointee address" }] } }) %}
+          {% set _ = appointeeRows.push({ key: { text: "Telephone" }, value: { text: appointeePhone if appointeePhone else notGiven }, actions: { items: [{ href: addressHref, text: "Change", visuallyHiddenText: "appointee telephone" }] } }) %}
         {% endif %}
 
         {{ govukSummaryList({ rows: appointeeRows }) }}
@@ -110,13 +118,30 @@
 
       <h2 class="govuk-heading-m">Benefit details</h2>
 
-      {{ govukSummaryList({
-        rows: [
-          { key: { text: "Benefit" }, value: { text: data.benefitLabel if data.benefitLabel else notGiven }, actions: { items: [{ href: "/customer-details/select-benefit", text: "Change", visuallyHiddenText: "benefit" }] } },
-          { key: { text: "Discrepancy period" }, value: { text: (dateText("discrepancyFrom") | trim) + " to " + (dateText("discrepancyTo") | trim) }, actions: { items: [{ href: "/customer-details/benefits-details#discrepancy-from-day", text: "Change", visuallyHiddenText: "discrepancy period" }] } },
-          { key: { text: "Initial benefit week" }, value: { text: ((data.initialBenefitWeek if data.initialBenefitWeek else notGiven) + (", " + data.benefitWeekType if data.benefitWeekType else "")) }, actions: { items: [{ href: "/customer-details/benefits-details#initial-benefit-week", text: "Change", visuallyHiddenText: "initial benefit week" }] } }
-        ]
-      }) }}
+      {% set benefitRows = [
+        { key: { text: "Benefit" }, value: { text: data.benefitLabel if data.benefitLabel else notGiven }, actions: { items: [{ href: "/customer-details/select-benefit", text: "Change", visuallyHiddenText: "benefit" }] } },
+        { key: { text: "Discrepancy period" }, value: { text: (dateText("discrepancyFrom") | trim) + " to " + (dateText("discrepancyTo") | trim) }, actions: { items: [{ href: "/customer-details/benefits-details#discrepancy-from-day", text: "Change", visuallyHiddenText: "discrepancy period" }] } },
+        { key: { text: "Initial benefit week" }, value: { text: ((data.initialBenefitWeek if data.initialBenefitWeek else notGiven) + (", " + data.benefitWeekType if data.benefitWeekType else "")) }, actions: { items: [{ href: "/customer-details/benefits-details#initial-benefit-week", text: "Change", visuallyHiddenText: "initial benefit week" }] } }
+      ] %}
+
+      {# The extra benefit details fields, shown when they were asked for
+         (Max's table, 9 Oct 2026). #}
+      {% if data.benefit == "MA" %}
+        {% set _ = benefitRows.push({ key: { text: "Expected week of childbirth after 31 March 2007" }, value: { text: ("Yes" if data.maternityAfter2007 == "yes" else ("No" if data.maternityAfter2007 == "no" else notGiven)) }, actions: { items: [{ href: "/customer-details/benefits-details#maternity-after-2007", text: "Change", visuallyHiddenText: "expected week of childbirth" }] } }) %}
+      {% endif %}
+      {% set _ = benefitRows.push({ key: { text: "Entitlement start date" }, value: { text: dateText("entitlementStart") | trim }, actions: { items: [{ href: "/customer-details/benefits-details#entitlement-start-day", text: "Change", visuallyHiddenText: "entitlement start date" }] } }) %}
+      {% if data.benefit == "ESA" %}
+        {% set _ = benefitRows.push({ key: { text: "ESA main phase start date" }, value: { text: dateText("esaMainPhaseStart") | trim }, actions: { items: [{ href: "/customer-details/benefits-details#esa-main-phase-start-day", text: "Change", visuallyHiddenText: "ESA main phase start date" }] } }) %}
+      {% endif %}
+      {% if data["pcStart-year"] %}
+        {% set _ = benefitRows.push({ key: { text: "Pension Credit start date" }, value: { text: dateText("pcStart") | trim }, actions: { items: [{ href: "/customer-details/benefits-details#pc-start-day", text: "Change", visuallyHiddenText: "Pension Credit start date" }] } }) %}
+      {% endif %}
+      {% if data.benefit in ["IS", "JSA", "ESA", "IS-JSA"] %}
+        {% set _ = benefitRows.push({ key: { text: "State Pension age start date" }, value: { text: dateText("spaStart") | trim }, actions: { items: [{ href: "/customer-details/benefits-details#spa-start-day", text: "Change", visuallyHiddenText: "State Pension age start date" }] } }) %}
+      {% endif %}
+      {% set _ = benefitRows.push({ key: { text: "Date of claim before 6 April 2004" }, value: { text: "No" if data.claimBefore2004 == "no" else "Yes" }, actions: { items: [{ href: "/customer-details/benefits-details#claim-before-2004", text: "Change", visuallyHiddenText: "whether the date of claim is before 6 April 2004" }] } }) %}
+
+      {{ govukSummaryList({ rows: benefitRows }) }}
 
       <form action="/onboarding/case-overview-confirmation" method="post" novalidate>
         {{ govukButton({

@@ -1196,6 +1196,67 @@ window.GOVUKPrototypeKit.documentReady(() => {
     })
   })
 
+  // ---- Arrow keys on a date ---------------------------------------------------
+  // Max's AC16: on a date, the up arrow moves it on a day and the down arrow
+  // back a day, from whichever of the three boxes has focus. Put
+  // data-date-arrows="true" on a govukDateInput to switch it on.
+  // Not done yet: an empty date and the up arrow should fill in "the
+  // earliest valid date" for the benefit, and those rules are still to come.
+  document.querySelectorAll('.govuk-date-input[data-date-arrows]').forEach(function (container) {
+    container.addEventListener('keydown', function (event) {
+      if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') { return }
+      const date = readDate(container)
+      if (!date) { return }
+      event.preventDefault()
+      writeDate(container, new Date(date.getTime() + (event.key === 'ArrowUp' ? 1 : -1) * DAY_MS))
+    })
+  })
+
+  // ---- Benefit details: fields that depend on the dates -----------------------
+  // The same rules as routes.js (Max's AC3, AC6 and AC7), run as the dates
+  // are typed, so the page changes straight away.
+  //   Pension Credit start date: Income Support/Pension Credit, the period
+  //     ends on or after 6 April 2010, and the customer turned 60 on or after
+  //     that date (date of birth unknown: shown).
+  //   Date of claim before 6 April 2004: can be changed for Income Support
+  //     and Jobseeker's Allowance when the period starts after 6 April 2004;
+  //     read only, Yes, otherwise.
+  document.querySelectorAll('form[data-benefit-rules]').forEach(function (form) {
+    const fromBox = document.getElementById('discrepancy-from')
+    const toBox = document.getElementById('discrepancy-to')
+    const pcBenefit = form.getAttribute('data-pc-benefit') === 'true'
+    const claimBenefit = form.getAttribute('data-claim-benefit') === 'true'
+    const born = form.getAttribute('data-birth-date')
+    const bornDate = born ? new Date(born + 'T00:00:00Z') : null
+    const PC_ENDS_FROM = Date.UTC(2010, 3, 6)
+    const PC_BORN_FROM = Date.UTC(1950, 3, 6)
+    const CLAIM_STARTS_AFTER = Date.UTC(2004, 3, 6)
+
+    function show (name, visible) {
+      form.querySelectorAll('[data-rule="' + name + '"]').forEach(function (block) {
+        block.hidden = !visible
+        // Hidden answers are not sent, so the two date of claim versions
+        // never both reach the server.
+        block.querySelectorAll('input').forEach(function (input) { input.disabled = !visible })
+      })
+    }
+
+    function update () {
+      const from = readDate(fromBox)
+      const to = readDate(toBox)
+      if (pcBenefit) {
+        show('pc-start', !!to && to.getTime() >= PC_ENDS_FROM && (!bornDate || bornDate.getTime() >= PC_BORN_FROM))
+      }
+      const editable = claimBenefit && !!from && from.getTime() > CLAIM_STARTS_AFTER
+      show('claim-editable', editable)
+      show('claim-readonly', !editable)
+    }
+
+    if (fromBox) { fromBox.addEventListener('input', update) }
+    if (toBox) { toBox.addEventListener('input', update) }
+    update()
+  })
+
   // ---- Type a code, pick the list item -----------------------------------------
   // Users know the benefit, asset and exclusion numbers and type them rather
   // than scroll a list. Put data-code-lookup="id-of-select" on the box, and
@@ -1271,6 +1332,30 @@ window.GOVUKPrototypeKit.documentReady(() => {
       return li
     }
 
+    // GOV.UK pagination's Previous and Next links, with their arrows.
+    function stepLink (which, number) {
+      const wrap = document.createElement('div')
+      wrap.className = 'govuk-pagination__' + which
+      const a = document.createElement('a')
+      a.className = 'govuk-link govuk-pagination__link'
+      a.href = '#' + id
+      a.rel = which
+      const arrow = which === 'next'
+        ? '<path d="m8.107-0.0078125-1.4136 1.414 4.2926 4.293h-12.986v2h12.896l-4.1855 3.9766 1.377 1.4492 6.7441-6.4062-6.7246-6.7266z"></path>'
+        : '<path d="m6.5938-0.0078125-6.7266 6.7266 6.7441 6.4062 1.377-1.449-4.1856-3.9768h12.896v-2h-12.984l4.2931-4.293-1.414-1.414z"></path>'
+      const svg = '<svg class="govuk-pagination__icon govuk-pagination__icon--' + which + '" xmlns="http://www.w3.org/2000/svg" height="13" width="15" aria-hidden="true" focusable="false" viewBox="0 0 15 13">' + arrow + '</svg>'
+      const label = '<span class="govuk-pagination__link-title">' + (which === 'next' ? 'Next' : 'Previous') + '<span class="govuk-visually-hidden"> page</span></span>'
+      a.innerHTML = which === 'next' ? label + svg : svg + label
+      a.addEventListener('click', function (event) {
+        event.preventDefault()
+        page = number
+        apply()
+        list.scrollIntoView()
+      })
+      wrap.appendChild(a)
+      return wrap
+    }
+
     function apply () {
       const wanted = search ? search.value.replace(/\s+/g, '').toUpperCase() : ''
       const from = source()
@@ -1302,15 +1387,27 @@ window.GOVUKPrototypeKit.documentReady(() => {
         pages.replaceChildren()
         pages.hidden = totalPages < 2
         if (totalPages > 1) {
+          if (page > 1) { pages.appendChild(stepLink('prev', page - 1)) }
           const ul = document.createElement('ul')
           ul.className = 'govuk-pagination__list'
           for (let n = 1; n <= totalPages; n++) { ul.appendChild(pageLink(String(n), n)) }
           pages.appendChild(ul)
+          if (page < totalPages) { pages.appendChild(stepLink('next', page + 1)) }
         }
       }
     }
 
     if (search) { search.addEventListener('input', function () { page = 1; apply() }) }
+
+    // A Search button next to the box filters the list too, without
+    // leaving the page.
+    document.querySelectorAll('form[data-search-for="' + id + '"]').forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        event.preventDefault()
+        page = 1
+        apply()
+      })
+    })
     sources.forEach(function (r) { r.addEventListener('change', function () { page = 1; apply() }) })
     apply()
   })
@@ -1349,9 +1446,9 @@ window.GOVUKPrototypeKit.documentReady(() => {
   })
 
   // ---- Clear this page --------------------------------------------------------
-  // Clear used to be a second submit button, so pressing it moved on to the
-  // next page. Nobody we spoke to had used it, so it is now a link that only
-  // empties the boxes on the page.
+  // Clear empties the boxes on the page without leaving it. Kept on the
+  // appointee screens because Max's mockups have it (9 Oct 2026). It works on
+  // a link or a button with the js-clear-form class.
   document.querySelectorAll('.js-clear-form').forEach(function (link) {
     link.addEventListener('click', function (event) {
       event.preventDefault()
@@ -1366,6 +1463,12 @@ window.GOVUKPrototypeKit.documentReady(() => {
         } else {
           field.value = ''
         }
+      })
+      // Close any section a radio had opened, now that nothing is chosen.
+      form.querySelectorAll('.govuk-radios__input[aria-controls]').forEach(function (radio) {
+        const target = document.getElementById(radio.getAttribute('aria-controls'))
+        if (target) { target.classList.add('govuk-radios__conditional--hidden') }
+        radio.setAttribute('aria-expanded', 'false')
       })
       const first = form.querySelector('input:not([type="hidden"]), select, textarea')
       if (first) { first.focus() }

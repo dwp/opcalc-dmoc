@@ -1,0 +1,87 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Appointee name – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "javascript:window.history.back()"
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+{#
+  Appointee name. New screen from Max's multistep journey (9 Oct 2026).
+  Reached from "Yes, a personal acting body". Every box is optional, as in
+  the old OpCalc. Clear is kept, as in Max's mockup.
+#}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Customer details</span>
+      <h1 class="govuk-heading-l">Appointee name</h1>
+
+      <form action="/customer-details/appointee-address" method="post" novalidate>
+
+        {{ govukSelect({
+          id: "appointee-title",
+          name: "appointeeTitle",
+          label: { text: "Title", classes: "govuk-label--s" },
+          items: [
+            { value: "Mr", text: "Mr", selected: data.appointeeTitle == "Mr" or not data.appointeeTitle },
+            { value: "Mrs", text: "Mrs", selected: data.appointeeTitle == "Mrs" },
+            { value: "Miss", text: "Miss", selected: data.appointeeTitle == "Miss" },
+            { value: "Ms", text: "Ms", selected: data.appointeeTitle == "Ms" },
+            { value: "Dr", text: "Dr", selected: data.appointeeTitle == "Dr" }
+          ]
+        }) }}
+
+        {{ govukInput({ id: "appointee-forenames", name: "appointeeForenames", label: { text: "Forenames", classes: "govuk-label--s" }, classes: "govuk-!-width-two-thirds", spellcheck: false, value: data.appointeeForenames }) }}
+
+        {{ govukInput({ id: "appointee-surname", name: "appointeeSurname", label: { text: "Surname", classes: "govuk-label--s" }, classes: "govuk-!-width-two-thirds", spellcheck: false, value: data.appointeeSurname }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({ text: "Continue", type: "submit", preventDoubleClick: true }) }}
+          <button type="button" class="govuk-button govuk-button--secondary js-clear-form" data-module="govuk-button">Clear</button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

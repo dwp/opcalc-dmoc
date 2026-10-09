@@ -8,13 +8,18 @@
 {# and which DCC open later, so these codes must match the benefits object   #}
 {# at the top of the A14 section in routes.js.                               #}
 {#                                                                           #}
+{# The 22 benefits in Max's "Fields by Benefit Type" table (9 Oct 2026).     #}
+{# Disability Living Allowance is split into its three kinds, and State      #}
+{# Pension replaces Retirement Pension.                                      #}
 {# Every benefit can be chosen (meeting with Viktoria, 8 Oct 2026). routes.js #}
 {# explains, if the A14 forms are opened for one that has no form yet.       #}
 
 {% set benefits = [
   { value: "AA",      text: "Attendance Allowance (AA)",                     available: true },
   { value: "BA",      text: "Bereavement Allowance (BA)",                    available: true },
-  { value: "DLA",     text: "Disability Living Allowance (DLA)",             available: true },
+  { value: "DLA-CARE", text: "Disability Living Allowance Care Component (DLA)", available: true },
+  { value: "DLA-MOB",  text: "Disability Living Allowance Mobility Component (DLA)", available: true },
+  { value: "DLA-BOTH", text: "Disability Living Allowance Care and Mobility (DLA)", available: true },
   { value: "ESA",     text: "Employment and Support Allowance (ESA)",        available: true },
   { value: "IB",      text: "Incapacity Benefit (IB)",                       available: true },
   { value: "IS",      text: "Income Support (IS)",                           available: true },
@@ -26,7 +31,7 @@
   { value: "MA",      text: "Maternity Allowance (MA)",                      available: true },
   { value: "PIB",     text: "Passported Incapacity Benefit (PIB)",           available: true },
   { value: "PC",      text: "Pension Credit (PC)",                           available: true },
-  { value: "RP",      text: "Retirement Pension (RP)",                       available: true },
+  { value: "SP",      text: "State Pension (SP)",                            available: true },
   { value: "SDA",     text: "Severe Disablement Allowance (SDA)",            available: true },
   { value: "SB",      text: "Sickness Benefit (SB)",                         available: true },
   { value: "WMA",     text: "Widowed Mother’s Allowance (WMA)",              available: true },
@@ -61,7 +66,6 @@
       if (!select || !window.accessibleAutocomplete) { return }
       window.accessibleAutocomplete.enhanceSelectElement({
         selectElement: select,
-        defaultValue: '',
         showAllValues: true,
         dropdownArrow: function () { return '<svg class="autocomplete__dropdown-arrow-down" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M256,298.3L256,298.3L256,298.3l174.2-167.2c4.3-4.2,11.4-4.1,15.8,0.2l30.6,29.9c4.4,4.3,4.5,11.3,0.2,15.5L264.1,380.9  c-2.2,2.2-5.2,3.2-8.1,3c-3,0.1-5.9-0.9-8.1-3L35.2,176.7c-4.3-4.2-4.2-11.2,0.2-15.5L66,131.3c4.4-4.3,11.5-4.4,15.8-0.2L256,298.3  z"/></svg>' },
         tNoResults: function () { return 'No benefits match. Try fewer letters.' }

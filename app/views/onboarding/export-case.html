@@ -55,22 +55,23 @@
   Changes after the design clinic (6 Oct 2026):
   - Plain checkboxes instead of checkboxes inside a table. Tables are for
     comparing information, not for choosing (Ross Brown).
-  - A link can tick a case before the page opens, with ?exportCase= and the
-    row number. After the 8 Oct meeting, Export moved back under More
-    actions on Your cases, so nothing uses this yet.
+  - Export next to a case on Your cases opens this page with that case
+    already ticked (?exportCase= and the row number), so exporting one case
+    is one click and a button. (9 Oct 2026, from the tweaked screen.)
+  - The list matches Your cases: one row per National Insurance number.
   - "Export to another office" is a yes or no question, as Viktoria had it
     in her second version, instead of an easily missed checkbox.
   - No benefit, to match Your cases.
 #}
 
 {% set exportRows = [
-  { nino: "AB 12 34 56 C", period: "10/07/2015 to 16/07/2026" },
-  { nino: "CD 12 34 56 C", period: "01/04/2023 to 04/11/2025" },
-  { nino: "CD 12 34 56 C", period: "05/11/2025 to 16/07/2026" },
-  { nino: "EF 12 34 56 C", period: "27/10/2008 to 16/07/2026" },
-  { nino: "GH 12 34 56 C", period: "03/03/2006 to 13/07/2026" },
-  { nino: "WX 12 34 56 C", period: "13/08/2024 to 02/09/2025" },
-  { nino: "WX 12 34 56 C", period: "03/09/2025 to 16/07/2026" }
+  { nino: "AB 12 34 56 C" },
+  { nino: "CD 12 34 56 C" },
+  { nino: "EF 12 34 56 C" },
+  { nino: "GH 12 34 56 C" },
+  { nino: "JK 12 34 56 C" },
+  { nino: "LM 12 34 56 C" },
+  { nino: "WX 12 34 56 C" }
 ] %}
 
 {% set exportItems = [] %}
@@ -78,7 +79,6 @@
   {% set _ = exportItems.push({
     value: loop.index0 | string,
     text: row.nino,
-    hint: { text: row.period },
     checked: (data.exportCase and data.exportCase == loop.index0) | default(false)
   }) %}
 {% endfor %}
@@ -97,7 +97,7 @@
               classes: "govuk-fieldset__legend--l"
             }
           },
-          hint: { text: "Colleagues can then import them. Where a National Insurance number has more than one calculation, each one is listed separately." },
+          hint: { text: "Colleagues can then import them." },
           items: exportItems
         }) }}
 

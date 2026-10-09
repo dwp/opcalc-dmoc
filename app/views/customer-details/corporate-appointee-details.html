@@ -1,0 +1,82 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Corporate appointee details – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "javascript:window.history.back()"
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+{#
+  Corporate appointee details. New screen from Max's multistep journey
+  (9 Oct 2026). Reached from "Yes, a corporate body". A corporate body
+  always needs its address typed in, as in the old OpCalc where "same
+  address as customer" disappears for a corporate body. Every box is
+  optional. Clear is kept, as in Max's mockup.
+#}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Customer details</span>
+      <h1 class="govuk-heading-l">Corporate appointee details</h1>
+
+      <form action="/customer-details/select-benefit" method="post" novalidate>
+
+        {{ govukInput({ id: "organisation-name", name: "organisationName", label: { text: "Corporate body or organisation name", classes: "govuk-label--s" }, spellcheck: false, value: data.organisationName }) }}
+
+        <h2 class="govuk-heading-s">Organisation address</h2>
+
+        {{ govukInput({ id: "organisation-address-line-1", name: "organisationAddressLine1", label: { text: "Address line 1" }, value: data.organisationAddressLine1 }) }}
+        {{ govukInput({ id: "organisation-address-line-2", name: "organisationAddressLine2", label: { text: "Address line 2 (optional)" }, value: data.organisationAddressLine2 }) }}
+        {{ govukInput({ id: "organisation-town", name: "organisationTown", label: { text: "Town or city" }, classes: "govuk-!-width-two-thirds", value: data.organisationTown }) }}
+        {{ govukInput({ id: "organisation-postcode", name: "organisationPostcode", label: { text: "Postcode" }, classes: "govuk-input--width-10", value: data.organisationPostcode }) }}
+        {{ govukInput({ id: "organisation-telephone", name: "organisationTelephone", label: { text: "Telephone" }, classes: "govuk-input--width-20", type: "tel", value: data.organisationTelephone }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({ text: "Continue", type: "submit", preventDoubleClick: true }) }}
+          <button type="button" class="govuk-button govuk-button--secondary js-clear-form" data-module="govuk-button">Clear</button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}

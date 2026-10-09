@@ -9,19 +9,44 @@
 {% set toError = [] %}
 {% set weekError = [] %}
 {% set weekTypeError = [] %}
-
+{% set entitlementError = [] %}
+{% set esaError = [] %}
+{% set pcError = [] %}
+{% set spaError = [] %}
 {% set errorsByField = {
   "discrepancy-from": fromError,
   "discrepancy-to": toError,
   "initial-benefit-week": weekError,
-  "benefit-week-type": weekTypeError
+  "benefit-week-type": weekTypeError,
+  "entitlement-start": entitlementError,
+  "esa-main-phase-start": esaError,
+  "pc-start": pcError,
+  "spa-start": spaError
 } %}
-
 {% for error in errors %}
   {% if errorsByField[error.field] %}
     {% set _ = errorsByField[error.field].push(error) %}
   {% endif %}
 {% endfor %}
+
+{% set rules = rules if rules else {} %}
+
+{# A GOV.UK date input with the day of the week under it and the up and
+   down arrow keys moving it a day at a time (Max's AC16). #}
+{% macro dateField(id, prefix, legend, value, error, show) %}
+  {{ govukDateInput({
+    id: id,
+    namePrefix: prefix,
+    attributes: { "data-weekday": "true", "data-date-arrows": "true" },
+    fieldset: { legend: { text: legend, classes: "govuk-fieldset__legend--s" } },
+    errorMessage: { text: error } if error else false,
+    items: [
+      { name: "day", value: value[prefix + "-day"], classes: "govuk-input--width-2" + (" govuk-input--error" if error else "") },
+      { name: "month", value: value[prefix + "-month"], classes: "govuk-input--width-2" + (" govuk-input--error" if error else "") },
+      { name: "year", value: value[prefix + "-year"], classes: "govuk-input--width-4" + (" govuk-input--error" if error else "") }
+    ]
+  }) }}
+{% endmacro %}
 
 {% block pageTitle %}
   {{ "Error: " if errors | length }}Benefit details – OpCalc – GOV.UK Prototype Kit
@@ -109,82 +134,32 @@
         <p><a class="govuk-link" href="/customer-details/select-benefit">Choose a benefit</a></p>
       {% endif %}
 
-      <form class="form" action="/benefit-details-continue" method="post" novalidate>
+      {#
+        Benefit details (Max's "Fields by Benefit Type" table and acceptance
+        criteria, 9 Oct 2026). The fields follow the table's column order.
+        Fields marked data-rule appear and disappear as the dates are typed
+        (application.js), and routes.js applies the same rules on Continue.
+      #}
+      <form class="form" action="/benefit-details-continue" method="post" novalidate
+            data-benefit-rules
+            data-pc-benefit="{{ 'true' if rules.pcBenefit else 'false' }}"
+            data-claim-benefit="{{ 'true' if rules.claimBenefit else 'false' }}"
+            data-birth-date="{{ rules.birthDate }}">
 
         <h2 class="govuk-heading-m">Discrepancy period</h2>
 
-        {{ govukDateInput({
-          id: "discrepancy-from",
-          namePrefix: "discrepancyFrom",
-          attributes: { "data-weekday": "true" },
-          fieldset: {
-            legend: {
-              text: "From",
-              classes: "govuk-fieldset__legend--s"
-            }
-          },
-          
-          errorMessage: { text: fromError[0].message } if fromError[0] else false,
-          items: [
-            {
-              name: "day",
-              value: data["discrepancyFrom-day"],
-              classes: "govuk-input--width-2 govuk-input--error" if fromError[0] else "govuk-input--width-2"
-            },
-            {
-              name: "month",
-              value: data["discrepancyFrom-month"],
-              classes: "govuk-input--width-2 govuk-input--error" if fromError[0] else "govuk-input--width-2"
-            },
-            {
-              name: "year",
-              value: data["discrepancyFrom-year"],
-              classes: "govuk-input--width-4 govuk-input--error" if fromError[0] else "govuk-input--width-4"
-            }
-          ]
-        }) }}
+        {{ dateField("discrepancy-from", "discrepancyFrom", "From", data, fromError[0].message if fromError[0] else "") }}
 
-        {{ govukDateInput({
-          id: "discrepancy-to",
-          namePrefix: "discrepancyTo",
-          attributes: { "data-weekday": "true" },
-          fieldset: {
-            legend: {
-              text: "To",
-              classes: "govuk-fieldset__legend--s"
-            }
-          },
-         
-          errorMessage: { text: toError[0].message } if toError[0] else false,
-          items: [
-            {
-              name: "day",
-              value: data["discrepancyTo-day"],
-              classes: "govuk-input--width-2 govuk-input--error" if toError[0] else "govuk-input--width-2"
-            },
-            {
-              name: "month",
-              value: data["discrepancyTo-month"],
-              classes: "govuk-input--width-2 govuk-input--error" if toError[0] else "govuk-input--width-2"
-            },
-            {
-              name: "year",
-              value: data["discrepancyTo-year"],
-              classes: "govuk-input--width-4 govuk-input--error" if toError[0] else "govuk-input--width-4"
-            }
-          ]
-        }) }}
+        {{ dateField("discrepancy-to", "discrepancyTo", "To", data, toError[0].message if toError[0] else "") }}
 
-        {# Lynn and David both use the weeks and days total as a check: a weekly
-           benefit should come out in whole weeks, so leftover days mean a date
-           is wrong. Filled in by application.js as the dates are typed. #}
+        {# Weeks and days, recalculated as either date changes (AC13, AC14). #}
         <p class="govuk-body govuk-!-font-weight-bold opcalc-period-summary" data-period-from="discrepancy-from" data-period-to="discrepancy-to" aria-live="polite"></p>
 
         {# Set from the benefit when it was chosen, but still changeable. #}
         {{ govukSelect({
           id: "initial-benefit-week",
           name: "initialBenefitWeek",
-          label: { text: "Initial benefit week" },
+          label: { text: "Initial benefit week", classes: "govuk-label--s" },
           errorMessage: { text: weekError[0].message } if weekError[0] else false,
           items: [
             { value: "", text: "Select a day", selected: not data.initialBenefitWeek },
@@ -196,54 +171,70 @@
           ]
         }) }}
 
-        {# Entitlement start date only applies to benefit week ending cases, so
-           it sits under that answer. Lynn: choosing BWC greys it out in OpCalc
-           today, because benefit week ending only came in around 2010. #}
-        {% set entitlementHtml %}
-          {{ govukDateInput({
-            id: "entitlement-start",
-            namePrefix: "entitlementStart",
-            fieldset: { legend: { text: "Entitlement start date (optional)", classes: "govuk-fieldset__legend--s" } },
-            hint: { text: "Only if entitlement started after 30 September 2003. Most cases leave this blank." },
-            items: [
-              { name: "day", classes: "govuk-input--width-2", value: data["entitlementStart-day"] },
-              { name: "month", classes: "govuk-input--width-2", value: data["entitlementStart-month"] },
-              { name: "year", classes: "govuk-input--width-4", value: data["entitlementStart-year"] }
-            ]
-          }) }}
-        {% endset %}
-
         {{ govukRadios({
           idPrefix: "benefit-week-type",
           name: "benefitWeekType",
-          fieldset: {
-            legend: {
-              text: "Benefit week type",
-              classes: "govuk-fieldset__legend--s"
-            }
-          },
+          classes: "govuk-radios--inline",
+          fieldset: { legend: { text: "Benefit week type", classes: "govuk-fieldset__legend--s" } },
           errorMessage: { text: weekTypeError[0].message } if weekTypeError[0] else false,
           items: [
-            { value: "BWE", text: "Benefit week ending (BWE)", checked: data.benefitWeekType == "BWE", conditional: { html: entitlementHtml } },
+            { value: "BWE", text: "Benefit week ending (BWE)", checked: data.benefitWeekType == "BWE" },
             { value: "BWC", text: "Benefit week commencing (BWC)", checked: data.benefitWeekType == "BWC" }
           ]
         }) }}
 
-        {# Only asked where it matters. No one we spoke to knew what it was for,
-           and it is always greyed out for Pension Credit. The IS/JSA A14 uses
-           it to decide whether the Dependants tab is available. #}
-        {% if data.benefit in ["IS", "IS-JSA", "JSA"] %}
+        {% if rules.maternity %}
+          {{ govukRadios({
+            idPrefix: "maternity-after-2007",
+            name: "maternityAfter2007",
+            classes: "govuk-radios--inline",
+            fieldset: { legend: { text: "Is the Maternity Allowance expected week of childbirth after 31 March 2007? (optional)", classes: "govuk-fieldset__legend--s" } },
+            items: [
+              { value: "yes", text: "Yes", checked: data.maternityAfter2007 == "yes" },
+              { value: "no", text: "No", checked: data.maternityAfter2007 == "no" }
+            ]
+          }) }}
+        {% endif %}
+
+        {{ dateField("entitlement-start", "entitlementStart", "Entitlement start date (optional)", data, entitlementError[0].message if entitlementError[0] else "") }}
+
+        {% if rules.esaMainPhase %}
+          {{ dateField("esa-main-phase-start", "esaMainPhaseStart", "ESA main phase start date", data, esaError[0].message if esaError[0] else "") }}
+        {% endif %}
+
+        {% if rules.pcBenefit %}
+          <div data-rule="pc-start" {{ "hidden" if not rules.pcStart }}>
+            {{ dateField("pc-start", "pcStart", "Pension Credit start date", data, pcError[0].message if pcError[0] else "") }}
+          </div>
+        {% endif %}
+
+        {% if rules.spaStart %}
+          {{ dateField("spa-start", "spaStart", "State Pension age start date (optional)", data, spaError[0].message if spaError[0] else "") }}
+        {% endif %}
+
+        {# Always shown, always starting at Yes. Only Income Support and
+           Jobseeker's Allowance cases whose period starts after 6 April 2004
+           can change it (AC6). Everyone else sees it read only (AC7). #}
+        <div data-rule="claim-editable" {{ "hidden" if not rules.claimEditable }}>
           {{ govukRadios({
             idPrefix: "claim-before-2004",
             name: "claimBefore2004",
             classes: "govuk-radios--inline",
             fieldset: { legend: { text: "Is the date of claim before 6 April 2004?", classes: "govuk-fieldset__legend--s" } },
+            attributes: { "data-claim-radios": "true" },
             items: [
-              { value: "yes", text: "Yes", checked: data.claimBefore2004 == "yes" },
-              { value: "no", text: "No", checked: data.claimBefore2004 == "no" }
+              { value: "yes", text: "Yes", checked: data.claimBefore2004 != "no", disabled: not rules.claimEditable },
+              { value: "no", text: "No", checked: data.claimBefore2004 == "no", disabled: not rules.claimEditable }
             ]
           }) }}
-        {% endif %}
+        </div>
+
+        <div class="govuk-form-group" data-rule="claim-readonly" {{ "hidden" if rules.claimEditable }}>
+          <h3 class="govuk-heading-s govuk-!-margin-bottom-1">Is the date of claim before 6 April 2004?</h3>
+          <p class="govuk-body govuk-!-margin-bottom-1">Yes</p>
+          <p class="govuk-hint">This can only be changed for Income Support or Jobseeker's Allowance, when the discrepancy period starts after 6 April 2004.</p>
+          <input type="hidden" name="claimBefore2004" value="yes" {{ "disabled" if rules.claimEditable }}>
+        </div>
 
         {{ govukButton({
           text: "Continue",

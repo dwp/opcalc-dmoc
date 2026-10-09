@@ -1293,7 +1293,9 @@ router.post('/return-to-tab', function (req, res) {
 const benefits = {
   AA: { label: 'Attendance Allowance (AA)', a14: null, available: true },
   BA: { label: 'Bereavement Allowance (BA)', a14: null, available: true },
-  DLA: { label: 'Disability Living Allowance (DLA)', a14: null, available: true },
+  'DLA-CARE': { label: 'Disability Living Allowance Care Component (DLA)', a14: null, available: true },
+  'DLA-MOB': { label: 'Disability Living Allowance Mobility Component (DLA)', a14: null, available: true },
+  'DLA-BOTH': { label: 'Disability Living Allowance Care and Mobility (DLA)', a14: null, available: true },
   ESA: { label: 'Employment and Support Allowance (ESA)', a14: '/a14esa', available: true, benefitWeek: 'Thursday', weekType: 'BWE' },
   IB: { label: 'Incapacity Benefit (IB)', a14: null, available: true },
   IS: { label: 'Income Support (IS)', a14: '/a14isjsa', available: true, benefitWeek: 'Monday', weekType: 'BWC' },
@@ -1305,7 +1307,7 @@ const benefits = {
   MA: { label: 'Maternity Allowance (MA)', a14: null, available: true },
   PIB: { label: 'Passported Incapacity Benefit (PIB)', a14: null, available: true },
   PC: { label: 'Pension Credit (PC)', a14: '/a14', available: true, benefitWeek: 'Tuesday', weekType: 'BWC' },
-  RP: { label: 'Retirement Pension (RP)', a14: null, available: true },
+  SP: { label: 'State Pension (SP)', a14: null, available: true },
   SDA: { label: 'Severe Disablement Allowance (SDA)', a14: null, available: true },
   SB: { label: 'Sickness Benefit (SB)', a14: null, available: true },
   WMA: { label: 'Widowed Mother’s Allowance (WMA)', a14: null, available: true },
@@ -1513,6 +1515,15 @@ Object.keys(viewsByName).forEach(function (name) {
 // Registered before anything else so it answers first. Express matches in
 // declaration order, and a route declared earlier would win - that is what
 // made /a14esa keep serving the ESA form whichever benefit was chosen.
+// The benefit details page reads its rules (Max's table, 9 Oct 2026) from
+// here. Registered before the router that renders the page, below.
+router.use(function (req, res, next) {
+  if (req.method === 'GET' && ['benefit-details', 'benefits-details', 'benefitdetails', 'benefitsdetails'].indexOf(lastSegment(req.path)) > -1) {
+    res.locals.rules = benefitFieldRules(req.session.data || {})
+  }
+  next()
+})
+
 router.use(function (req, res, next) {
   if (req.method !== 'GET') { return next() }
 
@@ -1861,11 +1872,29 @@ function selectBenefitContinue (req, res) {
   // the next page rather than making someone look it up. Only when it has not
   // already been set, so going back and changing the benefit does not throw
   // away a deliberate choice.
-  if (!data.initialBenefitWeek) {
-    data.initialBenefitWeek = benefits[chosen].benefitWeek
+  if (!data.initialBenefitWeek || data.benefitWeekAuto) {
+    data.initialBenefitWeek = benefits[chosen].benefitWeek || ''
+    data.benefitWeekAuto = true
   }
-  if (!data.benefitWeekType) {
-    data.benefitWeekType = benefits[chosen].weekType
+  if (!data.benefitWeekType || data.benefitWeekAuto) {
+    data.benefitWeekType = benefits[chosen].weekType || ''
+  }
+
+  // Discrepancy To date: today, or 12/04/1995 for Invalidity Benefit and
+  // Sickness Benefit (Max's AC11 and AC12). Only when nobody has typed one,
+  // so a deliberate date is never overwritten.
+  const toEmpty = !data['discrepancyTo-day'] && !data['discrepancyTo-month'] && !data['discrepancyTo-year']
+  if (toEmpty || data.discrepancyToAuto) {
+    const to = defaultDiscrepancyTo(chosen)
+    data['discrepancyTo-day'] = to.day
+    data['discrepancyTo-month'] = to.month
+    data['discrepancyTo-year'] = to.year
+    data.discrepancyToAuto = true
+  }
+
+  // The date of claim question starts at Yes (AC1, AC6, AC7).
+  if (!data.claimBefore2004) {
+    data.claimBefore2004 = 'yes'
   }
 
   delete data.benefitError
@@ -1879,10 +1908,94 @@ router.post('/select-benefit-continue', selectBenefitContinue)
 // Benefit details - the discrepancy period and benefit week
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Benefit details rules (Max's "Fields by Benefit Type" table and acceptance
+// criteria, 9 Oct 2026)
+// ---------------------------------------------------------------------------
+//
+// Every benefit shows, and must have: discrepancy from and to dates, initial
+// benefit week, BWE or BWC. Every benefit shows, optional: entitlement start
+// date. Every benefit shows "Is the date of claim before 6 April 2004?", set
+// to Yes. The extras:
+//
+//   ESA main phase start date      mandatory  ESA                     (AC2)
+//   Pension Credit start date      mandatory  IS/PC, when the period
+//                                             ends on or after 6 April
+//                                             2010 and the customer
+//                                             turned 60 on or after it (AC3)
+//   State Pension age start date   optional   IS, JSA, ESA, IS/JSA    (AC4)
+//   Maternity Allowance question   optional   MA                      (AC5)
+//   Date of claim before 2004      can be changed for IS and JSA, when
+//                                  the period starts after 6 April 2004;
+//                                  read only (Yes) otherwise          (AC6, AC7)
+//
+// The same rules run in the browser (application.js), so fields appear and
+// disappear as the dates are typed, and here, so what is saved matches.
+const BENEFIT_RULES = {
+  esaMainPhase: ['ESA'],
+  pcStart: ['IS-PC'],
+  spaStart: ['IS', 'JSA', 'ESA', 'IS-JSA'],
+  maternity: ['MA'],
+  claimEditable: ['IS', 'JSA']
+}
+const PC_PERIOD_ENDS_FROM = new Date(2010, 3, 6)
+const PC_BORN_FROM = new Date(1950, 3, 6) // turns 60 on or after 6 April 2010
+const CLAIM_PERIOD_STARTS_AFTER = new Date(2004, 3, 6)
+
+// To date prefilled when a benefit is chosen (AC11, AC12). The From date
+// needs "the first valid date for the selected benefit", and those rules have
+// not been shared yet, so it is left for the user to type.
+function defaultDiscrepancyTo (benefit) {
+  if (benefit === 'IVB' || benefit === 'SB') { return { day: '12', month: '04', year: '1995' } }
+  const now = new Date()
+  return { day: String(now.getDate()).padStart(2, '0'), month: String(now.getMonth() + 1).padStart(2, '0'), year: String(now.getFullYear()) }
+}
+
+// The customer's date of birth, when it is known. If the details entered
+// were a third party's, the date of birth is theirs, not the customer's, so
+// it does not count.
+function customerBirthDate (data) {
+  if (data.detailsFor === 'thirdParty') { return null }
+  if (checkDate(data, 'dateOfBirth', 'x')) { return null }
+  return dateValue(dateParts(data, 'dateOfBirth'))
+}
+
+function benefitFieldRules (data, source) {
+  const benefit = data.benefit
+  const values = source || data
+  const from = checkDate(values, 'discrepancyFrom', 'x') ? null : dateValue(dateParts(values, 'discrepancyFrom'))
+  const to = checkDate(values, 'discrepancyTo', 'x') ? null : dateValue(dateParts(values, 'discrepancyTo'))
+  const born = customerBirthDate(data)
+
+  return {
+    esaMainPhase: BENEFIT_RULES.esaMainPhase.indexOf(benefit) > -1,
+    // Date of birth unknown: shown, so it is never silently skipped.
+    pcStart: BENEFIT_RULES.pcStart.indexOf(benefit) > -1 && !!to && to >= PC_PERIOD_ENDS_FROM && (!born || born >= PC_BORN_FROM),
+    pcBenefit: BENEFIT_RULES.pcStart.indexOf(benefit) > -1,
+    spaStart: BENEFIT_RULES.spaStart.indexOf(benefit) > -1,
+    maternity: BENEFIT_RULES.maternity.indexOf(benefit) > -1,
+    claimBenefit: BENEFIT_RULES.claimEditable.indexOf(benefit) > -1,
+    claimEditable: BENEFIT_RULES.claimEditable.indexOf(benefit) > -1 && !!from && from > CLAIM_PERIOD_STARTS_AFTER,
+    birthDate: born ? born.getFullYear() + '-' + String(born.getMonth() + 1).padStart(2, '0') + '-' + String(born.getDate()).padStart(2, '0') : ''
+  }
+}
+
+const OPTIONAL_DATE_FIELDS = ['entitlementStart', 'esaMainPhaseStart', 'pcStart', 'spaStart']
+
+function clearDate (data, prefix) {
+  ['-day', '-month', '-year'].forEach(function (part) { delete data[prefix + part] })
+}
+
 function benefitDetailsContinue (req, res) {
   const data = req.session.data
   const body = req.body
   const errors = []
+  const rules = benefitFieldRules(data, body)
+
+  // Once the page has been sent, the dates and week on it are the user's own,
+  // so choosing another benefit later will not overwrite them.
+  delete data.discrepancyToAuto
+  delete data.benefitWeekAuto
 
   function fail (field, href, message) {
     if (message) {
@@ -1890,28 +2003,53 @@ function benefitDetailsContinue (req, res) {
     }
   }
 
-  fail('discrepancy-from', '#discrepancy-from-day',
-    checkDate(body, 'discrepancyFrom', 'the date the discrepancy period started'))
-  fail('discrepancy-to', '#discrepancy-to-day',
-    checkDate(body, 'discrepancyTo', 'the date the discrepancy period ended'))
+  // Missing mandatory fields say "Please enter ...", as in Max's AC18.
+  // Anything typed but not a real date gets the usual date messages.
+  function mandatoryDate (prefix, id, name) {
+    const empty = ['-day', '-month', '-year'].every(function (part) { return !String(body[prefix + part] || '').trim() })
+    if (empty) { return fail(id, '#' + id + '-day', 'Please enter the ' + name) }
+    fail(id, '#' + id + '-day', checkDate(body, prefix, 'the ' + name))
+  }
 
-  // Only worth comparing once both are real dates.
+  function optionalDate (prefix, id, name) {
+    const empty = ['-day', '-month', '-year'].every(function (part) { return !String(body[prefix + part] || '').trim() })
+    if (!empty) { fail(id, '#' + id + '-day', checkDate(body, prefix, 'the ' + name)) }
+  }
+
+  // In screen order (AC17, AC18).
+  mandatoryDate('discrepancyFrom', 'discrepancy-from', 'discrepancy from date')
+  mandatoryDate('discrepancyTo', 'discrepancy-to', 'discrepancy to date')
+
   if (!errors.length) {
     const from = dateValue(dateParts(body, 'discrepancyFrom'))
     const to = dateValue(dateParts(body, 'discrepancyTo'))
 
     if (from && to && to < from) {
       fail('discrepancy-to', '#discrepancy-to-day',
-        'The date the discrepancy period ended must be the same as or after the date it started')
+        'The discrepancy to date must be the same as or after the discrepancy from date')
     }
   }
 
   if (!body.initialBenefitWeek) {
-    fail('initial-benefit-week', '#initial-benefit-week', 'Select an initial benefit week')
+    fail('initial-benefit-week', '#initial-benefit-week', 'Please select the initial benefit week')
   }
 
   if (!body.benefitWeekType) {
-    fail('benefit-week-type', '#benefit-week-type', 'Select a benefit week type')
+    fail('benefit-week-type', '#benefit-week-type', 'Please select benefit week ending (BWE) or benefit week commencing (BWC)')
+  }
+
+  optionalDate('entitlementStart', 'entitlement-start', 'entitlement start date')
+
+  if (rules.esaMainPhase) {
+    mandatoryDate('esaMainPhaseStart', 'esa-main-phase-start', 'ESA main phase start date')
+  }
+
+  if (rules.pcStart) {
+    mandatoryDate('pcStart', 'pc-start', 'Pension Credit start date')
+  }
+
+  if (rules.spaStart) {
+    optionalDate('spaStart', 'spa-start', 'State Pension age start date')
   }
 
   if (errors.length) {
@@ -1920,6 +2058,17 @@ function benefitDetailsContinue (req, res) {
   }
 
   delete data.benefitDetailsErrors
+
+  // Fields that do not apply to this benefit are not kept.
+  if (!rules.esaMainPhase) { clearDate(data, 'esaMainPhaseStart') }
+  if (!rules.pcStart) { clearDate(data, 'pcStart') }
+  if (!rules.spaStart) { clearDate(data, 'spaStart') }
+  if (!rules.maternity) { delete data.maternityAfter2007 }
+
+  // Read only unless the rules allow a change: always Yes (AC7).
+  if (!rules.claimEditable || data.claimBefore2004 !== 'no') {
+    data.claimBefore2004 = 'yes'
+  }
 
   res.redirect(CHECK_ANSWERS_PAGE)
 }
@@ -3463,7 +3612,46 @@ router.post('/personal-details-continue', function (req, res) {
     return res.redirect('/customer-details/select-benefit')
   }
 
-  res.redirect('/customer-details/appointee-other-details')
+  res.redirect('/customer-details/appointee')
+})
+
+// Does the customer have an appointee? (Max's multistep journey, 9 Oct 2026)
+//
+// Yes, a corporate body       - Corporate appointee details
+// Yes, a personal acting body - Appointee name, then Appointee address
+// No                          - Which benefit is this case for?
+//
+// Answers for the kind not chosen are cleared, so Check your answers never
+// shows a person's name against a corporate body or the other way round.
+const PERSONAL_APPOINTEE_FIELDS = ['appointeeTitle', 'appointeeForenames', 'appointeeSurname',
+  'appointeeSameAddress', 'appointeeAddressLine1', 'appointeeAddressLine2', 'appointeeTown',
+  'appointeePostcode', 'appointeeTelephone']
+const CORPORATE_APPOINTEE_FIELDS = ['organisationName', 'organisationAddressLine1',
+  'organisationAddressLine2', 'organisationTown', 'organisationPostcode', 'organisationTelephone']
+
+router.post('/appointee-continue', function (req, res) {
+  const data = req.session.data || {}
+  const type = data.appointeeType
+
+  if (['corporate', 'personal', 'none'].indexOf(type) === -1) {
+    data.appointeeError = true
+    return res.redirect('/customer-details/appointee')
+  }
+
+  delete data.appointeeError
+
+  if (type !== 'personal') { PERSONAL_APPOINTEE_FIELDS.forEach(function (f) { delete data[f] }) }
+  if (type !== 'corporate') { CORPORATE_APPOINTEE_FIELDS.forEach(function (f) { delete data[f] }) }
+
+  if (type === 'corporate') { return res.redirect('/customer-details/corporate-appointee-details') }
+  if (type === 'personal') { return res.redirect('/customer-details/appointee-name') }
+  res.redirect('/customer-details/select-benefit')
+})
+
+// The old single "Appointee or other details" page became the four screens
+// above. Old links go to the first of them.
+router.get('/customer-details/appointee-other-details', function (req, res) {
+  res.redirect('/customer-details/appointee')
 })
 
 // Closing a case asks whether to save it first, the same way OpCalc does

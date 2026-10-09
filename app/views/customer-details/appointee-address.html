@@ -1,0 +1,112 @@
+{% extends "layouts/main.html" %}
+
+{% block pageTitle %}
+  Appointee address – OpCalc – GOV.UK Prototype Kit
+{% endblock %}
+
+{% block header %}
+  {{ dwpHeader({
+    serviceName: "OpCalc",
+    serviceHref: "/",
+    container: true
+  }) }}
+{% endblock %}
+
+{% block containerStart %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "javascript:window.history.back()"
+  }) }}
+{% endblock %}
+
+{% block footer %}
+  {{ dwpFooter({
+    meta: {
+      visuallyHiddenTitle: "About this website",
+      items: [
+        {
+          href: "#",
+          text: "Accessibility statement"
+        },
+        {
+          href: "#",
+          text: "Privacy notice"
+        },
+        {
+          href: "#",
+          text: "Cookies"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block content %}
+
+{#
+  Appointee address. New screen from Max's multistep journey (9 Oct 2026).
+
+  Yes - plays back the address entered on personal details, which is what
+        ticking "Appointee has same address as customer" does in the old
+        OpCalc.
+  No  - boxes for the appointee's own address.
+
+  Every box is optional. Clear is kept, as in Max's mockup.
+#}
+
+{% set notGiven = "Not given" %}
+
+  {% set sameHtml %}
+    <p class="govuk-body">The appointee's address will be recorded as:</p>
+    {{ govukSummaryList({
+      classes: "govuk-summary-list--no-border",
+      rows: [
+        { key: { text: "Address line 1" }, value: { text: data.addressLine1 or notGiven } },
+        { key: { text: "Address line 2" }, value: { text: data.addressLine2 or notGiven } },
+        { key: { text: "Town or city" }, value: { text: data.addressTown or notGiven } },
+        { key: { text: "Postcode" }, value: { text: data.addressPostcode or notGiven } },
+        { key: { text: "Telephone" }, value: { text: data.telephone or notGiven } }
+      ]
+    }) }}
+  {% endset %}
+
+  {% set ownHtml %}
+    <p class="govuk-body govuk-!-font-weight-bold">Appointee's address</p>
+    {{ govukInput({ id: "appointee-address-line-1", name: "appointeeAddressLine1", label: { text: "Address line 1" }, autocomplete: "address-line1", value: data.appointeeAddressLine1 }) }}
+    {{ govukInput({ id: "appointee-address-line-2", name: "appointeeAddressLine2", label: { text: "Address line 2 (optional)" }, autocomplete: "address-line2", value: data.appointeeAddressLine2 }) }}
+    {{ govukInput({ id: "appointee-town", name: "appointeeTown", label: { text: "Town or city" }, classes: "govuk-!-width-two-thirds", autocomplete: "address-level2", value: data.appointeeTown }) }}
+    {{ govukInput({ id: "appointee-postcode", name: "appointeePostcode", label: { text: "Postcode" }, classes: "govuk-input--width-10", autocomplete: "postal-code", value: data.appointeePostcode }) }}
+    {{ govukInput({ id: "appointee-telephone", name: "appointeeTelephone", label: { text: "Telephone" }, classes: "govuk-input--width-20", type: "tel", value: data.appointeeTelephone }) }}
+  {% endset %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <span class="govuk-caption-l">Customer details</span>
+      <h1 class="govuk-heading-l">Appointee address</h1>
+
+      <form action="/customer-details/select-benefit" method="post" novalidate>
+
+        {{ govukRadios({
+          idPrefix: "appointee-same-address",
+          name: "appointeeSameAddress",
+          fieldset: {
+            legend: { text: "Does the appointee live at the same address as the customer?", classes: "govuk-fieldset__legend--m" }
+          },
+          items: [
+            { value: "yes", text: "Yes", checked: data.appointeeSameAddress == "yes", conditional: { html: sameHtml } },
+            { value: "no", text: "No", checked: data.appointeeSameAddress == "no", conditional: { html: ownHtml } }
+          ]
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({ text: "Continue", type: "submit", preventDoubleClick: true }) }}
+          <button type="button" class="govuk-button govuk-button--secondary js-clear-form" data-module="govuk-button">Clear</button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}
