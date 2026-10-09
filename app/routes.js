@@ -3576,28 +3576,18 @@ router.post('/case-delete', function (req, res) {
 // Added after the user research round (October 2026)
 // ===========================================================================
 
-// Whose details are you entering? (new first screen, 8 Oct 2026)
-//
-// In the old OpCalc, ticking "Third party" on personal details means the
-// details typed there are the third party's own, and the "Appointee or
-// other details" screen is greyed out. This is now asked first, on its own,
-// so personal details can say whose details it wants.
-router.post('/whose-details-continue', function (req, res) {
-  const data = req.session.data || {}
-
-  if (data.detailsFor !== 'customer' && data.detailsFor !== 'thirdParty') {
-    data.whoseDetailsError = true
-    return res.redirect('/customer-details/whose-details')
-  }
-
-  delete data.whoseDetailsError
+// The separate "whose details" screen (8 Oct 2026) was folded back into
+// personal details to follow Max's multistep journey (9 Oct 2026). Old links
+// go to personal details.
+router.get('/customer-details/whose-details', function (req, res) {
   res.redirect('/customer-details/personal-details')
 })
 
 // Personal details. Everything is optional apart from the postcode.
 //
-// Third party  - skip the appointee screen, go straight to the benefit.
-// Customer     - show the appointee screen. Everything on it is optional.
+// "Are the details below for a third party?"
+//   Yes - the appointee screens do not apply: straight to the benefit.
+//   No  - "Does the customer have an appointee?" (Max's multistep journey).
 router.post('/personal-details-continue', function (req, res) {
   const data = req.session.data || {}
 

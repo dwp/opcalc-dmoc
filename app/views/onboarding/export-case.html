@@ -55,23 +55,23 @@
   Changes after the design clinic (6 Oct 2026):
   - Plain checkboxes instead of checkboxes inside a table. Tables are for
     comparing information, not for choosing (Ross Brown).
-  - Export next to a case on Your cases opens this page with that case
+  - Export next to a case on Saved Cases opens this page with that case
     already ticked (?exportCase= and the row number), so exporting one case
     is one click and a button. (9 Oct 2026, from the tweaked screen.)
-  - The list matches Your cases: one row per National Insurance number.
+  - The list matches Saved Cases: one row per National Insurance number.
   - "Export to another office" is a yes or no question, as Viktoria had it
     in her second version, instead of an easily missed checkbox.
-  - No benefit, to match Your cases.
+  - No benefit, to match Saved Cases.
 #}
 
 {% set exportRows = [
-  { nino: "AB 12 34 56 C" },
-  { nino: "CD 12 34 56 C" },
-  { nino: "EF 12 34 56 C" },
-  { nino: "GH 12 34 56 C" },
-  { nino: "JK 12 34 56 C" },
-  { nino: "LM 12 34 56 C" },
-  { nino: "WX 12 34 56 C" }
+  { nino: "QQ123456C" },
+  { nino: "AB987654A" },
+  { nino: "CD112233B" },
+  { nino: "EF445566C" },
+  { nino: "GH778899D" },
+  { nino: "JK123987A" },
+  { nino: "WX654321C" }
 ] %}
 
 {% set exportItems = [] %}

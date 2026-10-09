@@ -1,4 +1,5 @@
 {% extends "layouts/main.html" %}
+{% from "components/date-stepper.njk" import appDateStepper %}
 
 {# routes.js puts a list on data.benefitDetailsErrors when something fails    #}
 {# validation. Sorted here by field so each component can ask for its own.    #}
@@ -31,13 +32,13 @@
 
 {% set rules = rules if rules else {} %}
 
-{# A GOV.UK date input with the day of the week under it and the up and
-   down arrow keys moving it a day at a time (Max's AC16). #}
+{# A GOV.UK date input with the day of the week under it. The From and To
+   dates use the team's date stepper instead (components/date-stepper.njk). #}
 {% macro dateField(id, prefix, legend, value, error, show) %}
   {{ govukDateInput({
     id: id,
     namePrefix: prefix,
-    attributes: { "data-weekday": "true", "data-date-arrows": "true" },
+    attributes: { "data-weekday": "true" },
     fieldset: { legend: { text: legend, classes: "govuk-fieldset__legend--s" } },
     errorMessage: { text: error } if error else false,
     items: [
@@ -87,6 +88,10 @@
       ]
     }
   }) }}
+{% endblock %}
+
+{% block pageScripts %}
+  <script src="/public/javascripts/date-stepper.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -148,12 +153,27 @@
 
         <h2 class="govuk-heading-m">Discrepancy period</h2>
 
-        {{ dateField("discrepancy-from", "discrepancyFrom", "From", data, fromError[0].message if fromError[0] else "") }}
+        {# The team's date stepper (CASA build, 9 Oct 2026): up and down
+           buttons beside each date move it a day at a time (Max's AC16), the
+           day of the week shows underneath, and the period below is worked
+           out as either date changes (AC13, AC14). #}
+        {{ appDateStepper({
+          id: "discrepancy-from",
+          namePrefix: "discrepancyFrom",
+          legend: "From",
+          date: { day: data["discrepancyFrom-day"], month: data["discrepancyFrom-month"], year: data["discrepancyFrom-year"] },
+          errorMessage: { text: fromError[0].message } if fromError[0] else false
+        }) }}
 
-        {{ dateField("discrepancy-to", "discrepancyTo", "To", data, toError[0].message if toError[0] else "") }}
+        {{ appDateStepper({
+          id: "discrepancy-to",
+          namePrefix: "discrepancyTo",
+          legend: "To",
+          date: { day: data["discrepancyTo-day"], month: data["discrepancyTo-month"], year: data["discrepancyTo-year"] },
+          errorMessage: { text: toError[0].message } if toError[0] else false
+        }) }}
 
-        {# Weeks and days, recalculated as either date changes (AC13, AC14). #}
-        <p class="govuk-body govuk-!-font-weight-bold opcalc-period-summary" data-period-from="discrepancy-from" data-period-to="discrepancy-to" aria-live="polite"></p>
+        <p class="govuk-body govuk-!-font-weight-bold app-date-stepper__period opcalc-period-summary" data-period aria-live="polite"></p>
 
         {# Set from the benefit when it was chosen, but still changeable. #}
         {{ govukSelect({

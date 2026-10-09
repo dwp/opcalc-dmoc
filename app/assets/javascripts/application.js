@@ -1173,8 +1173,9 @@ window.GOVUKPrototypeKit.documentReady(() => {
       const weeks = Math.floor(days / 7)
       const rest = days % 7
 
-      summary.textContent = 'Period: ' + weeks + (weeks === 1 ? ' week' : ' weeks') +
-        (rest ? ' and ' + rest + (rest === 1 ? ' day' : ' days') : '')
+      const weekText = weeks ? weeks + (weeks === 1 ? ' week' : ' weeks') : ''
+      const dayText = rest ? rest + (rest === 1 ? ' day' : ' days') : ''
+      summary.textContent = 'Period: ' + [weekText, dayText].filter(Boolean).join(' and ')
     }
 
     from.addEventListener('input', update)
@@ -1193,22 +1194,6 @@ window.GOVUKPrototypeKit.documentReady(() => {
       if (!date) { return }
       const step = parseInt(button.getAttribute('data-date-step'), 10) || 0
       writeDate(container, new Date(date.getTime() + step * DAY_MS))
-    })
-  })
-
-  // ---- Arrow keys on a date ---------------------------------------------------
-  // Max's AC16: on a date, the up arrow moves it on a day and the down arrow
-  // back a day, from whichever of the three boxes has focus. Put
-  // data-date-arrows="true" on a govukDateInput to switch it on.
-  // Not done yet: an empty date and the up arrow should fill in "the
-  // earliest valid date" for the benefit, and those rules are still to come.
-  document.querySelectorAll('.govuk-date-input[data-date-arrows]').forEach(function (container) {
-    container.addEventListener('keydown', function (event) {
-      if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') { return }
-      const date = readDate(container)
-      if (!date) { return }
-      event.preventDefault()
-      writeDate(container, new Date(date.getTime() + (event.key === 'ArrowUp' ? 1 : -1) * DAY_MS))
     })
   })
 
@@ -1254,6 +1239,11 @@ window.GOVUKPrototypeKit.documentReady(() => {
 
     if (fromBox) { fromBox.addEventListener('input', update) }
     if (toBox) { toBox.addEventListener('input', update) }
+    // The date stepper's up and down buttons change the dates without an
+    // input event, so check again after any click on them.
+    form.querySelectorAll('.app-date-stepper__button').forEach(function (button) {
+      button.addEventListener('click', function () { window.setTimeout(update, 0) })
+    })
     update()
   })
 
@@ -1298,7 +1288,7 @@ window.GOVUKPrototypeKit.documentReady(() => {
   document.querySelectorAll('[data-case-list]').forEach(function (list) {
     const id = list.id
     const rows = Array.prototype.slice.call(list.querySelectorAll('[data-nino]'))
-    const search = document.querySelector('input[type="search"][aria-controls="' + id + '"]')
+    const search = document.querySelector('input[aria-controls="' + id + '"]')
     const sources = document.querySelectorAll('input[type="radio"][data-source-filter="' + id + '"]')
     const count = document.getElementById(id + '-count')
     const none = document.getElementById(id + '-none')
@@ -1357,7 +1347,7 @@ window.GOVUKPrototypeKit.documentReady(() => {
     }
 
     function apply () {
-      const wanted = search ? search.value.replace(/\s+/g, '').toUpperCase() : ''
+      const wanted = query.replace(/\s+/g, '').toUpperCase()
       const from = source()
       const matching = rows.filter(function (row) {
         const ninoOk = !wanted || row.getAttribute('data-nino').toUpperCase().indexOf(wanted) !== -1
@@ -1375,13 +1365,17 @@ window.GOVUKPrototypeKit.documentReady(() => {
 
       if (count) {
         let text = matching.length + ' ' + (matching.length === 1 ? noun.replace(/s$/, '') : noun)
-        if (wanted) { text += ' match "' + search.value.trim() + '"' }
+        if (wanted) { text += ' match "' + query.trim() + '"' }
         if (pageSize && totalPages > 1) {
           text += '. Showing ' + (Math.min((page - 1) * pageSize + 1, matching.length)) + ' to ' + Math.min(page * pageSize, matching.length)
         }
         count.textContent = text + '.'
       }
       if (none) { none.classList.toggle('govuk-!-display-none', matching.length !== 0) }
+      // A header row above the list (Saved Cases) goes when nothing matches.
+      const head = document.getElementById(id + '-head')
+      if (head) { hide(head, matching.length === 0) }
+      hide(list, matching.length === 0)
 
       if (pages) {
         pages.replaceChildren()
@@ -1397,13 +1391,18 @@ window.GOVUKPrototypeKit.documentReady(() => {
       }
     }
 
-    if (search) { search.addEventListener('input', function () { page = 1; apply() }) }
+    // The list narrows as you type, unless the list says data-search-live
+    // "false": then only the Search button filters it, as on Saved Cases.
+    let query = search ? search.value : ''
+    const live = list.getAttribute('data-search-live') !== 'false'
+    if (search && live) { search.addEventListener('input', function () { query = search.value; page = 1; apply() }) }
 
     // A Search button next to the box filters the list too, without
     // leaving the page.
     document.querySelectorAll('form[data-search-for="' + id + '"]').forEach(function (form) {
       form.addEventListener('submit', function (event) {
         event.preventDefault()
+        query = search ? search.value : ''
         page = 1
         apply()
       })

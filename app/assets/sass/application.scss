@@ -53,32 +53,6 @@
   font-family: "GDS Transport", arial, sans-serif;
 }
 
-// Your cases: search box with its button beside it, and the page numbers
-// sharing a row with the three buttons (9 Oct 2026 screen).
-.opcalc-search__row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.opcalc-search__button {
-  margin-bottom: 0;
-}
-
-.opcalc-list-footer {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.opcalc-list-footer__buttons {
-  margin-left: auto;
-}
-
 // Your cases (8 Oct): give Open, Edit and Delete room to sit on one line, and
 // keep each discrepancy period on one line too.
 @media (min-width: 40.0625em) {
@@ -93,3 +67,124 @@
     width: 35%;
   }
 }
+
+// ---------------------------------------------------------------------------
+// From the team's CASA build (shared 9 Oct 2026), copied as given so the
+// prototype looks the same and the styles can move across unchanged.
+// Used by Your cases (search, page numbers and buttons) and the date
+// stepper on Benefit details.
+// ---------------------------------------------------------------------------
+
+.app-related-items {
+  border-top: 2px solid #1d70b8;
+  padding-top: 15px;
+}
+
+.app-saved-cases-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.app-saved-cases-actions__pagination .govuk-pagination {
+  margin: 0;
+}
+
+.app-saved-cases-actions__buttons {
+  margin-bottom: 0;
+  margin-left: auto;
+}
+
+.app-date-stepper {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.app-date-stepper__date .govuk-form-group {
+  margin-bottom: 0;
+}
+
+.app-date-stepper__date .govuk-date-input__item .govuk-form-group {
+  margin-bottom: 0;
+}
+
+.app-date-stepper__weekday {
+  margin-top: 15px;
+  color: #505a5f;
+}
+
+.app-date-stepper__period {
+  margin-top: 20px;
+}
+
+.app-date-stepper__controls {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 28px;
+  height: 40px;
+  margin-top: 65px;
+  padding: 0;
+  border: 2px solid #0b0c0c;
+  background: #f3f2f1;
+}
+
+.app-date-stepper__button {
+  flex: 1 1 50%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid #b1b4b6;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.app-date-stepper__button:last-child {
+  border-bottom: 0;
+}
+
+.app-date-stepper__button:hover {
+  background: #dbdad9;
+}
+
+.app-date-stepper__button:focus {
+  outline: 3px solid #fd0;
+  outline-offset: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.app-search {
+  display: flex;
+  margin-bottom: 12px;
+}
+
+.app-search__form {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-search__row {
+  display: flex;
+  align-items: center;
+}
+
+.app-search__input {
+  margin-right: 10px;
+}
+
+.app-search__button {
+  margin-bottom: 0;
+}
+
+// Not in the CASA styles: the autocomplete and Your cases column widths
+// above are prototype only.

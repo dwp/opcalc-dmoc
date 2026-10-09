@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-  Your cases – OpCalc – GOV.UK Prototype Kit
+  Saved Cases – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
@@ -13,7 +13,10 @@
 {% endblock %}
 
 {% block containerStart %}
-
+  {{ govukBackLink({
+    text: "Back",
+    href: "/onboarding/start"
+  }) }}
 {% endblock %}
 
 {% block footer %}
@@ -41,7 +44,7 @@
 {% block content %}
 
 {#
-  Your cases (was "Saved cases"). The page you land on after Start.
+  Saved Cases. The page you land on after Start. (Called "Your cases" from 8 to 9 Oct 2026.)
 
   Changes after user research (Oct 2026):
   - "National Insurance number" in full (Emma's content review).
@@ -69,64 +72,86 @@
 #}
 
 {% set savedRows = [
-  { nino: "AB 12 34 56 C" },
-  { nino: "CD 12 34 56 C" },
-  { nino: "EF 12 34 56 C" },
-  { nino: "GH 12 34 56 C" },
-  { nino: "JK 12 34 56 C" },
-  { nino: "LM 12 34 56 C" },
-  { nino: "WX 12 34 56 C" }
+  { nino: "QQ123456C" },
+  { nino: "AB987654A" },
+  { nino: "CD112233B" },
+  { nino: "EF445566C" },
+  { nino: "GH778899D" },
+  { nino: "JK123987A" },
+  { nino: "WX654321C" }
 ] %}
+
+{#
+  Saved Cases (9 Oct 2026, 11:47): looks and works like the team's CASA
+  screen Maisie shared.
+  - Title "Saved Cases" and a Back link to the Start page.
+  - National Insurance numbers written without spaces, as on that screen.
+  - The list only filters when Search is pressed (data-search-live
+    "false"), as the CASA form posts the search. Nothing found shows the
+    "No saved cases" inset, as the CASA template does when the list is
+    empty, and the heading row goes with it.
+  - Five cases a page with page numbers and Next.
+  - Buttons "New Case", "Import a Case" and "Print setup", as written there.
+  NOTE: Max asked on 9 Oct for the home page to be called "Your cases".
+  This follows the CASA screen instead, so check which name stays.
+#}
 
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
 
-    <h1 class="govuk-heading-l">Your cases</h1>
+    <h1 class="govuk-heading-xl">Saved Cases</h1>
 
-    <form class="opcalc-search" action="/onboarding/landing-page" method="get" novalidate data-search-for="saved-cases">
-      <div class="govuk-form-group">
-        <label class="govuk-label" for="find-case">Find a case by National Insurance number</label>
-        <div class="opcalc-search__row">
-          <input class="govuk-input govuk-input--width-10 govuk-input--extra-letter-spacing" id="find-case" name="findCase" type="search" spellcheck="false" autocomplete="off" aria-controls="saved-cases">
-          {{ govukButton({ text: "Search", classes: "govuk-button--secondary opcalc-search__button" }) }}
+    <div class="app-search">
+      <form class="app-search__form" action="/onboarding/landing-page" method="get" novalidate data-search-for="saved-cases">
+        <label class="govuk-label govuk-!-margin-bottom-2" for="search">Find a case by National Insurance number</label>
+        <div class="app-search__row">
+          <input class="govuk-input govuk-input--width-10 app-search__input" id="search" name="search" type="text" spellcheck="false" autocomplete="off" aria-controls="saved-cases">
+          <button type="submit" class="govuk-button govuk-button--secondary app-search__button" data-module="govuk-button">Search</button>
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
 
-    <p class="govuk-body govuk-visually-hidden" id="saved-cases-count" aria-live="polite">{{ savedRows | length }} saved cases.</p>
+    <p class="govuk-visually-hidden" id="saved-cases-count" aria-live="polite">{{ savedRows | length }} saved cases.</p>
 
-    <table class="govuk-table" id="saved-cases" data-case-list data-page-size="5" data-noun="saved cases">
-      <caption class="govuk-table__caption govuk-visually-hidden">Your saved cases, sorted by National Insurance number</caption>
-      <thead class="govuk-table__head">
-        <tr class="govuk-table__row">
-          <th scope="col" class="govuk-table__header">National Insurance number</th>
-          <th scope="col" class="govuk-table__header govuk-table__header--numeric">Actions</th>
-        </tr>
-      </thead>
-      <tbody class="govuk-table__body">
+    {% if savedRows | length %}
+      {# Column headings, hidden from screen readers as in the CASA template. #}
+      <dl class="govuk-summary-list govuk-!-margin-bottom-0" id="saved-cases-head" aria-hidden="true">
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key"><strong>National Insurance number</strong></dt>
+          <dd class="govuk-summary-list__actions"><strong>Actions</strong></dd>
+        </div>
+      </dl>
+
+      <dl class="govuk-summary-list" id="saved-cases" data-case-list data-page-size="5" data-noun="saved cases" data-search-live="false">
         {% for row in savedRows %}
           {% set hidden %}<span class="govuk-visually-hidden"> {{ row.nino }}</span>{% endset %}
-          <tr class="govuk-table__row" data-nino="{{ row.nino | replace(' ', '') }}">
-            <th scope="row" class="govuk-table__header"><a class="govuk-link" href="/onboarding/case-overview"><span class="govuk-visually-hidden">Open </span>{{ row.nino }}</a></th>
-            <td class="govuk-table__cell govuk-table__cell--numeric">
+          <div class="govuk-summary-list__row" data-nino="{{ row.nino }}">
+            <dt class="govuk-summary-list__key"><a class="govuk-link" href="/onboarding/case-overview"><span class="govuk-visually-hidden">Open </span>{{ row.nino }}</a></dt>
+            <dd class="govuk-summary-list__actions">
               <ul class="govuk-summary-list__actions-list">
                 <li class="govuk-summary-list__actions-list-item"><a class="govuk-link" href="/onboarding/export-case?exportCase={{ loop.index0 }}">Export{{ hidden | safe }}</a></li>
                 <li class="govuk-summary-list__actions-list-item"><a class="govuk-link" href="/onboarding/deletecase">Delete{{ hidden | safe }}</a></li>
               </ul>
-            </td>
-          </tr>
+            </dd>
+          </div>
         {% endfor %}
-      </tbody>
-    </table>
+      </dl>
 
-    <p class="govuk-body govuk-!-display-none" id="saved-cases-none">No saved cases match that National Insurance number.</p>
+      <div class="govuk-!-display-none" id="saved-cases-none">
+        {{ govukInsetText({ text: "No saved cases" }) }}
+      </div>
+    {% else %}
+      {{ govukInsetText({ text: "No saved cases" }) }}
+    {% endif %}
 
-    <div class="opcalc-list-footer">
-      <nav class="govuk-pagination govuk-!-margin-bottom-0" id="saved-cases-pages" aria-label="Pages of saved cases" hidden></nav>
+    <div class="app-saved-cases-actions govuk-!-margin-top-6">
+      <div class="app-saved-cases-actions__pagination">
+        <nav class="govuk-pagination" id="saved-cases-pages" aria-label="Pages of saved cases" hidden></nav>
+      </div>
 
-      <div class="govuk-button-group opcalc-list-footer__buttons">
-        {{ govukButton({ text: "New case", href: "/customer-details/whose-details" }) }}
-        {{ govukButton({ text: "Import a case", href: "/onboarding/import-case", classes: "govuk-button--secondary" }) }}
+      <div class="govuk-button-group app-saved-cases-actions__buttons">
+        {{ govukButton({ text: "New Case", href: "/customer-details/personal-details" }) }}
+        {{ govukButton({ text: "Import a Case", href: "/onboarding/import-case", classes: "govuk-button--secondary" }) }}
         {{ govukButton({ text: "Print setup", href: "/onboarding/print-setup", classes: "govuk-button--secondary" }) }}
       </div>
     </div>

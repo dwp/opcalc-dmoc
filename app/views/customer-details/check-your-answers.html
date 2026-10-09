@@ -77,7 +77,7 @@
 
       {{ govukSummaryList({
         rows: [
-          { key: { text: "Details entered for" }, value: { text: "A third party" if data.detailsFor == "thirdParty" else ("The customer" if data.detailsFor == "customer" else notGiven) }, actions: { items: [{ href: "/customer-details/whose-details", text: "Change", visuallyHiddenText: "whose details these are" }] } },
+          { key: { text: "Details entered for" }, value: { text: "A third party" if data.detailsFor == "thirdParty" else ("The customer" if data.detailsFor == "customer" else notGiven) }, actions: { items: [{ href: "/customer-details/personal-details", text: "Change", visuallyHiddenText: "whose details these are" }] } },
           { key: { text: "National Insurance number" }, value: { text: data.nino if data.nino else notGiven }, actions: { items: [{ href: "/customer-details/personal-details#nino", text: "Change", visuallyHiddenText: "National Insurance number" }] } },
           { key: { text: "Date of birth" }, value: { text: dateText("dateOfBirth") | trim }, actions: { items: [{ href: "/customer-details/personal-details#date-of-birth-day", text: "Change", visuallyHiddenText: "date of birth" }] } },
           { key: { text: "Name" }, value: { text: ([data.title, data.firstName, data.surname] | select | join(" ")) if data.surname else notGiven }, actions: { items: [{ href: "/customer-details/personal-details#surname", text: "Change", visuallyHiddenText: "name" }] } },

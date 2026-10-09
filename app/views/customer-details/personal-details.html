@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-  {{ "Error: " if data.personalDetailsErrors }}{{ "Third party's details" if data.detailsFor == "thirdParty" else "Customer's details" }} – OpCalc – GOV.UK Prototype Kit
+  {{ "Error: " if data.personalDetailsErrors }}Personal details – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
@@ -54,17 +54,23 @@
   - No Clear link (Steven Killen, Ross Brown, Joanne, Lynn).
 
   Changes after the meeting with Viktoria (8 Oct 2026):
-  - "Whose details?" is now its own screen before this one. The heading
-    here says whose details to type: "Customer's details" or "Third
-    party's details", so it is clear the boxes below are the third party's.
   - No hint text anywhere on the page.
-  - Every box is optional apart from the postcode. Continue with no
-    postcode shows an error.
-    NOTE: David types a made up postcode today just to get past this
-    (session 2, 45:03). Worth checking why the postcode is needed.
+  - Every box is optional apart from the postcode.
+
+  Changes from Max's multistep journey (9 Oct 2026):
+  - The third party question is back on this page, at the top, as Max's
+    diagram starts: "User selects No to is third party in Personal
+    Details". The separate "whose details" screen has gone.
+  - The question says the details below are the third party's, so it is
+    clear whose details go in the boxes. No is ticked to start with, like
+    the unticked Third party checkbox in the old OpCalc.
+      Yes - the details below are the third party's. The appointee screens
+            do not apply, so Continue goes to "Which benefit is this case
+            for?"
+      No  - the details are the customer's. Continue goes to "Does the
+            customer have an appointee?"
 #}
 
-{% set isThirdParty = data.detailsFor == "thirdParty" %}
 {% set postcodeError = data.personalDetailsErrors and data.personalDetailsErrors.postcode %}
 
   <div class="govuk-grid-row">
@@ -78,9 +84,22 @@
       {% endif %}
 
       <span class="govuk-caption-l">Customer details</span>
-      <h1 class="govuk-heading-l">{{ "Third party's details" if isThirdParty else "Customer's details" }}</h1>
+      <h1 class="govuk-heading-l">Personal details</h1>
 
       <form class="form" action="/personal-details-continue" method="post" novalidate>
+
+        {{ govukRadios({
+          idPrefix: "details-for",
+          name: "detailsFor",
+          classes: "govuk-radios--inline",
+          fieldset: {
+            legend: { text: "Are the details below for a third party?", classes: "govuk-fieldset__legend--m" }
+          },
+          items: [
+            { value: "thirdParty", text: "Yes", checked: data.detailsFor == "thirdParty" },
+            { value: "customer", text: "No", checked: data.detailsFor != "thirdParty" }
+          ]
+        }) }}
 
         {{ govukInput({
           id: "nino",

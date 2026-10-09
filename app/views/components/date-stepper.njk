@@ -1,0 +1,74 @@
+{#
+  Date stepper, from the team's CASA build (shared 9 Oct 2026), copied as
+  given. A GOV.UK date input with the day of the week under it and up and
+  down buttons beside it that move the date a day at a time. Works with
+  assets/javascripts/date-stepper.js.
+
+  Used on Benefit details for the discrepancy From and To dates.
+
+  One change from the team's version: the three boxes turn red when there
+  is an error (govuk-input--error), as Max's AC17 asks. The GOV.UK date
+  input does not do this by itself.
+#}
+{% from "govuk/components/date-input/macro.njk" import govukDateInput %}
+
+{% macro appDateStepper(params) %}
+
+  {% set date = params.date or {} %}
+  {% set monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] %}
+  {% set monthName = monthNames[date.month | int - 1] %}
+
+  <div class="app-date-stepper" data-module="date-stepper">
+    <div class="app-date-stepper__date">
+      {{ govukDateInput({
+        id: params.id,
+        namePrefix: params.namePrefix,
+        formGroup: {
+          classes: "govuk-!-margin-bottom-0"
+        },
+        fieldset: {
+          legend: {
+            text: params.legend,
+            classes: "govuk-fieldset__legend--s"
+          }
+        },
+        errorMessage: params.errorMessage,
+        items: [
+          {
+            name: "day",
+            classes: "govuk-input--width-2" + (" govuk-input--error" if params.errorMessage else ""),
+            value: date.day,
+            attributes: { "data-date-part": "day" }
+          },
+          {
+            name: "month",
+            classes: "govuk-input--width-2" + (" govuk-input--error" if params.errorMessage else ""),
+            value: date.month,
+            attributes: { "data-date-part": "month" }
+          },
+          {
+            name: "year",
+            classes: "govuk-input--width-4" + (" govuk-input--error" if params.errorMessage else ""),
+            value: date.year,
+            attributes: { "data-date-part": "year" }
+          }
+        ]
+      }) }}
+
+      <p class="app-date-stepper__weekday govuk-body govuk-!-margin-bottom-0" data-weekday>
+        {{ date.weekday }} {{ date.day }} {{ monthName }} {{ date.year }}
+      </p>
+    </div>
+
+    <div class="app-date-stepper__controls">
+      <button class="app-date-stepper__button" type="button" data-step="1">
+        <span aria-hidden="true">▲</span>
+        <span class="govuk-visually-hidden">Next day</span>
+      </button>
+      <button class="app-date-stepper__button" type="button" data-step="-1">
+        <span aria-hidden="true">▼</span>
+        <span class="govuk-visually-hidden">Previous day</span>
+      </button>
+    </div>
+  </div>
+{% endmacro %}

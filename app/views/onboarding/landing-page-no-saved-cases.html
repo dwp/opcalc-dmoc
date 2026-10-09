@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-  Your cases – OpCalc – GOV.UK Prototype Kit
+  Saved Cases – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
@@ -43,74 +43,36 @@
 
 {% block content %}
 
+{# Saved Cases with nothing saved: the "No saved cases" inset from the
+   team's CASA template, with the same search and buttons as when there are
+   cases (9 Oct 2026). #}
+
 <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
+  <div class="govuk-grid-column-full">
 
- <h1 class="govuk-heading-l">Your cases</h1>
+    <h1 class="govuk-heading-xl">Saved Cases</h1>
 
- <!-- <p class="govuk-body">No saved cases</p> -->
-
- <div class="govuk-inset-text">
-  You have no saved cases. Start a new case, or import one a colleague has exported.
-</div>
-
-{% from "govuk/components/button/macro.njk" import govukButton %}
- 
-{{ govukButton({
-        text: "New case",
-        href: "/customer-details/whose-details",
-        classes: "govuk-button--secondary"
-      }) }}
-
-<!-- {{ govukButton({
-        text: "Open an exisiting case",
-        href: "/saved-cases",
-        isStartButton: true
-      }) }} -->
- 
-
-<h2 class="govuk-heading-m">
-        More actions
-      </h2>
-
-<ul class="govuk-list">
-  <li><a href="/onboarding/import-case" class="govuk-link govuk-link--no-visited-state">Import a case</a></li>
-  <li><a href="/onboarding/print-setup" class="govuk-link govuk-link--no-visited-state">Print setup</a></li>
-</ul>
-
-
- 
+    <div class="app-search">
+      <form class="app-search__form" action="/onboarding/landing-page-no-saved-cases" method="get" novalidate>
+        <label class="govuk-label govuk-!-margin-bottom-2" for="search">Find a case by National Insurance number</label>
+        <div class="app-search__row">
+          <input class="govuk-input govuk-input--width-10 app-search__input" id="search" name="search" type="text" spellcheck="false" autocomplete="off">
+          <button type="submit" class="govuk-button govuk-button--secondary app-search__button" data-module="govuk-button">Search</button>
+        </div>
+      </form>
     </div>
 
-    <!-- <div class="govuk-grid-column-one-third">
- 
-      <aside class="govuk-prototype-kit-common-templates-related-items" role="complementary">
-        <h2 class="govuk-heading-m" id="subsection-title">
-          More actions
-        </h2>
-        <nav role="navigation" aria-labelledby="subsection-title">
-          <ul class="govuk-list govuk-!-font-size-16">
-            <li>
-              <a href="/onboarding/import-case">
-                Import a case <span class="govuk-visually-hidden">in Subsection</span>
-              </a>
-            </li>
-            <li>
-              <a href="/onboarding/export-case">
-                Export a case <span class="govuk-visually-hidden">in Subsection</span>
-              </a>
-            </li>
-            <li>
-              <a href="/onboarding/print-setup">
-                Print setup <span class="govuk-visually-hidden">in Subsection</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </aside>
- 
-    </div> -->
+    {{ govukInsetText({ text: "No saved cases" }) }}
+
+    <div class="app-saved-cases-actions govuk-!-margin-top-6">
+      <div class="govuk-button-group app-saved-cases-actions__buttons">
+        {{ govukButton({ text: "New Case", href: "/customer-details/personal-details" }) }}
+        {{ govukButton({ text: "Import a Case", href: "/onboarding/import-case", classes: "govuk-button--secondary" }) }}
+        {{ govukButton({ text: "Print setup", href: "/onboarding/print-setup", classes: "govuk-button--secondary" }) }}
+      </div>
+    </div>
 
   </div>
- 
+</div>
+
 {% endblock %}
