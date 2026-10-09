@@ -73,44 +73,52 @@
 
       <h1 class="govuk-heading-l">Check your answers</h1>
 
-      <h2 class="govuk-heading-m">{{ "Third party's details" if data.detailsFor == "thirdParty" else "Customer's details" }}</h2>
+      <h2 class="govuk-heading-m">Customer's details</h2>
 
       {{ govukSummaryList({
         rows: [
-          { key: { text: "Details entered for" }, value: { text: "A third party" if data.detailsFor == "thirdParty" else ("The customer" if data.detailsFor == "customer" else notGiven) }, actions: { items: [{ href: "/customer-details/personal-details", text: "Change", visuallyHiddenText: "whose details these are" }] } },
           { key: { text: "National Insurance number" }, value: { text: data.nino if data.nino else notGiven }, actions: { items: [{ href: "/customer-details/personal-details#nino", text: "Change", visuallyHiddenText: "National Insurance number" }] } },
           { key: { text: "Date of birth" }, value: { text: dateText("dateOfBirth") | trim }, actions: { items: [{ href: "/customer-details/personal-details#date-of-birth-day", text: "Change", visuallyHiddenText: "date of birth" }] } },
           { key: { text: "Name" }, value: { text: ([data.title, data.firstName, data.surname] | select | join(" ")) if data.surname else notGiven }, actions: { items: [{ href: "/customer-details/personal-details#surname", text: "Change", visuallyHiddenText: "name" }] } },
           { key: { text: "Sex" }, value: { text: data.sex if data.sex else notGiven }, actions: { items: [{ href: "/customer-details/personal-details#sex", text: "Change", visuallyHiddenText: "sex" }] } },
-          { key: { text: "Address" }, value: { text: customerAddress if customerAddress else notGiven }, actions: { items: [{ href: "/customer-details/personal-details#address-line-1", text: "Change", visuallyHiddenText: "address" }] } }
+          { key: { text: "Address" }, value: { text: customerAddress if customerAddress else notGiven }, actions: { items: [{ href: "/customer-details/personal-details#address-line-1", text: "Change", visuallyHiddenText: "address" }] } },
+          { key: { text: "Third party case" }, value: { text: "Yes" if data.detailsFor == "thirdParty" else "No" }, actions: { items: [{ href: "/customer-details/personal-details#details-for", text: "Change", visuallyHiddenText: "whether this is a third party case" }] } }
         ]
       }) }}
 
+      {#
+        Appointee or other details (9 Oct 2026, from Maisie's screenshots).
+        What shows depends on "Does the customer have an appointee?":
+          No        - one row, Appointee: No
+          Corporate - Appointee type, Organisation name, Address
+          Personal  - Appointee type, Name, Address ("Same address as
+                      customer" when Yes was picked on the address screen)
+        Third party cases skip the appointee screens, so the section is
+        not shown for them.
+      #}
       {% if data.detailsFor != "thirdParty" %}
         <h2 class="govuk-heading-m">Appointee or other details</h2>
 
-        {% set customerAddress2 = [data.addressLine1, data.addressLine2, data.addressTown, data.addressPostcode] | select | join(", ") %}
-        {% if data.appointeeType == "personal" %}
+        {% set typeChange = { items: [{ href: "/customer-details/appointee", text: "Change", visuallyHiddenText: "appointee type" }] } %}
+        {% if data.appointeeType == "corporate" %}
+          {% set orgAddress = [data.organisationAddressLine1, data.organisationAddressLine2, data.organisationTown, data.organisationPostcode] | select | join(", ") %}
+          {% set appointeeRows = [
+            { key: { text: "Appointee type" }, value: { text: "Corporate body" }, actions: typeChange },
+            { key: { text: "Organisation name" }, value: { text: data.organisationName if data.organisationName else notGiven }, actions: { items: [{ href: "/customer-details/corporate-appointee-details#organisation-name", text: "Change", visuallyHiddenText: "organisation name" }] } },
+            { key: { text: "Address" }, value: { text: orgAddress if orgAddress else notGiven }, actions: { items: [{ href: "/customer-details/corporate-appointee-details#organisation-address-line-1", text: "Change", visuallyHiddenText: "organisation address" }] } }
+          ] %}
+        {% elif data.appointeeType == "personal" %}
           {% set appointeeName = [data.appointeeTitle, data.appointeeForenames, data.appointeeSurname] | select | join(" ") %}
-          {% set appointeeAddress = ("Same as the customer" + (": " + customerAddress2 if customerAddress2 else "")) if data.appointeeSameAddress == "yes" else ([data.appointeeAddressLine1, data.appointeeAddressLine2, data.appointeeTown, data.appointeePostcode] | select | join(", ")) %}
-          {% set appointeePhone = data.telephone if data.appointeeSameAddress == "yes" else data.appointeeTelephone %}
-          {% set nameHref = "/customer-details/appointee-name" %}
-          {% set addressHref = "/customer-details/appointee-address" %}
-        {% elif data.appointeeType == "corporate" %}
-          {% set appointeeName = data.organisationName %}
-          {% set appointeeAddress = [data.organisationAddressLine1, data.organisationAddressLine2, data.organisationTown, data.organisationPostcode] | select | join(", ") %}
-          {% set appointeePhone = data.organisationTelephone %}
-          {% set nameHref = "/customer-details/corporate-appointee-details" %}
-          {% set addressHref = "/customer-details/corporate-appointee-details" %}
-        {% endif %}
-
-        {% set appointeeRows = [
-          { key: { text: "Appointee" }, value: { text: "Yes, a corporate body" if data.appointeeType == "corporate" else ("Yes, a personal acting body" if data.appointeeType == "personal" else "No") }, actions: { items: [{ href: "/customer-details/appointee", text: "Change", visuallyHiddenText: "whether the customer has an appointee" }] } }
-        ] %}
-        {% if data.appointeeType == "personal" or data.appointeeType == "corporate" %}
-          {% set _ = appointeeRows.push({ key: { text: "Name" }, value: { text: appointeeName if appointeeName else notGiven }, actions: { items: [{ href: nameHref, text: "Change", visuallyHiddenText: "appointee name" }] } }) %}
-          {% set _ = appointeeRows.push({ key: { text: "Address" }, value: { text: appointeeAddress if appointeeAddress else notGiven }, actions: { items: [{ href: addressHref, text: "Change", visuallyHiddenText: "appointee address" }] } }) %}
-          {% set _ = appointeeRows.push({ key: { text: "Telephone" }, value: { text: appointeePhone if appointeePhone else notGiven }, actions: { items: [{ href: addressHref, text: "Change", visuallyHiddenText: "appointee telephone" }] } }) %}
+          {% set appointeeAddress = "Same address as customer" if data.appointeeSameAddress == "yes" else ([data.appointeeAddressLine1, data.appointeeAddressLine2, data.appointeeTown, data.appointeePostcode] | select | join(", ")) %}
+          {% set appointeeRows = [
+            { key: { text: "Appointee type" }, value: { text: "Personal acting body" }, actions: typeChange },
+            { key: { text: "Name" }, value: { text: appointeeName if appointeeName else notGiven }, actions: { items: [{ href: "/customer-details/appointee-name", text: "Change", visuallyHiddenText: "appointee name" }] } },
+            { key: { text: "Address" }, value: { text: appointeeAddress if appointeeAddress else notGiven }, actions: { items: [{ href: "/customer-details/appointee-address", text: "Change", visuallyHiddenText: "appointee address" }] } }
+          ] %}
+        {% else %}
+          {% set appointeeRows = [
+            { key: { text: "Appointee" }, value: { text: "No" }, actions: { items: [{ href: "/customer-details/appointee", text: "Change", visuallyHiddenText: "whether the customer has an appointee" }] } }
+          ] %}
         {% endif %}
 
         {{ govukSummaryList({ rows: appointeeRows }) }}
@@ -121,7 +129,7 @@
       {% set benefitRows = [
         { key: { text: "Benefit" }, value: { text: data.benefitLabel if data.benefitLabel else notGiven }, actions: { items: [{ href: "/customer-details/select-benefit", text: "Change", visuallyHiddenText: "benefit" }] } },
         { key: { text: "Discrepancy period" }, value: { text: (dateText("discrepancyFrom") | trim) + " to " + (dateText("discrepancyTo") | trim) }, actions: { items: [{ href: "/customer-details/benefits-details#discrepancy-from-day", text: "Change", visuallyHiddenText: "discrepancy period" }] } },
-        { key: { text: "Initial benefit week" }, value: { text: ((data.initialBenefitWeek if data.initialBenefitWeek else notGiven) + (", " + data.benefitWeekType if data.benefitWeekType else "")) }, actions: { items: [{ href: "/customer-details/benefits-details#initial-benefit-week", text: "Change", visuallyHiddenText: "initial benefit week" }] } }
+        { key: { text: "Initial benefit week" }, value: { text: ((data.initialBenefitWeek if data.initialBenefitWeek else notGiven) + (", Benefit Week Commencing" if data.benefitWeekType == "BWC" else (", Benefit Week Ending" if data.benefitWeekType == "BWE" else ""))) }, actions: { items: [{ href: "/customer-details/benefits-details#initial-benefit-week", text: "Change", visuallyHiddenText: "initial benefit week" }] } }
       ] %}
 
       {# The extra benefit details fields, shown when they were asked for
