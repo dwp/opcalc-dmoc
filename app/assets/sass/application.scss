@@ -431,6 +431,11 @@
   white-space: nowrap;
 }
 
+// Each tick box in a list keeps its own line and its full label.
+.app-field-row .govuk-checkboxes:not(.app-checkboxes--inline) .govuk-checkboxes__item {
+  margin-bottom: 10px;
+}
+
 .app-field-row > .govuk-form-group.app-field--wide {
   max-width: none;
 }
@@ -611,8 +616,9 @@
   padding-bottom: 0;
 }
 
-// A tick box beside a box lines up with it.
-.app-field-row .govuk-checkboxes--small:not(.app-checkboxes--inline) {
+// A single tick box beside a box lines up with it (Residential care). A
+// list of tick boxes, like the CG Premium list, stays one under another.
+.app-field-row .govuk-checkboxes--small:not(.app-checkboxes--inline):has(> .govuk-checkboxes__item:only-child) {
   min-height: 40px;
   display: flex;
   align-items: center;

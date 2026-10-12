@@ -54,13 +54,14 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
 
-      {# Same title as the real OpCalc, "A14: 11/04/1988", where the date is
+      {# Same title as the real OpCalc, "A14 IS/JSA: 11/04/1988" (Maisie asked for IS/JSA in
+         the title), where the date is
          the day this A14 starts (Maisie, 12 Oct 2026). #}
       {% set sd = data["a14StartDate-day"] if data["a14StartDate-year"] else data["discrepancyFrom-day"] %}
       {% set sm = data["a14StartDate-month"] if data["a14StartDate-year"] else data["discrepancyFrom-month"] %}
       {% set sy = data["a14StartDate-year"] if data["a14StartDate-year"] else data["discrepancyFrom-year"] %}
       {% set a14Date = ((("0" + sd) if (sd | string | length) == 1 else sd) + "/" + (("0" + sm) if (sm | string | length) == 1 else sm) + "/" + sy) if sy else "01/09/2003" %}
-      <h1 class="govuk-heading-l">A14: {{ a14Date }}</h1>
+      <h1 class="govuk-heading-l">A14 IS/JSA: {{ a14Date }}</h1>
 
       {#
         12 Oct 2026 (Maisie): every tab rebuilt to follow the real OpCalc
@@ -178,12 +179,10 @@
 
         <h2 class="govuk-heading-m">Client group premium</h2>
 
-        <div class="app-field-row app-field-row--top">
           {{ govukCheckboxes({
             idPrefix: "isjsa-cg-premium",
             name: "isjsaCgPremium",
             classes: "govuk-checkboxes--small",
-            formGroup: { classes: "app-field--wide" },
             fieldset: { legend: { text: "Client group premium", classes: "govuk-visually-hidden" } },
             items: [
               { value: "familyPremiumLp", text: "Family premium (LP)", id: "isjsa-cg-premium", checked: data.isjsaCgPremium and "familyPremiumLp" in data.isjsaCgPremium },
@@ -194,11 +193,12 @@
             ]
           }) }}
 
-          <dl class="app-inline-value app-field-row__end">
-            <dt>Premium payable</dt>
-            <dd>£{{ data.isjsaCgPremiumPayable if data.isjsaCgPremiumPayable else "0.00" }}</dd>
-          </dl>
-        </div>
+          {# Premium payable sits under the list (Maisie, 12 Oct 2026). #}
+          {{ govukSummaryList({
+            rows: [
+              { key: { text: "Premium payable" }, value: { text: "£" + (data.isjsaCgPremiumPayable if data.isjsaCgPremiumPayable else "0.00") } }
+            ]
+          }) }}
 
       {% endset %}
 
