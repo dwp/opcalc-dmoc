@@ -1,4 +1,5 @@
 {% extends "layouts/main.html" %}
+{% from "components/date-stepper.njk" import appDateStepper %}
 
 {# routes.js puts a list on data.newFormErrors when something fails           #}
 {# validation. One field here, so one bucket.                                 #}
@@ -46,6 +47,10 @@
   }) }}
 {% endblock %}
 
+{% block pageScripts %}
+  <script src="/public/javascripts/date-stepper.js"></script>
+{% endblock %}
+
 {% block content %}
 
   <div class="govuk-grid-row">
@@ -67,14 +72,10 @@
         Create new A14 Forms
       </h1>
 
-      {# Which form Continue opens depends on the benefit chosen at the start
-         of the case, so it is worth showing rather than leaving it a
-         surprise. #}
-      {% if data.benefitLabel %}
-        {{ govukInsetText({
-          text: "This case is " + data.benefitLabel + ", so Continue opens the A14 form for that benefit."
-        }) }}
-      {% else %}
+      {# Shortened (Maisie, 12 Oct 2026): no line saying which form opens,
+         no hint text and no help link. The warning stays, because without a
+         benefit there is no form to open. #}
+      {% if not data.benefitLabel %}
         {{ govukWarningText({
           text: "No benefit has been chosen for this case, so there is no A14 form to open.",
           iconFallbackText: "Warning"
@@ -83,39 +84,24 @@
         <p><a class="govuk-link" href="/customer-details/select-benefit">Choose a benefit</a></p>
       {% endif %}
 
+      <p class="govuk-body">Choose the date this A14 form starts from. It cannot be earlier than the discrepancy period.</p>
+
       <form action="/newform" method="post" novalidate>
 
-        {# Defaults to the start of the discrepancy period, as the hint says,
-           by falling back to what was entered on benefit details. #}
-        {{ govukDateInput({
+        {# Defaults to the start of the discrepancy period, by falling back to
+           what was entered on benefit details. Uses the date stepper, as on
+           Benefit details. It cannot be earlier than the discrepancy period:
+           routes.js says so in the error message if it is. #}
+        {{ appDateStepper({
           id: "a14-start-date",
           namePrefix: "a14StartDate",
-          fieldset: {
-            legend: {
-              text: "Start date"
-            }
+          legend: "Start date",
+          date: {
+            day: data["a14StartDate-day"] if data["a14StartDate-day"] else data["discrepancyFrom-day"],
+            month: data["a14StartDate-month"] if data["a14StartDate-month"] else data["discrepancyFrom-month"],
+            year: data["a14StartDate-year"] if data["a14StartDate-year"] else data["discrepancyFrom-year"]
           },
-          hint: {
-            text: "This defaults to the start of the discrepancy period. It can be later than that date, but not earlier - if it needs to be earlier, cancel and amend the Discrepancy Period From date on the Benefit details tab instead."
-          },
-          errorMessage: { text: errors[0].message } if errors[0] else false,
-          items: [
-            {
-              name: "day",
-              value: data["a14StartDate-day"] if data["a14StartDate-day"] else data["discrepancyFrom-day"],
-              classes: "govuk-input--width-2 govuk-input--error" if errors[0] else "govuk-input--width-2"
-            },
-            {
-              name: "month",
-              value: data["a14StartDate-month"] if data["a14StartDate-month"] else data["discrepancyFrom-month"],
-              classes: "govuk-input--width-2 govuk-input--error" if errors[0] else "govuk-input--width-2"
-            },
-            {
-              name: "year",
-              value: data["a14StartDate-year"] if data["a14StartDate-year"] else data["discrepancyFrom-year"],
-              classes: "govuk-input--width-4 govuk-input--error" if errors[0] else "govuk-input--width-4"
-            }
-          ]
+          errorMessage: { text: errors[0].message } if errors[0] else false
         }) }}
 
         {{ govukCheckboxes({
@@ -126,9 +112,6 @@
               value: "copyLatestData",
               text: "Copy latest data",
               id: "copy-latest-data",
-              hint: {
-                text: "Selected by default - copies all entries from the previous A14 so you do not need to re-enter them"
-              },
               checked: data.copyLatestData if data.newFormErrors else true
             }
           ]
@@ -154,9 +137,6 @@
 
       </form>
 
-      <p>
-        <a href="#">Get help creating an A14 form</a>
-      </p>
 
     </div>
   </div>

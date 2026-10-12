@@ -181,13 +181,21 @@ window.GOVUKPrototypeKit.documentReady(() => {
   // them out three times would mean fixing every future change three times, so
   // they are built from the prefix instead.
   //
-  function housingRules (prefix, idPrefix) {
-    return [
+  // withAllowable false: the form has no Allowable section. The ESA form
+  // lost it on 12 Oct 2026 (Maisie), so its checks must not point at fields
+  // that are no longer there.
+  function housingRules (prefix, idPrefix, withAllowable) {
+    const rules = [
       { field: prefix + 'Interest', id: idPrefix + 'interest', label: 'Interest', tab: 'housing', type: 'money' },
       { field: prefix + 'GroundRent', id: idPrefix + 'ground-rent', label: 'Ground rent / Service or rent charge', tab: 'housing', type: 'money' },
       { field: prefix + 'OtherCosts', id: idPrefix + 'other-costs', label: 'Other costs', tab: 'housing', type: 'money' },
       { field: prefix + 'YearlyTotal', id: idPrefix + 'yearly-total', label: 'Yearly total', tab: 'housing', type: 'money' },
-      { field: prefix + 'WeeklyTotalHousing', id: idPrefix + 'weekly-total-housing', label: 'Weekly total', tab: 'housing', type: 'money' },
+      { field: prefix + 'WeeklyTotalHousing', id: idPrefix + 'weekly-total-housing', label: 'Weekly total', tab: 'housing', type: 'money' }
+    ]
+
+    if (withAllowable === false) { return rules }
+
+    return rules.concat([
       {
         field: prefix + 'FirstDayEntitlement',
         id: idPrefix + 'first-day-entitlement',
@@ -198,7 +206,7 @@ window.GOVUKPrototypeKit.documentReady(() => {
       },
       { field: prefix + '0PercentWeeks', id: idPrefix + '0-percent-weeks', label: '0% allowable for (weeks)', tab: 'housing', type: 'wholeNumber' },
       { field: prefix + '50PercentWeeks', id: idPrefix + '50-percent-weeks', label: '50% allowable for (weeks)', tab: 'housing', type: 'wholeNumber' }
-    ]
+    ])
   }
 
   // -------------------------------------------------------------------------
@@ -211,11 +219,11 @@ window.GOVUKPrototypeKit.documentReady(() => {
   //
   // Return null when there is no problem, or { id, tab, message }.
   //
-  function housingChecks (prefix, idPrefix) {
+  function housingChecks (prefix, idPrefix, withAllowable) {
     const individual = [prefix + 'Interest', prefix + 'GroundRent', prefix + 'OtherCosts']
     const totals = [prefix + 'YearlyTotal', prefix + 'WeeklyTotalHousing']
 
-    return [
+    const checks = [
       // The page says "You can enter a yearly or weekly total instead of the
       // individual costs above." Entering both is contradictory, and OpCalc
       // would have to silently pick one.
@@ -246,6 +254,13 @@ window.GOVUKPrototypeKit.documentReady(() => {
         return null
       },
 
+    ]
+
+    // The first day of entitlement is in the Allowable section, so this
+    // check only applies to a form that still has one.
+    if (withAllowable === false) { return checks }
+
+    return checks.concat([
       // Housing costs without a start date cannot be apportioned into weeks.
       function (value) {
         const anyCost = individual.concat(totals).some(function (f) { return value(f) !== '' })
@@ -262,7 +277,7 @@ window.GOVUKPrototypeKit.documentReady(() => {
         }
         return null
       }
-    ]
+    ])
   }
 
   // -------------------------------------------------------------------------
@@ -316,9 +331,10 @@ window.GOVUKPrototypeKit.documentReady(() => {
           missingMessage: 'Enter the personal allowance amount'
         },
         { field: 'esaClericalComponents', id: 'esa-clerical-components', label: 'Clerical components', tab: 'customer', type: 'money' },
+        { field: 'esaTransitionalAddition', id: 'esa-transitional-addition', label: 'Transitional addition', tab: 'customer', type: 'money' },
         { field: 'esaTotalCapital', id: 'esa-total-capital', label: 'Total capital', tab: 'income', type: 'money' }
-      ].concat(housingRules('esa', 'esa-')),
-      checks: housingChecks('esa', 'esa-')
+      ].concat(housingRules('esa', 'esa-', false)),
+      checks: housingChecks('esa', 'esa-', false)
     },
 
     // ---- Income Support / Jobseeker's Allowance -----------------------------
@@ -440,6 +456,7 @@ window.GOVUKPrototypeKit.documentReady(() => {
         label: labelFor(boxes[0], group, true),
         type: 'date',
         parts: parts,
+        container: dateInput,
         // The first date on one of these pages is what the entry is about -
         // the date of change, the date an exclusion starts. A row with no date
         // is a blank line in the table, so the first one has to be filled in.
@@ -662,6 +679,12 @@ window.GOVUKPrototypeKit.documentReady(() => {
     }
 
     function problemsFor (rule) {
+      // A date inside a closed "reveal" (for example Payday, under the Auto
+      // tick box) has not been asked for, so it is not checked.
+      if (rule.container && rule.container.closest('.govuk-checkboxes__conditional--hidden, .govuk-radios__conditional--hidden')) {
+        return null
+      }
+
       const required = rule.requiredWhen ? rule.requiredWhen(value, values) : !!rule.required
 
       if (rule.type === 'date') { return checkDate(rule, required) }
@@ -1026,9 +1049,14 @@ window.GOVUKPrototypeKit.documentReady(() => {
     //
     // Delete this block if you would rather nothing moved until the button is
     // pressed again.
+    //
+    // It waits a moment before redrawing. Leaving a corrected field by
+    // clicking a tab fires this first, and removing the error summary there
+    // and then moved the tabs up the page under the mouse, so the click
+    // missed and the tab did not open (found 12 Oct 2026).
     form.addEventListener('change', function () {
       if (!document.getElementById('a14-error-summary')) { return }
-      render(findProblems(), true)
+      window.setTimeout(function () { render(findProblems(), true) }, 250)
     })
   }
 
@@ -1442,6 +1470,145 @@ window.GOVUKPrototypeKit.documentReady(() => {
         done(false)
       }
     })
+  })
+
+  // ---- A14 ESA Customer tab: prices and which answers are allowed ---------------
+  // Added 12 Oct 2026 (Maisie), to match the real OpCalc A14 ESA screen: each
+  // row shows its weekly amount on the right, and answers that cannot apply
+  // are taken off the page instead of being explained in hint text.
+  //
+  // Amounts come from data-price on each radio (data-price-couple for a
+  // couple case) and from data-price on each age band option. They are
+  // 2008/09 rates, for the prototype only.
+  document.querySelectorAll('[data-a14-prices]').forEach(function (tab) {
+    const allowance = tab.querySelector('#esa-personal-allowance')
+    const ageBand = tab.querySelector('#esa-age-band')
+
+    function picked (name) {
+      const radio = tab.querySelector('input[name="' + name + '"]:checked')
+      return radio ? radio.value : ''
+    }
+
+    function money (amount) {
+      return '£' + (Math.round(amount * 100) / 100).toFixed(2)
+    }
+
+    function priceOf (radio, couple) {
+      if (!radio) { return 0 }
+      const value = couple && radio.hasAttribute('data-price-couple')
+        ? radio.getAttribute('data-price-couple')
+        : radio.getAttribute('data-price')
+      return parseFloat(value) || 0
+    }
+
+    // Show or hide an answer. One that cannot apply is taken off the page
+    // rather than greyed out (Maisie, 12 Oct 2026). If it was picked, the
+    // row goes back to its first answer, which is always No.
+    function allow (name, value, allowed) {
+      const radio = tab.querySelector('input[name="' + name + '"][value="' + value + '"]')
+      if (!radio) { return }
+      radio.disabled = !allowed
+      const item = radio.closest('.govuk-radios__item')
+      if (item) { hide(item, !allowed) }
+      if (!allowed && radio.checked) {
+        radio.checked = false
+        const first = tab.querySelector('input[name="' + name + '"]')
+        if (first) { first.checked = true }
+      }
+    }
+
+    function update () {
+      const couple = picked('esaClientGroup') === 'couple'
+      const band = ageBand ? ageBand.value : ''
+      const assessment = band === '16-24' || band === '16-17-both'
+
+      // Higher and Both only apply to a couple.
+      allow('esaSevereDisabilityPremium', 'higher', couple)
+      allow('esaCarerPremium', 'both', couple)
+      // Enhanced disability premium cannot go with Pensioner.
+      allow('esaEnhancedDisabilityPremium', 'yes', picked('esaPensioner') !== 'yes')
+      // The components start after the assessment phase, and only one of
+      // them can apply at a time.
+      allow('esaSupportComponent', 'yes', !assessment && picked('esaWorkRelatedActivityComponent') !== 'yes')
+      allow('esaWorkRelatedActivityComponent', 'yes', !assessment && picked('esaSupportComponent') !== 'yes')
+
+      // Personal allowance: worked out from the age band and shown as an
+      // amount, unless Manual, when the box to type it in appears.
+      if (allowance && ageBand) {
+        const manual = band === 'manual'
+        const option = ageBand.options[ageBand.selectedIndex]
+        if (!manual && option && option.getAttribute('data-price')) {
+          allowance.value = parseFloat(option.getAttribute('data-price')).toFixed(2)
+        }
+        const box = allowance.closest('.govuk-form-group')
+        const shown = tab.querySelector('[data-allowance-text]')
+        if (box) { hide(box, !manual) }
+        if (shown) {
+          shown.textContent = money(parseFloat(allowance.value) || 0)
+          hide(shown, manual)
+        }
+      }
+
+      // Each row's amount.
+      let component = 0
+      tab.querySelectorAll('[data-price-row]').forEach(function (row) {
+        const name = row.getAttribute('data-price-row')
+        const radio = tab.querySelector('input[name="' + name + '"]:checked')
+        let amount = priceOf(radio, couple)
+        if (name === 'esaSupportComponent' || name === 'esaWorkRelatedActivityComponent') { component += amount }
+        row.setAttribute('data-amount', amount)
+      })
+
+      tab.querySelectorAll('[data-price-row]').forEach(function (row) {
+        let amount = parseFloat(row.getAttribute('data-amount')) || 0
+        // The Pensioner amount is reduced by any component being paid.
+        if (row.getAttribute('data-price-row') === 'esaPensioner' && amount) {
+          amount = Math.max(0, amount - component)
+        }
+        const out = row.querySelector('[data-price-out]')
+        if (out) { out.textContent = money(amount) }
+        // A row left with nothing but No (Enhanced disability premium once
+        // Pensioner is Yes) is taken off the page too. Its No still counts.
+        const radios = row.querySelectorAll('input[type="radio"]')
+        const onlyNo = Array.prototype.every.call(radios, function (r) { return r.disabled || r.value === 'no' })
+        hide(row, onlyNo && radios.length > 0)
+      })
+    }
+
+    // Picking Couple, or going back to Single or Lone parent, moves the age
+    // band to the usual one for that group, unless Manual was chosen.
+    tab.querySelectorAll('input[name="esaClientGroup"]').forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        if (!ageBand || ageBand.value === 'manual') { return }
+        const coupleBand = ageBand.value === '16-17-both' || ageBand.value === '18-and-over'
+        if (radio.value === 'couple' && !coupleBand) { ageBand.value = '18-and-over' }
+        if (radio.value !== 'couple' && coupleBand) { ageBand.value = '25-and-over' }
+      })
+    })
+
+    tab.addEventListener('change', update)
+    update()
+  })
+
+  // ---- Non-dependant deductions ----------------------------------------------------
+  // How many, times the deduction for each, on every line, and a total at the
+  // bottom, as OpCalc shows it (12 Oct 2026).
+  document.querySelectorAll('[data-nde]').forEach(function (box) {
+    function update () {
+      let sum = 0
+      box.querySelectorAll('[data-nde-rate]').forEach(function (row) {
+        const input = row.querySelector('input')
+        const count = parseInt(input ? input.value : '0', 10) || 0
+        const total = count * (parseFloat(row.getAttribute('data-nde-rate')) || 0)
+        sum += total
+        row.querySelector('[data-nde-total]').textContent = '£' + total.toFixed(2)
+      })
+      const working = box.querySelector('[data-nde-working]')
+      sum += working ? (parseFloat(working.getAttribute('data-nde-working')) || 0) : 0
+      box.querySelector('[data-nde-sum]').textContent = '£' + sum.toFixed(2)
+    }
+    box.addEventListener('input', update)
+    update()
   })
 
   // ---- Clear this page --------------------------------------------------------

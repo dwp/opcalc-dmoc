@@ -52,57 +52,42 @@
 
       <form action="/a14esa#housing" method="post">
 
-        {{ govukInput({
-          id: "nde-25-and-over",
-          name: "nde25AndOver",
-          classes: "govuk-input--width-2",
-          label: {
-            text: "Number aged 25 and over on Income Support, JSA (IB) or ESA"
-          },
-          hint: {
-            text: "£7.40 deduction each"
-          },
-          value: data.nde25AndOver if data.nde25AndOver else "0"
-        }) }}
+        {# Laid out like OpCalc (Maisie, 12 Oct 2026): each line shows how
+           many, the deduction for each one and the total, so the amounts that
+           used to sit in hint text are on the line itself. Totals are worked
+           out as you type (application.js, "Non-dependant deductions"). #}
+        {% macro ndeRow(id, name, label, rate, value) %}
+          <div class="app-a14-row app-nde-row" data-nde-rate="{{ rate }}">
+            {{ govukInput({
+              id: id,
+              name: name,
+              classes: "govuk-input--width-2",
+              inputmode: "numeric",
+              formGroup: { classes: "app-a14-row__group app-nde-row__group" },
+              label: { text: label, classes: "app-a14-row__label" },
+              value: value if value else "0"
+            }) }}
+            <p class="govuk-body app-nde-row__rate">at £{{ rate }}</p>
+            <p class="govuk-body app-a14-row__price" data-nde-total>£0.00</p>
+          </div>
+        {% endmacro %}
 
-        {{ govukInput({
-          id: "nde-18-24",
-          name: "nde18To24",
-          classes: "govuk-input--width-2",
-          label: {
-            text: "Number aged 18 to 24 on Income Support, JSA (IB) or ESA, or with other exemptions"
-          },
-          hint: {
-            text: "£0.00 deduction each. Press Help for guidance on other exemptions."
-          },
-          value: data.nde18To24 if data.nde18To24 else "0"
-        }) }}
+        <p class="govuk-body">Enter how many non-dependants live with the customer in each group.</p>
 
-        {{ govukInput({
-          id: "nde-others-not-working",
-          name: "ndeOthersNotWorking",
-          classes: "govuk-input--width-2",
-          label: {
-            text: "Number of other non-dependants aged 18 and over not working"
-          },
-          hint: {
-            text: "£7.40 deduction each"
-          },
-          value: data.ndeOthersNotWorking if data.ndeOthersNotWorking else "0"
-        }) }}
+        <div data-nde>
+          {{ ndeRow("nde-25-and-over", "nde25AndOver", "Aged 25 and over on Income Support, JSA (IB) or ESA", "7.40", data.nde25AndOver) }}
+          {{ ndeRow("nde-18-24", "nde18To24", "Aged 18 to 24 on Income Support, JSA (IB) or ESA, or other exemptions", "0.00", data.nde18To24) }}
+          {{ ndeRow("nde-others-not-working", "ndeOthersNotWorking", "Others aged 18 and over not working", "7.40", data.ndeOthersNotWorking) }}
 
-        {{ govukSummaryList({
-          rows: [
-            {
-              key: { text: "18 and over working (from table below)" },
-              value: { text: "£" + (data.ndeWorkingDeduction if data.ndeWorkingDeduction else "0.00") }
-            },
-            {
-              key: { text: "Total non-dependant deductions" },
-              value: { text: "£" + (data.ndeTotalDeduction if data.ndeTotalDeduction else "0.00") }
-            }
-          ]
-        }) }}
+          <div class="app-a14-row">
+            <p class="govuk-body app-nde-row__text">18 and over working (from the table below)</p>
+            <p class="govuk-body app-a14-row__price" data-nde-working="{{ data.ndeWorkingDeduction if data.ndeWorkingDeduction else '0.00' }}">£{{ data.ndeWorkingDeduction if data.ndeWorkingDeduction else "0.00" }}</p>
+          </div>
+          <div class="app-a14-row app-nde-row--total">
+            <p class="govuk-body app-nde-row__text govuk-!-font-weight-bold">Total non-dependant deductions</p>
+            <p class="govuk-body app-a14-row__price" data-nde-sum>£0.00</p>
+          </div>
+        </div>
 
         <h2 class="govuk-heading-m">
           Non-dependants' earnings

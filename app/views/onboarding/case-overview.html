@@ -16,7 +16,9 @@
   green when the thing it names has actually been done.
 #}
 
-{% set customerName = data.firstName + " " + data.surname if data.surname else "Mr Max Martin" %}
+{# Only the first letter of the first name, then the surname, for example
+   "M Martin" (meeting with Viktoria, 8 Oct 2026). #}
+{% set customerName = (((data.firstName | trim | first | upper) + " ") if (data.firstName | trim) else "") + data.surname if data.surname else "M Martin" %}
 {% set caseRef = data.nino if data.nino else "AB 12 34 56 C" %}
 
 {# Written as single expressions rather than if blocks: a block at the top
@@ -189,11 +191,25 @@
         </div>
       {% endif %}
 
-      <h1 class="govuk-heading-l">Case overview</h1>
+      {# The heading names the customer so it is clear which case is open
+         (Emma's content review). After the meeting with Viktoria (8 Oct
+         2026) it shows only the first letter of the first name, and the
+         benefit is no longer listed underneath. #}
+      <span class="govuk-caption-l">Case overview</span>
+      <h1 class="govuk-heading-l">{{ customerName }}</h1>
 
-      <p class="govuk-body">
-        {{ customerName }} &nbsp;·&nbsp; {{ caseRef }}{{ " · " + discrepancyPeriod if discrepancyPeriod }}
-      </p>
+      {# National Insurance number and discrepancy period side by side, so
+         the page is shorter (Maisie, 12 Oct 2026). They stack on a phone. #}
+      <dl class="app-case-facts">
+        <div class="app-case-facts__item">
+          <dt class="app-case-facts__key">National Insurance number</dt>
+          <dd class="app-case-facts__value">{{ caseRef }}</dd>
+        </div>
+        <div class="app-case-facts__item">
+          <dt class="app-case-facts__key">Discrepancy period</dt>
+          <dd class="app-case-facts__value">{{ discrepancyPeriod if discrepancyPeriod else "Not entered yet" }}</dd>
+        </div>
+      </dl>
 
       {#
         Every row is described the same way, so the table below is built from
@@ -223,6 +239,7 @@
           ref: a14Reference,
           view: "/a14forms",
           edit: "/a14",
+          print: "/a14forms",
           start: "/newform"
         },
         {
@@ -239,6 +256,7 @@
           ref: qb16Reference,
           view: "/viewqb16",
           edit: "/qb16listofentries",
+          print: "/qb16PDF",
           start: "/qb16listofentries"
         },
         {
@@ -259,6 +277,7 @@
           ref: dccReference,
           view: "/dcc-view",
           edit: "/dcc",
+          print: "/dccPDF",
           start: "/dcc"
         },
         {
@@ -283,44 +302,58 @@
         }
       ] %}
 
-      {% set tags = {
-        "completed": '<strong class="govuk-tag govuk-tag--green">Completed</strong>',
-        "incomplete": '<strong class="govuk-tag govuk-tag--blue">Incomplete</strong>',
-        "inactive": '<strong class="govuk-tag govuk-tag--grey">Inactive</strong>'
+      {#
+        Status and Start (Maisie, 12 Oct 2026): status is plain text, so the
+        green Start buttons are what stand out (option A of the three tried).
+        Records that cannot be used on this case (inactive) are left out
+        altogether rather than shown greyed out.
+      #}
+      {% set statusText = {
+        "completed": '<span class="app-status app-status--done">Completed</span>',
+        "incomplete": '<span class="app-status">Incomplete</span>'
       } %}
 
       {% set rows = [] %}
 
       {% for record in records %}
-        {% set actions = [] %}
+        {% if record.status != "inactive" %}
+          {% set actions = [] %}
 
-        {% if record.status == "completed" %}
-          {% if record.view %}
-            {% set _ = actions.push('<a class="govuk-link" href="' + record.view +
-              '">View<span class="govuk-visually-hidden"> ' + record.name + '</span></a>') %}
+          {% if record.status == "completed" %}
+            {% if record.view %}
+              {% set _ = actions.push('<a class="govuk-link" href="' + record.view +
+                '">View<span class="govuk-visually-hidden"> ' + record.name + '</span></a>') %}
+            {% endif %}
+            {% if record.edit %}
+              {% set _ = actions.push('<a class="govuk-link" href="' + record.edit +
+                '">Edit<span class="govuk-visually-hidden"> ' + record.name + '</span></a>') %}
+            {% endif %}
+            {# David sometimes needs to print only the A14s, or only the QB16,
+               so a finished record can be printed from its own row. #}
+            {% if record.print %}
+              {% set _ = actions.push('<a class="govuk-link" href="' + record.print +
+                '">Print<span class="govuk-visually-hidden"> ' + record.name + '</span></a>') %}
+            {% endif %}
+          {% elif record.start %}
+            {% set _ = actions.push('<a class="govuk-button app-button--small" data-module="govuk-button" href="' + record.start +
+              '">Start<span class="govuk-visually-hidden"> ' + record.name + '</span></a>') %}
           {% endif %}
-          {% if record.edit %}
-            {% set _ = actions.push('<a class="govuk-link" href="' + record.edit +
-              '">Edit<span class="govuk-visually-hidden"> ' + record.name + '</span></a>') %}
-          {% endif %}
-        {% elif record.status == "incomplete" and record.start %}
-          {% set _ = actions.push('<a class="govuk-link" href="' + record.start +
-            '">Start<span class="govuk-visually-hidden"> ' + record.name + '</span></a>') %}
+
+          {% set _ = rows.push([
+            { text: record.name },
+            { text: record.ref if record.ref else "" },
+            { html: statusText[record.status] },
+            { html: actions | join(' | ') if actions | length else '' }
+          ]) %}
         {% endif %}
-
-        {% set _ = rows.push([
-          { text: record.name },
-          { text: record.ref if record.ref else "" },
-          { html: tags[record.status] },
-          { html: actions | join(' | ') if actions | length else '' }
-        ]) %}
       {% endfor %}
 
       {{ govukTable({
         caption: "Records held for this case",
         captionClasses: "govuk-visually-hidden",
+        classes: "app-case-records",
         head: [
-          { text: "Type" },
+          { text: "Form or calculation" },
           { text: "Reference" },
           { text: "Status" },
           { text: "Actions" }
@@ -328,27 +361,13 @@
         rows: rows
       }) }}
 
-      <h2 class="govuk-heading-m">Printing</h2>
-
-      <ul class="govuk-list">
-        <li><a class="govuk-link" href="/a14forms">Print A14 PDFs</a></li>
-        <li><a class="govuk-link" href="/qb16PDF">Print the QB16 calculation</a></li>
-        <li><a class="govuk-link" href="/dccPDF">Print the diminishing capital calculation</a></li>
-        <li><a class="govuk-link" href="/qb16caseprintselection">Print PDFs for this case</a></li>
-      </ul>
-
-      {# Nothing here needs saving, so these navigate rather than submit. There
-         is no form involved, which is why govukButton with href is right. #}
+      {# Only Save as draft and Delete case (Maisie, 12 Oct 2026). The print
+         and export links sit underneath the buttons, side by side, so the
+         page is shorter. #}
       <div class="govuk-button-group">
         {{ govukButton({
-          text: "Close case",
-          href: "/onboarding/landing-page"
-        }) }}
-
-        {{ govukButton({
           text: "Save as draft",
-          href: "/onboarding/landing-page",
-          classes: "govuk-button--secondary"
+          href: "/onboarding/landing-page"
         }) }}
 
         {{ govukButton({
@@ -357,6 +376,11 @@
           classes: "govuk-button--warning"
         }) }}
       </div>
+
+      <ul class="govuk-list app-inline-links">
+        <li><a class="govuk-link" href="/qb16caseprintselection">Print PDFs for this case</a></li>
+        <li><a class="govuk-link" href="/onboarding/export-case">Export this case</a></li>
+      </ul>
 
     </div>
   </div>

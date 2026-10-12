@@ -1,4 +1,5 @@
 {% extends "layouts/main.html" %}
+{% from "components/date-stepper.njk" import appDateStepper %}
 
 {% block pageTitle %}
   Copy form – OpCalc – GOV.UK Prototype Kit
@@ -41,6 +42,10 @@
   }) }}
 {% endblock %}
 
+{% block pageScripts %}
+  <script src="/public/javascripts/date-stepper.js"></script>
+{% endblock %}
+
 {% block content %}
 
   <div class="govuk-grid-row">
@@ -56,22 +61,16 @@
 
       <form action="/a14forms" method="post">
 
-        {{ govukDateInput({
+        {# Date stepper and no hint text (Maisie, 12 Oct 2026). #}
+        {{ appDateStepper({
           id: "copy-start-date",
           namePrefix: "copyStartDate",
-          fieldset: {
-            legend: {
-              text: "Start date"
-            }
-          },
-          hint: {
-            text: "Form cannot be copied to itself. Choose a different start date."
-          },
-          items: [
-            { name: "day", classes: "govuk-input--width-2", value: data["copyStartDate-day"] if data["copyStartDate-day"] else "10" },
-            { name: "month", classes: "govuk-input--width-2", value: data["copyStartDate-month"] if data["copyStartDate-month"] else "07" },
-            { name: "year", classes: "govuk-input--width-4", value: data["copyStartDate-year"] if data["copyStartDate-year"] else "2015" }
-          ]
+          legend: "Start date",
+          date: {
+            day: data["copyStartDate-day"] if data["copyStartDate-day"] else "10",
+            month: data["copyStartDate-month"] if data["copyStartDate-month"] else "07",
+            year: data["copyStartDate-year"] if data["copyStartDate-year"] else "2015"
+          }
         }) }}
 
         <div class="govuk-button-group">

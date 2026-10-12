@@ -213,3 +213,309 @@
     align-items: flex-start;
   }
 }
+
+// Case overview (12 Oct 2026, Maisie) ---------------------------------------
+
+// National Insurance number and discrepancy period side by side.
+.app-case-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 40px;
+  margin: 0 0 30px;
+}
+
+.app-case-facts__key {
+  font-family: "GDS Transport", arial, sans-serif;
+  font-size: 1rem;
+  color: #505a5f;
+  margin: 0;
+}
+
+.app-case-facts__value {
+  font-family: "GDS Transport", arial, sans-serif;
+  font-size: 1.1875rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+// Status as plain text instead of a coloured tag.
+.app-status {
+  color: #0b0c0c;
+}
+
+.app-status--off {
+  color: #505a5f;
+}
+
+// A small button for Start inside a table row.
+.app-button--small {
+  margin: 0;
+  padding: 4px 10px 3px;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.app-case-records .govuk-table__cell {
+  vertical-align: middle;
+}
+
+// Links sitting side by side on one line.
+.app-inline-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 30px;
+}
+
+.app-inline-links > li {
+  margin-bottom: 0;
+}
+
+// A14 forms and their sub-pages (12 Oct 2026, Maisie) -------------------------
+
+// Fields side by side, wrapping onto the next line when there is no room.
+// Inputs line up along their bottom edge, so labels of different lengths
+// do not push the boxes out of line.
+.app-field-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0 20px;
+}
+
+.app-field-row--centre {
+  align-items: center;
+}
+
+.app-field-row > .govuk-form-group,
+.app-field-row > div > .govuk-form-group {
+  margin-bottom: 20px;
+}
+
+.app-field-row .govuk-form-group .govuk-form-group {
+  margin-bottom: 0;
+}
+
+// Two date steppers side by side.
+.app-field-row > .app-date-stepper {
+  margin-bottom: 20px;
+}
+
+// A label and a worked out value, shown inline in a row of fields.
+.app-inline-value {
+  font-family: "GDS Transport", arial, sans-serif;
+  margin: 0 0 20px;
+}
+
+.app-inline-value dt {
+  font-size: 1rem;
+  color: #505a5f;
+}
+
+.app-inline-value dd {
+  margin: 0;
+  font-size: 1.1875rem;
+  font-weight: 700;
+}
+
+// ESA Customer tab: label, answers and weekly amount on one line.
+.app-a14-allowance {
+  border: 1px solid #b1b4b6;
+  padding: 15px 15px 0;
+  margin-bottom: 15px;
+}
+
+.app-a14-allowance .app-field-row > .govuk-form-group,
+.app-a14-allowance .app-field-row > div > .govuk-form-group {
+  margin-bottom: 15px;
+}
+
+.app-a14-allowance .app-field-row__end {
+  margin-left: auto;
+}
+
+.app-a14-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border-bottom: 1px solid #b1b4b6;
+  padding: 5px 0;
+}
+
+.app-a14-row .app-a14-row__group {
+  flex: 1 1 auto;
+  margin-bottom: 0;
+}
+
+.app-a14-row__label {
+  margin-bottom: 5px;
+}
+
+.app-a14-row__price {
+  flex: 0 0 auto;
+  min-width: 6em;
+  margin: 0;
+  text-align: right;
+  font-weight: 700;
+}
+
+.app-a14-row--off .app-a14-row__label,
+.app-a14-row--off .app-a14-row__price {
+  color: #505a5f;
+}
+
+@media (min-width: 40.0625em) {
+  .app-a14-row__label {
+    float: left;
+    width: 18em;
+    margin: 0;
+    padding-top: 8px;
+  }
+
+  .app-a14-row .govuk-radios {
+    overflow: hidden;
+  }
+}
+
+.govuk-radios__input:disabled + .govuk-radios__label {
+  opacity: .5;
+}
+
+// Personal allowance amount when it is worked out for you.
+.app-input--readonly {
+  background-color: #f3f2f1;
+  border-color: #b1b4b6;
+}
+
+// Benefit week, with the two periods directly under each other.
+.app-benefit-week {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 5px 20px;
+  margin: 10px 0 0;
+  padding: 15px;
+  background: #f3f2f1;
+  font-family: "GDS Transport", arial, sans-serif;
+  font-size: 1.1875rem;
+  line-height: 1.3;
+}
+
+.app-benefit-week dt {
+  font-weight: 700;
+}
+
+.app-benefit-week dd {
+  margin: 0;
+}
+
+@media (max-width: 40.0525em) {
+  .app-benefit-week {
+    grid-template-columns: 1fr;
+    font-size: 1rem;
+  }
+  .app-a14-allowance .app-field-row__end {
+    margin-left: 0;
+  }
+}
+
+.app-a14-allowance .govuk-radios__label {
+  white-space: nowrap;
+}
+
+// Long labels wrap rather than push the next field onto a new line.
+.app-field-row > .govuk-form-group {
+  max-width: 12em;
+}
+
+.app-field-row .govuk-checkboxes__label,
+.app-field-row .govuk-radios__label {
+  white-space: nowrap;
+}
+
+.app-field-row > .govuk-form-group.app-field--wide {
+  max-width: none;
+}
+
+.app-field-row--top {
+  align-items: flex-start;
+}
+
+// Non-dependant deductions: label, how many, rate and total on one line.
+.app-nde-row .govuk-label {
+  margin-bottom: 0;
+}
+
+@media (min-width: 40.0625em) {
+  .app-nde-row .app-a14-row__label {
+    float: left;
+    width: 20em;
+    padding-top: 5px;
+  }
+}
+
+.app-nde-row__rate {
+  flex: 0 0 auto;
+  margin: 0;
+  color: #505a5f;
+}
+
+.app-nde-row__text {
+  flex: 1 1 auto;
+  margin: 0;
+  padding: 5px 0;
+}
+
+.app-nde-row--total {
+  border-bottom: 0;
+  margin-bottom: 30px;
+}
+
+// Lists and radio groups in a row take the room they need.
+.app-field-row > .govuk-form-group:has(select),
+.app-field-row > .govuk-form-group:has(.govuk-radios) {
+  max-width: none;
+}
+
+@media (min-width: 40.0625em) {
+  .app-nde-row .app-nde-row__group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .app-nde-row .app-a14-row__label {
+    float: none;
+    flex: 0 0 20em;
+    padding-top: 0;
+  }
+}
+
+@media (min-width: 40.0625em) {
+  .app-nde-row .app-nde-row__group .govuk-input {
+    flex: 0 0 4em;
+    width: 4em;
+  }
+
+  .app-nde-row .app-a14-row__label {
+    flex: 1 1 auto;
+  }
+}
+
+.app-nde-row .app-nde-row__group {
+  min-width: 0;
+}
+
+@media (min-width: 40.0625em) {
+  .app-nde-row .app-a14-row__label {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+.app-nde-row__rate {
+  width: 5em;
+}
+
+.app-a14-allowance__amount {
+  margin: 0 0 15px;
+  font-size: 1.1875rem;
+}

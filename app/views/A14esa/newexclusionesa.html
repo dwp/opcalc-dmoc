@@ -1,4 +1,5 @@
 {% extends "layouts/main.html" %}
+{% from "components/date-stepper.njk" import appDateStepper %}
 
 {% block pageTitle %}
   Exclusion details – A14 form (ESA) – OpCalc – GOV.UK Prototype Kit
@@ -41,6 +42,10 @@
   }) }}
 {% endblock %}
 
+{% block pageScripts %}
+  <script src="/public/javascripts/date-stepper.js"></script>
+{% endblock %}
+
 {% block content %}
 
   <div class="govuk-grid-row">
@@ -52,80 +57,58 @@
         Exclusion details
       </h1>
 
-      <p class="govuk-body">Record a period that should be excluded from this calculation.</p>
-
+      {# Much less text (Maisie, 12 Oct 2026): no intro and no hints, but
+         the headings stay so it is clear what each part is for. From and To use the date stepper and sit side by side,
+         and so do the code and the reason. Typing a code still picks the
+         reason. #}
       <form action="/return-to-tab" method="post">
 
         <input type="hidden" name="returnTo" value="/a14esa#exclusions">
 
-        {{ govukDateInput({
-          id: "esa-exclusion-from",
-          namePrefix: "esaExclusionFrom",
-          fieldset: {
-            legend: {
-              text: "From"
-            }
-          },
-          hint: {
-            text: "For example, 3 3 2009"
-          },
-          items: [
-            { name: "day", classes: "govuk-input--width-2", value: data["esaExclusionFrom-day"] },
-            { name: "month", classes: "govuk-input--width-2", value: data["esaExclusionFrom-month"] },
-            { name: "year", classes: "govuk-input--width-4", value: data["esaExclusionFrom-year"] }
-          ]
-        }) }}
+        <h2 class="govuk-heading-m">Period to exclude</h2>
+        <div class="app-field-row app-field-row--top">
+          {{ appDateStepper({
+            id: "esa-exclusion-from",
+            namePrefix: "esaExclusionFrom",
+            legend: "From",
+            date: { day: data["esaExclusionFrom-day"], month: data["esaExclusionFrom-month"], year: data["esaExclusionFrom-year"] }
+          }) }}
 
-        {{ govukDateInput({
-          id: "esa-exclusion-to",
-          namePrefix: "esaExclusionTo",
-          fieldset: {
-            legend: {
-              text: "To"
-            }
-          },
-          hint: {
-            text: "For example, 15 8 2026"
-          },
-          items: [
-            { name: "day", classes: "govuk-input--width-2", value: data["esaExclusionTo-day"] },
-            { name: "month", classes: "govuk-input--width-2", value: data["esaExclusionTo-month"] },
-            { name: "year", classes: "govuk-input--width-4", value: data["esaExclusionTo-year"] }
-          ]
-        }) }}
+          {{ appDateStepper({
+            id: "esa-exclusion-to",
+            namePrefix: "esaExclusionTo",
+            legend: "To",
+            date: { day: data["esaExclusionTo-day"], month: data["esaExclusionTo-month"], year: data["esaExclusionTo-year"] }
+          }) }}
+        </div>
 
         <h2 class="govuk-heading-m">Reason for the exclusion</h2>
+        <p class="govuk-body">Enter the exclusion code, or choose a reason.</p>
+        <div class="app-field-row">
+          {{ govukInput({
+            id: "esa-exclusion-code",
+            name: "esaExclusionCode",
+            classes: "govuk-input--width-3",
+            attributes: { "data-code-lookup": "esa-exclusion-reason" },
+            label: { text: "Exclusion code" },
+            value: data.esaExclusionCode
+          }) }}
 
-        <p class="govuk-body govuk-hint">Enter the exclusion code if you know it, or choose a reason.</p>
-
-        {{ govukInput({
-          id: "esa-exclusion-code",
-          name: "esaExclusionCode",
-          classes: "govuk-input--width-3",
-          attributes: { "data-code-lookup": "esa-exclusion-reason" },
-          label: {
-            text: "Exclusion code"
-          },
-          hint: { text: "For example, 11 for customer abroad. Typing a code fills in the reason below." },
-          value: data.esaExclusionCode
-        }) }}
-
-        {{ govukSelect({
-          id: "esa-exclusion-reason",
-          name: "esaExclusionReason",
-          label: {
-            text: "Exclusion reason"
-          },
-          items: [
-            { value: "", text: "Choose a reason", selected: not data.esaExclusionReason },
-            { value: "customer-in-hospital", text: "Customer in hospital", selected: data.esaExclusionReason == "customer-in-hospital" },
-            { value: "customer-abroad", text: "Customer abroad", selected: data.esaExclusionReason == "customer-abroad", attributes: { "data-code": "11" } },
-            { value: "customer-in-custody", text: "Customer in custody", selected: data.esaExclusionReason == "customer-in-custody" },
-            { value: "benefit-suspended", text: "Benefit suspended", selected: data.esaExclusionReason == "benefit-suspended" },
-            { value: "no-entitlement", text: "No entitlement in this period", selected: data.esaExclusionReason == "no-entitlement" }
-          ]
-        }) }}
-
+          {{ govukSelect({
+            id: "esa-exclusion-reason",
+            name: "esaExclusionReason",
+            label: { text: "Reason" },
+            formGroup: { classes: "app-field--wide" },
+            items: [
+              { value: "", text: "Choose a reason", selected: not data.esaExclusionReason },
+              { value: "Customer in hospital", text: "Customer in hospital", selected: data.esaExclusionReason == "Customer in hospital" },
+              { value: "Customer abroad", text: "Customer abroad", selected: data.esaExclusionReason == "Customer abroad", attributes: { "data-code": "11" } },
+              { value: "Customer in custody", text: "Customer in custody", selected: data.esaExclusionReason == "Customer in custody" },
+              { value: "Benefit suspended", text: "Benefit suspended", selected: data.esaExclusionReason == "Benefit suspended" },
+              { value: "No entitlement in this period", text: "No entitlement in this period", selected: data.esaExclusionReason == "No entitlement in this period" }
+            ]
+          }) }}
+        </div>
 
         <div class="govuk-button-group">
           {{ govukButton({

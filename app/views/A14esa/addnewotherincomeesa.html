@@ -52,111 +52,96 @@
         Other income details
       </h1>
 
-      <p class="govuk-body">Record income the customer or their partner received that is not a benefit.</p>
+      {# Shorter (Maisie, 12 Oct 2026), and laid out like OpCalc's A14
+         Income Details: Type and Category on one line, Net pay, Disregard
+         and Net weekly on one line, and no hint text. #}
+      <p class="govuk-body">Record income the customer or their partner gets that is not a benefit.</p>
 
       <form action="/return-to-tab" method="post">
 
         <input type="hidden" name="returnTo" value="/a14esa#income">
 
-        {{ govukSelect({
-          id: "esa-income-category",
-          name: "esaIncomeCategory",
-          label: {
-            text: "Category"
-          },
-          hint: {
-            text: "The category sets the income type code used on the A14."
-          },
-          items: [
-            { value: "", text: "Select a category", selected: not data.esaIncomeCategory },
-            { value: "earnings", text: "Earnings", selected: data.esaIncomeCategory == "earnings" },
-            { value: "self-employed", text: "Self-employed earnings", selected: data.esaIncomeCategory == "self-employed" },
-            { value: "occupational-pension", text: "Occupational pension", selected: data.esaIncomeCategory == "occupational-pension" },
-            { value: "personal-pension", text: "Personal pension", selected: data.esaIncomeCategory == "personal-pension" },
-            { value: "maintenance", text: "Maintenance", selected: data.esaIncomeCategory == "maintenance" },
-            { value: "sub-tenant", text: "Sub-tenant or boarder", selected: data.esaIncomeCategory == "sub-tenant" },
-            { value: "other", text: "Other", selected: data.esaIncomeCategory == "other" }
-          ]
-        }) }}
+        {# QUESTION for Max: what goes in the Type and Category lists. In
+           OpCalc the Type is a code that goes with the category. For now Type
+           uses the list from the IS/JSA other income page, and Category the
+           list from the older ESA other income page. #}
+        {% set types = ["Earnings", "Self-employed earnings", "Occupational pension", "Personal pension", "Maintenance", "Sub-tenant or boarder", "Other"] %}
+        {% set typeItems = [{ value: "", text: "Select", selected: not data.esaIncomeType }] %}
+        {% for t in types %}{% set _ = typeItems.push({ value: t, text: t, selected: data.esaIncomeType == t }) %}{% endfor %}
+
+        {% set categories = ["Occupational pension", "Maintenance payments", "Charitable payments", "Boarder's payments", "Sub-tenant's payments", "Other"] %}
+        {% set categoryItems = [{ value: "", text: "Select a category", selected: not data.esaIncomeCategory }] %}
+        {% for t in categories %}{% set _ = categoryItems.push({ value: t, text: t, selected: data.esaIncomeCategory == t }) %}{% endfor %}
+
+        <h2 class="govuk-heading-m">Income</h2>
+        <div class="app-field-row">
+          {{ govukSelect({ id: "esa-income-type", name: "esaIncomeType", label: { text: "Type" }, items: typeItems }) }}
+          {{ govukSelect({ id: "esa-income-category", name: "esaIncomeCategory", label: { text: "Category" }, formGroup: { classes: "app-field--wide" }, items: categoryItems }) }}
+        </div>
 
         {{ govukInput({
           id: "esa-income-other",
           name: "esaIncomeOther",
-          label: {
-            text: "Description"
-          },
-          hint: {
-            text: "Only needed if you chose Other above."
-          },
+          label: { text: "Other" },
           value: data.esaIncomeOther
         }) }}
 
-        {{ govukSelect({
-          id: "esa-income-payment-period",
-          name: "esaIncomePaymentPeriod",
-          label: {
-            text: "Payment period"
-          },
-          items: [
-            { value: "Weekly", text: "Weekly", selected: data.esaIncomePaymentPeriod == "Weekly" or not data.esaIncomePaymentPeriod },
-            { value: "Fortnightly", text: "Fortnightly", selected: data.esaIncomePaymentPeriod == "Fortnightly" },
-            { value: "4 weekly", text: "4 weekly", selected: data.esaIncomePaymentPeriod == "4 weekly" },
-            { value: "Monthly", text: "Monthly", selected: data.esaIncomePaymentPeriod == "Monthly" },
-            { value: "Quarterly", text: "Quarterly", selected: data.esaIncomePaymentPeriod == "Quarterly" },
-            { value: "Annually", text: "Annually", selected: data.esaIncomePaymentPeriod == "Annually" }
-          ]
-        }) }}
+        <h2 class="govuk-heading-m">How it is paid</h2>
+        <div class="app-field-row">
+          {{ govukSelect({
+            id: "esa-income-payment-period",
+            name: "esaIncomePaymentPeriod",
+            label: { text: "Payment period" },
+            items: [
+              { value: "Weekly", text: "Weekly", selected: data.esaIncomePaymentPeriod == "Weekly" or not data.esaIncomePaymentPeriod },
+              { value: "Fortnightly", text: "Fortnightly", selected: data.esaIncomePaymentPeriod == "Fortnightly" },
+              { value: "4 weekly", text: "4 weekly", selected: data.esaIncomePaymentPeriod == "4 weekly" },
+              { value: "Monthly", text: "Monthly", selected: data.esaIncomePaymentPeriod == "Monthly" },
+              { value: "Quarterly", text: "Quarterly", selected: data.esaIncomePaymentPeriod == "Quarterly" },
+              { value: "Annually", text: "Annually", selected: data.esaIncomePaymentPeriod == "Annually" }
+            ]
+          }) }}
 
-        {{ govukRadios({
-          idPrefix: "esa-income-paid-to",
-          name: "esaIncomePaidTo",
-          classes: "govuk-radios--inline",
-          fieldset: {
-            legend: {
-              text: "Paid to"
-            }
-          },
-          hint: {
-            text: "Partner is only available on a couple case."
-          },
-          items: [
-            { value: "customer", text: "Customer", checked: data.esaIncomePaidTo == "customer" or not data.esaIncomePaidTo },
-            { value: "partner", text: "Partner", checked: data.esaIncomePaidTo == "partner" }
-          ]
-        }) }}
+          {{ govukRadios({
+            idPrefix: "esa-income-paid-to",
+            name: "esaIncomePaidTo",
+            classes: "govuk-radios--inline govuk-radios--small",
+            formGroup: { classes: "app-field--wide" },
+            fieldset: { legend: { text: "Paid to" } },
+            items: [
+              { value: "Customer", text: "Customer", checked: data.esaIncomePaidTo == "Customer" or not data.esaIncomePaidTo or data.esaClientGroup != "couple" },
+              { value: "Partner", text: "Partner", checked: data.esaIncomePaidTo == "Partner" and data.esaClientGroup == "couple" }
+            ] if data.esaClientGroup == "couple" else [
+              { value: "Customer", text: "Customer", checked: true }
+            ]
+          }) }}
+        </div>
 
-        {{ govukInput({
-          id: "esa-income-net-pay",
-          name: "esaIncomeNetPay",
-          classes: "govuk-input--width-5",
-          prefix: { text: "£" },
-          label: {
-            text: "Net pay"
-          },
-          value: data.esaIncomeNetPay
-        }) }}
+        <h2 class="govuk-heading-m">Amounts</h2>
+        <div class="app-field-row">
+          {{ govukInput({
+            id: "esa-income-net-pay",
+            name: "esaIncomeNetPay",
+            classes: "govuk-input--width-5",
+            prefix: { text: "£" },
+            label: { text: "Net pay" },
+            value: data.esaIncomeNetPay
+          }) }}
 
-        {{ govukInput({
-          id: "esa-income-disregard",
-          name: "esaIncomeDisregard",
-          classes: "govuk-input--width-5",
-          prefix: { text: "£" },
-          label: {
-            text: "Disregard"
-          },
-          hint: {
-            text: "Leave blank if no disregard applies"
-          },
-          value: data.esaIncomeDisregard
-        }) }}
+          {{ govukInput({
+            id: "esa-income-disregard",
+            name: "esaIncomeDisregard",
+            classes: "govuk-input--width-5",
+            prefix: { text: "£" },
+            label: { text: "Disregard" },
+            value: data.esaIncomeDisregard
+          }) }}
 
-        {{ govukSummaryList({
-          rows: [
-            { key: { text: "Net weekly" }, value: { text: "£0.00" } }
-          ]
-        }) }}
-
-        <p class="govuk-body govuk-hint">Net weekly is worked out from the net pay, payment period and disregard once this income is saved.</p>
+          <dl class="app-inline-value">
+            <dt>Net weekly</dt>
+            <dd>£0.00</dd>
+          </dl>
+        </div>
 
         <div class="govuk-button-group">
           {{ govukButton({

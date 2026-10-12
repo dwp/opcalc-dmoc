@@ -49,294 +49,171 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
 
-      <h1 class="govuk-heading-l">
-        A14 form (Employment and Support Allowance)
-      </h1>
+      {# Same title as the real OpCalc: "A14 ESA: 27/10/2008", where the date
+         is the day this A14 starts (the start date chosen on Create new A14
+         forms, or the start of the discrepancy period). #}
+      {% set sd = data["a14StartDate-day"] if data["a14StartDate-year"] else data["discrepancyFrom-day"] %}
+      {% set sm = data["a14StartDate-month"] if data["a14StartDate-year"] else data["discrepancyFrom-month"] %}
+      {% set sy = data["a14StartDate-year"] if data["a14StartDate-year"] else data["discrepancyFrom-year"] %}
+      {% set a14Date = ((("0" + sd) if (sd | string | length) == 1 else sd) + "/" + (("0" + sm) if (sm | string | length) == 1 else sm) + "/" + sy) if sy else "27/10/2008" %}
+      <h1 class="govuk-heading-l">A14 ESA: {{ a14Date }}</h1>
 
       <form action="/a14forms" method="post">
 
+        {#
+          Customer tab, laid out like the real OpCalc A14 ESA screen (Maisie,
+          12 Oct 2026): one line per premium, the answers in the middle and
+          the weekly amount on the right. No hint text. Answers that cannot
+          apply are taken off the page instead (see application.js, "A14 ESA Customer
+          tab"). Amounts are 2008/09 rates, for the prototype only.
+        #}
+        {% macro priceRow(name, idPrefix, label, options, value) %}
+          {% set items = [] %}
+          {% for o in options %}
+            {% set attrs = { "data-price": o.price } %}
+            {% if o.couple %}{% set attrs = { "data-price": o.price, "data-price-couple": o.couple } %}{% endif %}
+            {% set _ = items.push({ value: o.value, text: o.text, checked: (value == o.value) or (not value and loop.first), attributes: attrs }) %}
+          {% endfor %}
+          <div class="app-a14-row" data-price-row="{{ name }}">
+            {{ govukRadios({
+              idPrefix: idPrefix,
+              name: name,
+              classes: "govuk-radios--inline govuk-radios--small",
+              formGroup: { classes: "app-a14-row__group" },
+              fieldset: { legend: { text: label, classes: "app-a14-row__label" } },
+              items: items
+            }) }}
+            <p class="govuk-body app-a14-row__price" data-price-out aria-live="polite">£0.00</p>
+          </div>
+        {% endmacro %}
+
         {% set customerHtml %}
+          <div data-a14-prices>
 
-          <h2 class="govuk-heading-m">Customer's personal allowance</h2>
+            <div class="app-a14-allowance">
+              <h2 class="govuk-heading-s govuk-!-margin-bottom-2">Customer's personal allowance</h2>
+              <div class="app-field-row app-field-row--centre">
+                {{ govukRadios({
+                  idPrefix: "esa-client-group",
+                  name: "esaClientGroup",
+                  classes: "govuk-radios--inline govuk-radios--small",
+                  fieldset: { legend: { text: "Client group", classes: "govuk-visually-hidden" } },
+                  items: [
+                    { value: "single", text: "Single", checked: data.esaClientGroup == "single" or not data.esaClientGroup },
+                    { value: "couple", text: "Couple", checked: data.esaClientGroup == "couple" },
+                    { value: "lone-parent", text: "Lone parent", checked: data.esaClientGroup == "lone-parent" }
+                  ]
+                }) }}
 
-          {{ govukRadios({
-            idPrefix: "esa-client-group",
-            name: "esaClientGroup",
-            classes: "govuk-radios--inline",
-            fieldset: {
-              legend: {
-                text: "Client group"
-              }
-            },
-            items: [
-              { value: "single", text: "Single", checked: data.esaClientGroup == "single" or not data.esaClientGroup },
-              { value: "couple", text: "Couple", checked: data.esaClientGroup == "couple" },
-              { value: "lone-parent", text: "Lone parent", checked: data.esaClientGroup == "lone-parent" }
-            ]
-          }) }}
+                {{ govukSelect({
+                  id: "esa-age-band",
+                  name: "esaAgeBand",
+                  label: { text: "Age band", classes: "govuk-visually-hidden" },
+                  items: [
+                    { value: "16-24", text: "16 to 24", selected: data.esaAgeBand == "16-24", attributes: { "data-price": "47.95" } },
+                    { value: "25-and-over", text: "25 and over", selected: data.esaAgeBand == "25-and-over" or not data.esaAgeBand, attributes: { "data-price": "60.50" } },
+                    { value: "16-17-both", text: "16 to 17 (both)", selected: data.esaAgeBand == "16-17-both", attributes: { "data-price": "72.35" } },
+                    { value: "18-and-over", text: "18 and over", selected: data.esaAgeBand == "18-and-over", attributes: { "data-price": "94.95" } },
+                    { value: "manual", text: "Manual", selected: data.esaAgeBand == "manual" }
+                  ]
+                }) }}
 
-          {{ govukSelect({
-            id: "esa-age-band",
-            name: "esaAgeBand",
-            label: {
-              text: "Age band"
-            },
-            hint: {
-              text: "Single defaults to 25 and over (16-24 in the assessment phase). Couple defaults to 18 and over (16-17 (both) in the assessment phase). Choose Manual for a non-standard personal allowance."
-            },
-            items: [
-              { value: "16-24", text: "16-24 (Single, assessment phase)", selected: data.esaAgeBand == "16-24" },
-              { value: "25-and-over", text: "25 and over (Single)", selected: data.esaAgeBand == "25-and-over" or not data.esaAgeBand },
-              { value: "16-17-both", text: "16-17 (both) (Couple, assessment phase)", selected: data.esaAgeBand == "16-17-both" },
-              { value: "18-and-over", text: "18 and over (Couple)", selected: data.esaAgeBand == "18-and-over" },
-              { value: "manual", text: "Manual", selected: data.esaAgeBand == "manual" }
-            ]
-          }) }}
+                <div class="app-field-row__end">
+                  <p class="govuk-body govuk-!-font-weight-bold app-a14-allowance__amount" data-allowance-text aria-live="polite">£{{ data.esaPersonalAllowance if data.esaPersonalAllowance else "60.50" }}</p>
+                  {{ govukInput({
+                    id: "esa-personal-allowance",
+                    name: "esaPersonalAllowance",
+                    classes: "govuk-input--width-5",
+                    prefix: { text: "£" },
+                    label: { text: "Personal allowance amount", classes: "govuk-visually-hidden" },
+                    value: data.esaPersonalAllowance if data.esaPersonalAllowance else "60.50"
+                  }) }}
+                </div>
+              </div>
+            </div>
 
-          {{ govukInput({
-            id: "esa-personal-allowance",
-            name: "esaPersonalAllowance",
-            classes: "govuk-input--width-5",
-            prefix: { text: "£" },
-            label: {
-              text: "Personal allowance amount"
-            },
-            hint: {
-              text: "Calculated automatically unless Manual is selected above"
-            },
-            value: data.esaPersonalAllowance if data.esaPersonalAllowance else "60.50"
-          }) }}
+            <h2 class="govuk-heading-s govuk-!-margin-top-6 govuk-!-margin-bottom-2">Premiums and components</h2>
 
-          {{ govukRadios({
-            idPrefix: "esa-severe-disability-premium",
-            name: "esaSevereDisabilityPremium",
-            classes: "govuk-radios--inline",
-            fieldset: {
-              legend: {
-                text: "Severe disability premium"
-              }
-            },
-            hint: {
-              text: "Higher only applies to Couple cases"
-            },
-            items: [
-              { value: "no", text: "No", checked: data.esaSevereDisabilityPremium == "no" or not data.esaSevereDisabilityPremium },
-              { value: "lower", text: "Lower", checked: data.esaSevereDisabilityPremium == "lower" },
-              { value: "higher", text: "Higher", checked: data.esaSevereDisabilityPremium == "higher" }
-            ]
-          }) }}
+            {{ priceRow("esaSevereDisabilityPremium", "esa-severe-disability-premium", "Severe disability premium", [
+              { value: "no", text: "No", price: "0" },
+              { value: "lower", text: "Lower", price: "50.35" },
+              { value: "higher", text: "Higher", price: "100.70" }
+            ], data.esaSevereDisabilityPremium) }}
 
-          {{ govukRadios({
-            idPrefix: "esa-enhanced-disability-premium",
-            name: "esaEnhancedDisabilityPremium",
-            classes: "govuk-radios--inline",
-            fieldset: {
-              legend: {
-                text: "Enhanced disability premium"
-              }
-            },
-            hint: {
-              text: "Not available when Pensioner (below) is set to Yes"
-            },
-            items: [
-              { value: "no", text: "No", checked: data.esaEnhancedDisabilityPremium == "no" or not data.esaEnhancedDisabilityPremium },
-              { value: "yes", text: "Yes", checked: data.esaEnhancedDisabilityPremium == "yes" }
-            ]
-          }) }}
+            {{ priceRow("esaEnhancedDisabilityPremium", "esa-enhanced-disability-premium", "Enhanced disability premium", [
+              { value: "no", text: "No", price: "0" },
+              { value: "yes", text: "Yes", price: "12.60", couple: "18.15" }
+            ], data.esaEnhancedDisabilityPremium) }}
 
-          {{ govukRadios({
-            idPrefix: "esa-carer-premium",
-            name: "esaCarerPremium",
-            classes: "govuk-radios--inline",
-            fieldset: {
-              legend: {
-                text: "Carer premium"
-              }
-            },
-            hint: {
-              text: "Both only applies to Couple cases"
-            },
-            items: [
-              { value: "no", text: "No", checked: data.esaCarerPremium == "no" or not data.esaCarerPremium },
-              { value: "yes", text: "Yes", checked: data.esaCarerPremium == "yes" },
-              { value: "both", text: "Both", checked: data.esaCarerPremium == "both" }
-            ]
-          }) }}
+            {{ priceRow("esaCarerPremium", "esa-carer-premium", "Carer premium", [
+              { value: "no", text: "No", price: "0" },
+              { value: "yes", text: "Yes", price: "27.75" },
+              { value: "both", text: "Both", price: "55.50" }
+            ], data.esaCarerPremium) }}
 
-          {{ govukRadios({
-            idPrefix: "esa-pensioner",
-            name: "esaPensioner",
-            classes: "govuk-radios--inline",
-            fieldset: {
-              legend: {
-                text: "Pensioner"
-              }
-            },
-            hint: {
-              text: "Applies if the customer or their partner has reached pension age. Setting this to Yes disables Enhanced disability premium. If an amount is entered for Support component or Work-related activity component below, the Pensioner amount is reduced by that amount."
-            },
-            items: [
-              { value: "no", text: "No", checked: data.esaPensioner == "no" or not data.esaPensioner },
-              { value: "yes", text: "Yes", checked: data.esaPensioner == "yes" }
-            ]
-          }) }}
+            {{ priceRow("esaPensioner", "esa-pensioner", "Pensioner", [
+              { value: "no", text: "No", price: "0" },
+              { value: "yes", text: "Yes", price: "63.55", couple: "94.40" }
+            ], data.esaPensioner) }}
 
-          {{ govukRadios({
-            idPrefix: "esa-support-component",
-            name: "esaSupportComponent",
-            classes: "govuk-radios--inline",
-            fieldset: {
-              legend: {
-                text: "Support component"
-              }
-            },
-            hint: {
-              text: "Awarded once the customer has been placed in the Support Group following a Work Capability Assessment. Not available if the age band above is Single 16-24, Couple 16-17 (both), or Lone Parent 16-17 - these are the assessment phase age bands, before a Work Capability Assessment has taken place."
-            },
-            items: [
-              { value: "no", text: "No", checked: data.esaSupportComponent == "no" or not data.esaSupportComponent },
-              { value: "yes", text: "Yes", checked: data.esaSupportComponent == "yes" }
-            ]
-          }) }}
+            {{ priceRow("esaSupportComponent", "esa-support-component", "Support component", [
+              { value: "no", text: "No", price: "0" },
+              { value: "yes", text: "Yes", price: "25.50" }
+            ], data.esaSupportComponent) }}
 
-          {{ govukRadios({
-            idPrefix: "esa-work-related-activity-component",
-            name: "esaWorkRelatedActivityComponent",
-            classes: "govuk-radios--inline",
-            fieldset: {
-              legend: {
-                text: "Work-related activity component"
-              }
-            },
-            hint: {
-              text: "Support component and Work-related activity component cannot both be Yes at the same time - selecting one should be treated as disabling the other. Not available in the assessment phase age bands (see above)."
-            },
-            items: [
-              { value: "no", text: "No", checked: data.esaWorkRelatedActivityComponent == "no" or not data.esaWorkRelatedActivityComponent },
-              { value: "yes", text: "Yes", checked: data.esaWorkRelatedActivityComponent == "yes" }
-            ]
-          }) }}
+            {{ priceRow("esaWorkRelatedActivityComponent", "esa-work-related-activity-component", "Work related activity component", [
+              { value: "no", text: "No", price: "0" },
+              { value: "yes", text: "Yes", price: "24.00" }
+            ], data.esaWorkRelatedActivityComponent) }}
 
-          <p class="govuk-body govuk-hint">
-            OpCalc cannot detect when the 13-week assessment phase ends. Once the main phase begins, create a new A14 form and select either Support component or Work-related activity component - unless the whole over/underpayment falls within the main phase, in which case the relevant component can be selected on the initial A14.
-          </p>
+            {# Clerical components and Transitional addition side by side. #}
+            <h2 class="govuk-heading-s govuk-!-margin-top-6 govuk-!-margin-bottom-2">Other amounts</h2>
+            <div class="app-field-row">
+              {{ govukInput({
+                id: "esa-clerical-components",
+                name: "esaClericalComponents",
+                classes: "govuk-input--width-5",
+                prefix: { text: "£" },
+                label: { text: "Clerical components" },
+                value: data.esaClericalComponents
+              }) }}
 
-          {{ govukInput({
-            id: "esa-clerical-components",
-            name: "esaClericalComponents",
-            classes: "govuk-input--width-5",
-            prefix: { text: "£" },
-            label: {
-              text: "Clerical components"
-            },
-            value: data.esaClericalComponents
-          }) }}
+              {{ govukInput({
+                id: "esa-transitional-addition",
+                name: "esaTransitionalAddition",
+                classes: "govuk-input--width-5",
+                prefix: { text: "£" },
+                label: { text: "Transitional addition" },
+                value: data.esaTransitionalAddition
+              }) }}
+            </div>
 
-          {{ govukInsetText({
-            html: "<p class=\"govuk-body\">Benefit week: Thursday Week Ending</p><p class=\"govuk-body\">Currently to be used from: 27/10/2008 to 30/10/2008 (4 day part week)</p><p class=\"govuk-body\">31/10/2008 to 16/07/2026 (924 weeks)</p>"
-          }) }}
+            {# The two periods sit directly under each other, as in OpCalc. #}
+            <dl class="app-benefit-week">
+              <dt>Benefit week</dt>
+              <dd>{{ (data.initialBenefitWeek if data.initialBenefitWeek else "Thursday") + (" Week Commencing" if data.benefitWeekType == "BWC" else " Week Ending") }}</dd>
+              <dt>Currently to be used from</dt>
+              <dd>27/10/2008 to 30/10/2008 (4 day part week)<br>31/10/2008 to 16/07/2026 (924 weeks)</dd>
+            </dl>
 
+          </div>
         {% endset %}
 
         {% set housingHtml %}
 
           <h2 class="govuk-heading-m">Housing costs</h2>
 
-          {{ govukInput({
-            id: "esa-interest",
-            name: "esaInterest",
-            classes: "govuk-input--width-5",
-            prefix: { text: "£" },
-            label: { text: "Interest" },
-            value: data.esaInterest
-          }) }}
-
-          {{ govukInput({
-            id: "esa-ground-rent",
-            name: "esaGroundRent",
-            classes: "govuk-input--width-5",
-            prefix: { text: "£" },
-            label: { text: "Ground rent / Service or rent charge" },
-            value: data.esaGroundRent
-          }) }}
-
-          {{ govukInput({
-            id: "esa-other-costs",
-            name: "esaOtherCosts",
-            classes: "govuk-input--width-5",
-            prefix: { text: "£" },
-            label: { text: "Other costs" },
-            value: data.esaOtherCosts
-          }) }}
-
-          <p class="govuk-body govuk-hint">You can enter a yearly or weekly total instead of the individual costs above.</p>
-
-          {{ govukInput({
-            id: "esa-yearly-total",
-            name: "esaYearlyTotal",
-            classes: "govuk-input--width-5",
-            prefix: { text: "£" },
-            label: { text: "Yearly total" },
-            value: data.esaYearlyTotal
-          }) }}
-
-          {{ govukInput({
-            id: "esa-weekly-total-housing",
-            name: "esaWeeklyTotalHousing",
-            classes: "govuk-input--width-5",
-            prefix: { text: "£" },
-            label: { text: "Weekly total" },
-            value: data.esaWeeklyTotalHousing
-          }) }}
-
-          <h2 class="govuk-heading-m">Allowable</h2>
-
-          {{ govukRadios({
-            idPrefix: "esa-loan-before-021095",
-            name: "esaLoanBefore021095",
-            classes: "govuk-radios--inline",
-            fieldset: {
-              legend: {
-                text: "Loan commenced before 2 October 1995"
-              }
-            },
-            items: [
-              { value: "yes", text: "Yes", checked: data.esaLoanBefore021095 == "yes" or not data.esaLoanBefore021095 },
-              { value: "no", text: "No", checked: data.esaLoanBefore021095 == "no" }
-            ]
-          }) }}
-
-          {{ govukDateInput({
-            id: "esa-first-day-entitlement",
-            namePrefix: "esaFirstDayEntitlement",
-            fieldset: {
-              legend: {
-                text: "First day of entitlement"
-              }
-            },
-            items: [
-              { name: "day", classes: "govuk-input--width-2", value: data["esaFirstDayEntitlement-day"] },
-              { name: "month", classes: "govuk-input--width-2", value: data["esaFirstDayEntitlement-month"] },
-              { name: "year", classes: "govuk-input--width-4", value: data["esaFirstDayEntitlement-year"] }
-            ]
-          }) }}
-
-          {{ govukInput({
-            id: "esa-0-percent-weeks",
-            name: "esa0PercentWeeks",
-            classes: "govuk-input--width-3",
-            label: { text: "0% allowable for (weeks)" },
-            hint: { text: "For example, 26 weeks at 0%, then 13 weeks at 50% below means 100% applies from week 40 onwards" },
-            value: data.esa0PercentWeeks
-          }) }}
-
-          {{ govukInput({
-            id: "esa-50-percent-weeks",
-            name: "esa50PercentWeeks",
-            classes: "govuk-input--width-3",
-            label: { text: "50% allowable for (weeks)" },
-            value: data.esa50PercentWeeks
-          }) }}
+          {# All the housing costs side by side (Maisie, 12 Oct 2026). The
+             Allowable section has gone. One line says how to fill them in,
+             since entering both the costs and a total is an error. #}
+          <p class="govuk-body">Enter each cost, or just a yearly or weekly total.</p>
+          <div class="app-field-row">
+            {{ govukInput({ id: "esa-interest", name: "esaInterest", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Interest" }, value: data.esaInterest }) }}
+            {{ govukInput({ id: "esa-ground-rent", name: "esaGroundRent", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Ground rent / Service or rent charge" }, value: data.esaGroundRent }) }}
+            {{ govukInput({ id: "esa-other-costs", name: "esaOtherCosts", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Other costs" }, value: data.esaOtherCosts }) }}
+            {{ govukInput({ id: "esa-yearly-total", name: "esaYearlyTotal", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Yearly total" }, value: data.esaYearlyTotal }) }}
+            {{ govukInput({ id: "esa-weekly-total-housing", name: "esaWeeklyTotalHousing", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Weekly total" }, value: data.esaWeeklyTotalHousing }) }}
+          </div>
 
           <h2 class="govuk-heading-m">Calculation</h2>
 
@@ -359,71 +236,72 @@
 
           <h2 class="govuk-heading-m">Benefits</h2>
 
+          {# Columns in the same order as OpCalc. #}
           {{ a14Table(
             data.a14Benefits,
             [
-              { text: "Paid to", field: ["benefitPaidTo", "paidTo", "benefitPaid"] },
-              { text: "Amount", field: ["benefitAmount", "amount"] },
-              { text: "Period", field: ["benefitQualifyingPeriod", "qualifyingPeriod", "benefitPeriod", "period"] },
-              { text: "Disregards", field: ["benefitDisregards", "disregards", "benefitDisregard"] },
-              { text: "Type", field: ["benefitType", "type"] },
-              { text: "Text", field: ["benefitText", "text", "benefitDescription"] }
+              { text: "Paid to", field: ["esaBenefitPaidTo", "benefitPaidTo", "paidTo"] },
+              { text: "Amount", field: ["esaBenefitAmount", "benefitAmount", "amount"], prefix: "£" },
+              { text: "Period", field: ["esaBenefitPaymentPeriod", "benefitQualifyingPeriod", "period"] },
+              { text: "Disregards", field: ["esaBenefitDisregard", "benefitDisregards", "disregard"], prefix: "£" },
+              { text: "Type", field: ["esaBenefitType", "benefitType"] },
+              { text: "Benefit", field: ["esaBenefit", "benefitName"] }
             ],
             "No benefits recorded",
             "a14Benefits",
             "/A14esa/a14esa#income"
           ) }}
 
-          <p class="govuk-body"><a class="govuk-link" href="/A14esa/newbenefitesa?returnTo=/A14esa/a14esa%23income">New benefit</a></p>
+          <p class="govuk-body"><a class="govuk-link" href="/A14esa/incomenewbenefitesa?returnTo=/A14esa/a14esa%23income">New benefit</a></p>
 
           <h2 class="govuk-heading-m">Other income</h2>
 
           {{ a14Table(
             data.a14OtherIncome,
             [
-              { text: "Paid to", field: ["otherIncomePaidTo", "paidTo", "incomePaidTo"] },
-              { text: "Amount", field: ["otherIncomeAmount", "incomeAmount", "amount"] },
-              { text: "Period", field: ["otherIncomeQualifyingPeriod", "qualifyingPeriod", "otherIncomePeriod", "period"] },
-              { text: "Disregards", field: ["otherIncomeDisregards", "disregards", "otherIncomeDisregard"] },
-              { text: "Type", field: ["otherIncomeType", "type"] },
-              { text: "Text", field: ["otherIncomeText", "text", "otherIncomeDescription"] }
+              { text: "Paid to", field: ["esaIncomePaidTo", "otherIncomePaidTo", "paidTo"] },
+              { text: "Amount", field: ["esaIncomeNetPay", "otherIncomeAmount", "netPay"], prefix: "£" },
+              { text: "Period", field: ["esaIncomePaymentPeriod", "otherIncomeQualifyingPeriod", "period"] },
+              { text: "Disregards", field: ["esaIncomeDisregard", "otherIncomeDisregards", "disregard"], prefix: "£" },
+              { text: "Type", field: ["esaIncomeType", "otherIncomeType"] },
+              { text: "Category", field: ["esaIncomeCategory", "category"] }
             ],
             "No other income recorded",
             "a14OtherIncome",
             "/A14esa/a14esa#income"
           ) }}
 
-          <p class="govuk-body"><a class="govuk-link" href="/A14esa/newotherincomeesa?returnTo=/A14esa/a14esa%23income">New other income</a></p>
+          <p class="govuk-body"><a class="govuk-link" href="/A14esa/addnewotherincomeesa?returnTo=/A14esa/a14esa%23income">New other income</a></p>
 
-          <h2 class="govuk-heading-m">Total capital</h2>
+          {# Total capital and Residential care side by side, with the tariff
+             income beside them (Maisie, 12 Oct 2026). #}
+          <h2 class="govuk-heading-m">Capital</h2>
+          <div class="app-field-row app-field-row--centre">
+            {{ govukInput({
+              id: "esa-total-capital",
+              name: "esaTotalCapital",
+              classes: "govuk-input--width-5",
+              prefix: { text: "£" },
+              label: { text: "Total capital" },
+              value: data.esaTotalCapital
+            }) }}
 
-          {{ govukInput({
-            id: "esa-total-capital",
-            name: "esaTotalCapital",
-            classes: "govuk-input--width-5",
-            prefix: { text: "£" },
-            label: { text: "Total capital" },
-            value: data.esaTotalCapital
-          }) }}
+            <div class="app-field-row__end">
+              {{ govukCheckboxes({
+                idPrefix: "esa-residential-care",
+                name: "esaResidentialCare",
+                classes: "govuk-checkboxes--small",
+                items: [
+                  { value: "residentialCare", text: "Residential care", id: "esa-residential-care", checked: data.esaResidentialCare }
+                ]
+              }) }}
+            </div>
 
-          {{ govukCheckboxes({
-            idPrefix: "esa-residential-care",
-            name: "esaResidentialCare",
-            items: [
-              { value: "residentialCare", text: "Residential care", id: "esa-residential-care", checked: data.esaResidentialCare }
-            ]
-          }) }}
-
-          {{ govukSummaryList({
-            rows: [
-              {
-                key: { text: "Tariff income" },
-                value: { text: "£" + (data.esaTariffIncome if data.esaTariffIncome else "0.00") }
-              }
-            ]
-          }) }}
-
-          <p class="govuk-body govuk-hint">Tariff income is calculated automatically once Total capital exceeds the lower capital threshold.</p>
+            <dl class="app-field-row__end app-inline-value">
+              <dt>Tariff income</dt>
+              <dd>£{{ data.esaTariffIncome if data.esaTariffIncome else "0.00" }}</dd>
+            </dl>
+          </div>
 
         {% endset %}
 
@@ -431,7 +309,7 @@
 
           <h2 class="govuk-heading-m">Exclusions</h2>
 
-          <p class="govuk-body govuk-hint">Exclusions from the Average Hours Calculation are added for you. Do not enter them again here.</p>
+          <p class="govuk-body">Exclusions from the Average Hours Calculation are added for you, so do not enter them again here.</p>
 
           {{ a14Table(
             data.a14Exclusions,
