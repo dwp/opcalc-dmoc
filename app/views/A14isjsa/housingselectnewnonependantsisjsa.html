@@ -50,30 +50,17 @@
         Non-dependant's earnings
       </h1>
 
-      <form action="/housingnondependantsisjsa" method="post">
+      {# Name and Earnings side by side, no hint text. Saved as a row in the
+         earnings table on the non-dependant deductions page (Maisie, 12 Oct
+         2026). #}
+      <form action="/return-to-tab" method="post">
 
-        {{ govukInput({
-          id: "hsnne-name",
-          name: "hsnneName",
-          label: {
-            text: "Name"
-          },
-          value: data.hsnneName
-        }) }}
+        <input type="hidden" name="returnTo" value="/A14isjsa/housingnondependantsisjsa">
 
-        {{ govukInput({
-          id: "hsnne-earnings",
-          name: "hsnneEarnings",
-          classes: "govuk-input--width-5",
-          prefix: { text: "£" },
-          label: {
-            text: "Earnings"
-          },
-          hint: {
-            text: "Please enter a valid earnings amount"
-          },
-          value: data.hsnneEarnings if data.hsnneEarnings else "0.00"
-        }) }}
+        <div class="app-field-row">
+          {{ govukInput({ id: "hsnne-name", name: "hsnneName", label: { text: "Name" }, formGroup: { classes: "app-field--wide" }, value: data.hsnneName }) }}
+          {{ govukInput({ id: "hsnne-earnings", name: "hsnneEarnings", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Earnings" }, value: data.hsnneEarnings }) }}
+        </div>
 
         <div class="govuk-button-group">
           {{ govukButton({

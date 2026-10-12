@@ -174,3 +174,108 @@
     }) }}
   {% endif %}
 {% endmacro %}
+
+
+{#
+  One line of an A14 tab with a price: the question on the left, the answers
+  in the middle and the weekly amount on the right, as in the real OpCalc
+  (Maisie, 12 Oct 2026). application.js fills in the amount and takes away
+  answers that cannot apply. Each option is { value, text, price, couple },
+  where couple is the price for a couple case when it is different.
+#}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+
+{% macro a14PriceRow(name, idPrefix, label, options, value) %}
+  {% set items = [] %}
+  {% for o in options %}
+    {% set attrs = { "data-price": o.price } %}
+    {% if o.couple %}{% set attrs = { "data-price": o.price, "data-price-couple": o.couple } %}{% endif %}
+    {% set _ = items.push({ value: o.value, text: o.text, checked: (value == o.value) or (not value and loop.first), attributes: attrs }) %}
+  {% endfor %}
+  <div class="app-a14-row" data-price-row="{{ name }}">
+    {{ govukRadios({
+      idPrefix: idPrefix,
+      name: name,
+      classes: "govuk-radios--inline govuk-radios--small",
+      formGroup: { classes: "app-a14-row__group" },
+      fieldset: { legend: { text: label, classes: "app-a14-row__label" } },
+      items: items
+    }) }}
+    <p class="govuk-body app-a14-row__price" data-price-out aria-live="polite">£0.00</p>
+  </div>
+{% endmacro %}
+
+
+{#
+  Type and Benefit on A14 benefit pages (Maisie, 12 Oct 2026), as in
+  OpCalc: pick a benefit and its type code fills in, or type the code and
+  the benefit is picked for you (application.js, "Type a code, pick the
+  list item"). The list is the one OpCalc showed for an Income Support A14.
+  In OpCalc the list changes with the case, so check with Max whether ESA or
+  JSA show a different one. Widows Allowance has no code.
+#}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/select/macro.njk" import govukSelect %}
+
+{% macro a14BenefitFields(typeName, typeId, benefitName, benefitId, typeValue, benefitValue) %}
+  {% set benefits = [
+    { name: "Attendance Allowance", code: "1" },
+    { name: "Child Benefit", code: "2" },
+    { name: "Child's Special Allowance", code: "3" },
+    { name: "Civilian War Injury Pension", code: "27" },
+    { name: "Claim to War Disablement Pension", code: "20" },
+    { name: "Constant Attendance Allowance", code: "28" },
+    { name: "Disability Working Allowance", code: "46" },
+    { name: "DLA Care Component", code: "44" },
+    { name: "DLA Mobility Component", code: "11" },
+    { name: "Exceptionally Severe Disablement Allowance", code: "34" },
+    { name: "Family Credit", code: "4" },
+    { name: "Guardians Allowance", code: "5" },
+    { name: "Housing Benefit", code: "29" },
+    { name: "Income Support", code: "18" },
+    { name: "Industrial Death Benefit", code: "6" },
+    { name: "Industrial Injuries Disablement Benefit", code: "7" },
+    { name: "Invalid Care Allowance", code: "8" },
+    { name: "Invalidity Benefit", code: "9" },
+    { name: "Maternity Allowance", code: "10" },
+    { name: "Miscellaneous Diseases Benefit", code: "13" },
+    { name: "One Parent Benefit", code: "12" },
+    { name: "Severe Disablement Allowance", code: "16" },
+    { name: "Severe Disablement Occupational Allowance", code: "35" },
+    { name: "Sickness Benefit", code: "17" },
+    { name: "State Pension", code: "15" },
+    { name: "Statutory Maternity Pay", code: "30" },
+    { name: "Statutory Sick Pay", code: "31" },
+    { name: "Unemployment Benefit", code: "19" },
+    { name: "War Disablement Pension", code: "32" },
+    { name: "War Orphans Pension", code: "36" },
+    { name: "War Widows Pension", code: "33" },
+    { name: "Widowed Mother's Allowance", code: "76" },
+    { name: "Widows Allowance", code: "" },
+    { name: "Widows Benefit", code: "21" },
+    { name: "Workman's Compensation Scheme", code: "22" }
+  ] %}
+  {% set items = [{ value: "", text: "Select a benefit", selected: not benefitValue, attributes: { "data-code": "" } }] %}
+  {% for b in benefits %}
+    {% set _ = items.push({ value: b.name, text: b.name, selected: benefitValue == b.name, attributes: { "data-code": b.code } }) %}
+  {% endfor %}
+  <div class="app-field-row">
+    {{ govukInput({
+      id: typeId,
+      name: typeName,
+      classes: "govuk-input--width-3",
+      inputmode: "numeric",
+      spellcheck: false,
+      attributes: { "data-code-lookup": benefitId },
+      label: { text: "Type" },
+      value: typeValue
+    }) }}
+    {{ govukSelect({
+      id: benefitId,
+      name: benefitName,
+      label: { text: "Benefit" },
+      formGroup: { classes: "app-field--wide" },
+      items: items
+    }) }}
+  </div>
+{% endmacro %}

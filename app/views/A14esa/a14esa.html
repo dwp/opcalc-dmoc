@@ -88,7 +88,7 @@
         {% endmacro %}
 
         {% set customerHtml %}
-          <div data-a14-prices>
+          <div data-a14-prices="esa">
 
             <div class="app-a14-allowance">
               <h2 class="govuk-heading-s govuk-!-margin-bottom-2">Customer's personal allowance</h2>
@@ -276,7 +276,7 @@
           {# Total capital and Residential care side by side, with the tariff
              income beside them (Maisie, 12 Oct 2026). #}
           <h2 class="govuk-heading-m">Capital</h2>
-          <div class="app-field-row app-field-row--centre">
+          <div class="app-field-row">
             {{ govukInput({
               id: "esa-total-capital",
               name: "esaTotalCapital",

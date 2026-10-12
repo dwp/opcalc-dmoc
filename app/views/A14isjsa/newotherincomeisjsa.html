@@ -55,98 +55,68 @@
       </h1>
 
 
+      {# Laid out like OpCalc's A14 Income Details (Maisie, 12 Oct 2026):
+         Type and Category on one line, Other, payment period, who it is paid
+         to, and Net pay, Disregard and Net weekly on one line. No hint text
+         and no Text box. #}
+      <p class="govuk-body">Record income the customer or their partner gets that is not a benefit.</p>
+
       <form action="/return-to-tab" method="post">
 
-        <p class="govuk-body">Record income the customer or their partner received that is not a benefit.</p>
+        {% set typeItems = [{ value: "", text: "Select", selected: not data.otherIncomeType }] %}
+        {% for t in ["Earnings", "Self-employed earnings", "Occupational pension", "Personal pension", "Maintenance", "Sub-tenant or boarder", "Other"] %}{% set _ = typeItems.push({ value: t, text: t, selected: data.otherIncomeType == t }) %}{% endfor %}
+        {% set categories = ["Occupational pension", "Maintenance payments", "Charitable payments", "Boarder's payments", "Sub-tenant's payments", "Other"] %}
+        {% set categoryItems = [{ value: "", text: "Select a category", selected: not data.otherIncomeCategory }] %}
+        {% for c in categories %}{% set _ = categoryItems.push({ value: c, text: c, selected: data.otherIncomeCategory == c }) %}{% endfor %}
 
-        {{ govukSelect({
-          id: "other-income-type",
-          name: "otherIncomeType",
-          label: {
-            text: "Type"
-          },
-          items: [
-            { value: "", text: "Choose a type", selected: not data.otherIncomeType },
-            { value: "Earnings", text: "Earnings", selected: data.otherIncomeType == "Earnings" },
-            { value: "Self-employed earnings", text: "Self-employed earnings", selected: data.otherIncomeType == "Self-employed earnings" },
-            { value: "Occupational pension", text: "Occupational pension", selected: data.otherIncomeType == "Occupational pension" },
-            { value: "Personal pension", text: "Personal pension", selected: data.otherIncomeType == "Personal pension" },
-            { value: "Maintenance", text: "Maintenance", selected: data.otherIncomeType == "Maintenance" },
-            { value: "Sub-tenant or boarder", text: "Sub-tenant or boarder", selected: data.otherIncomeType == "Sub-tenant or boarder" },
-            { value: "Other", text: "Other", selected: data.otherIncomeType == "Other" }
-          ]
-        }) }}
+        <h2 class="govuk-heading-m">Income</h2>
+        <div class="app-field-row">
+          {{ govukSelect({ id: "other-income-type", name: "otherIncomeType", label: { text: "Type" }, items: typeItems }) }}
+          {{ govukSelect({ id: "other-income-category", name: "otherIncomeCategory", label: { text: "Category" }, formGroup: { classes: "app-field--wide" }, items: categoryItems }) }}
+        </div>
 
-        {{ govukRadios({
-          idPrefix: "otherIncome-paid-to",
-          name: "otherIncomePaidTo",
-          classes: "govuk-radios--inline",
-          fieldset: {
-            legend: {
-              text: "Paid to"
-            }
-          },
-          hint: {
-            text: "Partner is only available on a couple case"
-          },
-          items: [
-            { value: "customer", text: "Customer", checked: data.otherIncomePaidTo == "customer" or not data.otherIncomePaidTo },
-            { value: "partner", text: "Partner", checked: data.otherIncomePaidTo == "partner" }
-          ]
-        }) }}
+        {{ govukInput({ id: "other-income-other", name: "otherIncomeOther", label: { text: "Other" }, value: data.otherIncomeOther }) }}
 
-        {{ govukInput({
-          id: "other-income-amount",
-          name: "otherIncomeAmount",
-          classes: "govuk-input--width-5",
-          prefix: { text: "£" },
-          label: {
-            text: "Amount"
-          },
-          value: data.otherIncomeAmount
-        }) }}
+        <h2 class="govuk-heading-m">How it is paid</h2>
+        <div class="app-field-row">
+          {{ govukSelect({
+            id: "otherIncome-qualifying-period",
+            name: "otherIncomeQualifyingPeriod",
+            label: { text: "Payment period" },
+            items: [
+              { value: "Weekly", text: "Weekly", selected: data.otherIncomeQualifyingPeriod == "Weekly" or not data.otherIncomeQualifyingPeriod },
+              { value: "Fortnightly", text: "Fortnightly", selected: data.otherIncomeQualifyingPeriod == "Fortnightly" },
+              { value: "4 weekly", text: "4 weekly", selected: data.otherIncomeQualifyingPeriod == "4 weekly" },
+              { value: "Monthly", text: "Monthly", selected: data.otherIncomeQualifyingPeriod == "Monthly" },
+              { value: "Quarterly", text: "Quarterly", selected: data.otherIncomeQualifyingPeriod == "Quarterly" },
+              { value: "Annually", text: "Annually", selected: data.otherIncomeQualifyingPeriod == "Annually" }
+            ]
+          }) }}
 
-        {{ govukSelect({
-          id: "otherIncome-qualifying-period",
-          name: "otherIncomeQualifyingPeriod",
-          label: {
-            text: "Qualifying period"
-          },
-          items: [
-            { value: "Weekly", text: "Weekly", selected: data.otherIncomeQualifyingPeriod == "Weekly" or not data.otherIncomeQualifyingPeriod },
-            { value: "Fortnightly", text: "Fortnightly", selected: data.otherIncomeQualifyingPeriod == "Fortnightly" },
-            { value: "4 weekly", text: "4 weekly", selected: data.otherIncomeQualifyingPeriod == "4 weekly" },
-            { value: "Monthly", text: "Monthly", selected: data.otherIncomeQualifyingPeriod == "Monthly" },
-            { value: "Quarterly", text: "Quarterly", selected: data.otherIncomeQualifyingPeriod == "Quarterly" },
-            { value: "Annually", text: "Annually", selected: data.otherIncomeQualifyingPeriod == "Annually" }
-          ]
-        }) }}
+          {{ govukRadios({
+            idPrefix: "otherIncome-paid-to",
+            name: "otherIncomePaidTo",
+            classes: "govuk-radios--inline govuk-radios--small",
+            formGroup: { classes: "app-field--wide" },
+            fieldset: { legend: { text: "Paid to" } },
+            items: [
+              { value: "Customer", text: "Customer", checked: data.otherIncomePaidTo != "Partner" or data.isjsaClientGroup != "couple" },
+              { value: "Partner", text: "Partner", checked: data.otherIncomePaidTo == "Partner" and data.isjsaClientGroup == "couple" }
+            ] if data.isjsaClientGroup == "couple" else [
+              { value: "Customer", text: "Customer", checked: true }
+            ]
+          }) }}
+        </div>
 
-        {{ govukInput({
-          id: "other-income-disregards",
-          name: "otherIncomeDisregards",
-          classes: "govuk-input--width-5",
-          prefix: { text: "£" },
-          label: {
-            text: "Disregards"
-          },
-          hint: {
-            text: "Leave blank if no disregard applies"
-          },
-          value: data.otherIncomeDisregards
-        }) }}
-
-        {{ govukInput({
-          id: "other-income-text",
-          name: "otherIncomeText",
-          label: {
-            text: "Text"
-          },
-          hint: {
-            text: "Any note to show against this income"
-          },
-          value: data.otherIncomeText
-        }) }}
+        <h2 class="govuk-heading-m">Amounts</h2>
+        <div class="app-field-row">
+          {{ govukInput({ id: "other-income-amount", name: "otherIncomeAmount", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Net pay" }, value: data.otherIncomeAmount }) }}
+          {{ govukInput({ id: "other-income-disregards", name: "otherIncomeDisregards", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Disregard" }, value: data.otherIncomeDisregards }) }}
+          <dl class="app-inline-value">
+            <dt>Net weekly</dt>
+            <dd>£0.00</dd>
+          </dl>
+        </div>
 
         <div class="govuk-button-group">
           {{ govukButton({

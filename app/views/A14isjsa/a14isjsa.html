@@ -1,7 +1,8 @@
 {% extends "layouts/main.html" %}
 
 {# Tables on this page are drawn from what the sub-pages saved. #}
-{% from "a14-tables.html" import a14Table %}
+{% from "a14-tables.html" import a14Table, a14PriceRow %}
+{% from "components/date-stepper.njk" import appDateStepper %}
 
 {% block pageTitle %}
   A14 form (IS or JSA) – OpCalc – GOV.UK Prototype Kit
@@ -44,148 +45,122 @@
   }) }}
 {% endblock %}
 
+{% block pageScripts %}
+  <script src="/public/javascripts/date-stepper.js"></script>
+{% endblock %}
+
 {% block content %}
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
 
-      <h1 class="govuk-heading-l">
-        A14 form (Income Support or Jobseeker's Allowance)
-      </h1>
+      {# Same title as the real OpCalc, "A14: 11/04/1988", where the date is
+         the day this A14 starts (Maisie, 12 Oct 2026). #}
+      {% set sd = data["a14StartDate-day"] if data["a14StartDate-year"] else data["discrepancyFrom-day"] %}
+      {% set sm = data["a14StartDate-month"] if data["a14StartDate-year"] else data["discrepancyFrom-month"] %}
+      {% set sy = data["a14StartDate-year"] if data["a14StartDate-year"] else data["discrepancyFrom-year"] %}
+      {% set a14Date = ((("0" + sd) if (sd | string | length) == 1 else sd) + "/" + (("0" + sm) if (sm | string | length) == 1 else sm) + "/" + sy) if sy else "01/09/2003" %}
+      <h1 class="govuk-heading-l">A14: {{ a14Date }}</h1>
+
+      {#
+        12 Oct 2026 (Maisie): every tab rebuilt to follow the real OpCalc
+        A14 screens, shorter, with no hint text. Answers that cannot apply
+        are taken off the page. Amounts are 2003/04 rates, for the prototype
+        only (see application.js, "A14 tabs with prices").
+      #}
 
       {% set customerHtml %}
+        <div data-a14-prices="isjsa">
 
-        <h2 class="govuk-heading-m">Customer's personal allowance</h2>
+          <div class="app-a14-allowance">
+            <h2 class="govuk-heading-s govuk-!-margin-bottom-2">Customer's personal allowance</h2>
+            <div class="app-field-row app-field-row--centre">
+              {{ govukRadios({
+                idPrefix: "isjsa-client-group",
+                name: "isjsaClientGroup",
+                classes: "govuk-radios--inline govuk-radios--small",
+                fieldset: { legend: { text: "Client group", classes: "govuk-visually-hidden" } },
+                items: [
+                  { value: "single", text: "Single", checked: data.isjsaClientGroup == "single" or not data.isjsaClientGroup },
+                  { value: "couple", text: "Couple", checked: data.isjsaClientGroup == "couple" },
+                  { value: "lone-parent", text: "Lone parent", checked: data.isjsaClientGroup == "lone-parent" }
+                ]
+              }) }}
 
-        {{ govukRadios({
-          idPrefix: "isjsa-client-group",
-          name: "isjsaClientGroup",
-          classes: "govuk-radios--inline",
-          fieldset: {
-            legend: {
-              text: "Client group"
-            }
-          },
-          items: [
-            { value: "single", text: "Single", checked: data.isjsaClientGroup == "single" or not data.isjsaClientGroup },
-            { value: "couple", text: "Couple", checked: data.isjsaClientGroup == "couple" },
-            { value: "lone-parent", text: "Lone parent", checked: data.isjsaClientGroup == "lone-parent" }
-          ]
-        }) }}
+              {{ govukSelect({
+                id: "isjsa-age-band",
+                name: "isjsaAgeBand",
+                label: { text: "Age band", classes: "govuk-visually-hidden" },
+                items: [
+                  { value: "under-25", text: "Under 25", selected: data.isjsaAgeBand == "under-25", attributes: { "data-price": "43.25", "data-price-couple": "85.75" } },
+                  { value: "25-and-over", text: "25 and over", selected: data.isjsaAgeBand == "25-and-over" or not data.isjsaAgeBand, attributes: { "data-price": "54.65", "data-price-couple": "85.75" } },
+                  { value: "manual", text: "Manual", selected: data.isjsaAgeBand == "manual" }
+                ]
+              }) }}
 
-        {{ govukSelect({
-          id: "isjsa-age-band",
-          name: "isjsaAgeBand",
-          label: {
-            text: "Age band"
-          },
-          hint: {
-            text: "OpCalc applies the appropriate age band from the customer's date of birth. Choose Manual if a non-standard personal allowance rate applies."
-          },
-          items: [
-            { value: "under-25", text: "Under 25", selected: data.isjsaAgeBand == "under-25" },
-            { value: "25-and-over", text: "25 and over", selected: data.isjsaAgeBand == "25-and-over" or not data.isjsaAgeBand },
-            { value: "manual", text: "Manual", selected: data.isjsaAgeBand == "manual" }
-          ]
-        }) }}
+              <div class="app-field-row__end">
+                <p class="govuk-body govuk-!-font-weight-bold app-a14-allowance__amount" data-allowance-text aria-live="polite">£{{ data.isjsaPersonalAllowance if data.isjsaPersonalAllowance else "54.65" }}</p>
+                {{ govukInput({
+                  id: "isjsa-personal-allowance",
+                  name: "isjsaPersonalAllowance",
+                  classes: "govuk-input--width-5",
+                  prefix: { text: "£" },
+                  label: { text: "Personal allowance amount", classes: "govuk-visually-hidden" },
+                  value: data.isjsaPersonalAllowance if data.isjsaPersonalAllowance else "54.65"
+                }) }}
+              </div>
+            </div>
+          </div>
 
-        {{ govukInput({
-          id: "isjsa-personal-allowance",
-          name: "isjsaPersonalAllowance",
-          classes: "govuk-input--width-5",
-          prefix: { text: "£" },
-          label: {
-            text: "Personal allowance amount"
-          },
-          hint: {
-            text: "Calculated automatically unless Manual is selected above"
-          },
-          value: data.isjsaPersonalAllowance if data.isjsaPersonalAllowance else "54.65"
-        }) }}
+          <h2 class="govuk-heading-s govuk-!-margin-top-6 govuk-!-margin-bottom-2">Premiums</h2>
 
-        {{ govukRadios({
-          idPrefix: "isjsa-family-premium",
-          name: "isjsaFamilyPremium",
-          classes: "govuk-radios--inline",
-          fieldset: {
-            legend: {
-              text: "Family premium"
-            }
-          },
-          hint: {
-            text: "Selected automatically when Lone parent is chosen above, or when the Dependants tab has been completed in a Couple case"
-          },
-          items: [
-            { value: "no", text: "No", checked: data.isjsaFamilyPremium == "no" or not data.isjsaFamilyPremium },
-            { value: "yes", text: "Yes", checked: data.isjsaFamilyPremium == "yes" }
-          ]
-        }) }}
+          {{ a14PriceRow("isjsaFamilyPremium", "isjsa-family-premium", "Family premium", [
+            { value: "no", text: "No", price: "0" },
+            { value: "yes", text: "Yes", price: "15.75" }
+          ], data.isjsaFamilyPremium) }}
 
-        {{ govukRadios({
-          idPrefix: "isjsa-severe-disability-premium",
-          name: "isjsaSevereDisabilityPremium",
-          classes: "govuk-radios--inline",
-          fieldset: {
-            legend: {
-              text: "Severe disability premium"
-            }
-          },
-          hint: {
-            text: "Higher only applies to Couple cases"
-          },
-          items: [
-            { value: "no", text: "No", checked: data.isjsaSevereDisabilityPremium == "no" or not data.isjsaSevereDisabilityPremium },
-            { value: "lower", text: "Lower", checked: data.isjsaSevereDisabilityPremium == "lower" },
-            { value: "higher", text: "Higher", checked: data.isjsaSevereDisabilityPremium == "higher" }
-          ]
-        }) }}
+          {{ a14PriceRow("isjsaSevereDisabilityPremium", "isjsa-severe-disability-premium", "Severe disability premium", [
+            { value: "no", text: "No", price: "0" },
+            { value: "lower", text: "Lower", price: "42.95" },
+            { value: "higher", text: "Higher", price: "85.90" }
+          ], data.isjsaSevereDisabilityPremium) }}
 
-        {{ govukRadios({
-          idPrefix: "isjsa-carer-premium",
-          name: "isjsaCarerPremium",
-          classes: "govuk-radios--inline",
-          fieldset: {
-            legend: {
-              text: "Carer premium"
-            }
-          },
-          hint: {
-            text: "Both only applies to Couple cases"
-          },
-          items: [
-            { value: "no", text: "No", checked: data.isjsaCarerPremium == "no" or not data.isjsaCarerPremium },
-            { value: "yes", text: "Yes", checked: data.isjsaCarerPremium == "yes" },
-            { value: "both", text: "Both", checked: data.isjsaCarerPremium == "both" }
-          ]
-        }) }}
+          {{ a14PriceRow("isjsaCarerPremium", "isjsa-carer-premium", "Carer premium", [
+            { value: "no", text: "No", price: "0" },
+            { value: "yes", text: "Yes", price: "25.55" },
+            { value: "both", text: "Both", price: "51.10" }
+          ], data.isjsaCarerPremium) }}
 
-        {{ govukInput({
-          id: "isjsa-clerical-components",
-          name: "isjsaClericalComponents",
-          classes: "govuk-input--width-5",
-          prefix: { text: "£" },
-          label: {
-            text: "Clerical components"
-          },
-          value: data.isjsaClericalComponents
-        }) }}
+          <h2 class="govuk-heading-s govuk-!-margin-top-6 govuk-!-margin-bottom-2">Other amounts</h2>
+          <div class="app-field-row">
+            {{ govukInput({
+              id: "isjsa-clerical-components",
+              name: "isjsaClericalComponents",
+              classes: "govuk-input--width-5",
+              prefix: { text: "£" },
+              label: { text: "Clerical components" },
+              value: data.isjsaClericalComponents
+            }) }}
+          </div>
 
-        {{ govukInsetText({
-          html: "<p class=\"govuk-body\">Benefit week: Monday Week Commencing</p><p class=\"govuk-body\">Currently to be used from: 01/09/2003 to 06/06/2004 (40 weeks)</p>"
-        }) }}
+          <dl class="app-benefit-week">
+            <dt>Benefit week</dt>
+            <dd>{{ (data.initialBenefitWeek if data.initialBenefitWeek else "Monday") + (" Week Ending" if data.benefitWeekType == "BWE" else " Week Commencing") }}</dd>
+            <dt>Currently to be used from</dt>
+            <dd>01/09/2003 to 06/06/2004 (40 weeks)</dd>
+          </dl>
 
+        </div>
       {% endset %}
 
       {% set dependantsHtml %}
 
-        <p class="govuk-body govuk-hint">
-          Not available if Single is selected on the Customer tab, or if "Is the date of claim prior to 6 April 2004?" is No on the Benefit details tab. Lone parents must have at least one dependant.
-        </p>
+        <h2 class="govuk-heading-m">Dependent children</h2>
 
         {{ a14Table(
             data.a14Dependants,
             [
-              { text: "Date of birth", field: ["dependantDob", "dependantDateOfBirth", "dob"] },
+              { text: "Date of birth", field: ["dependantDateOfBirth", "dependantDob", "dob"] },
               { text: "Age", field: ["dependantAge", "age"] },
               { text: "IS amount", field: ["dependantIsAmount", "isAmount", "dependantAmount"] },
               { text: "Premium", field: ["dependantPremium", "premium"] }
@@ -201,41 +176,29 @@
 
       {% set cgPremiumHtml %}
 
-        <p class="govuk-body govuk-hint">
-          Certain premiums are awarded automatically depending on the customer's circumstances - for example Minimum Income Guarantee when the customer reaches 60.
-        </p>
+        <h2 class="govuk-heading-m">Client group premium</h2>
 
-        {{ govukCheckboxes({
-          idPrefix: "isjsa-cg-premium",
-          name: "isjsaCgPremium",
-          fieldset: {
-            legend: {
-              text: "Client group premium"
-            }
-          },
-          items: [
-            { value: "familyPremiumLp", text: "Family premium (LP)", id: "isjsa-cg-premium", checked: data.isjsaCgPremium and "familyPremiumLp" in data.isjsaCgPremium },
-            { value: "minimumIncomeGuarantee", text: "Minimum Income Guarantee (HPP)", id: "isjsa-cg-premium-2", checked: data.isjsaCgPremium and "minimumIncomeGuarantee" in data.isjsaCgPremium },
-            { value: "disability", text: "Disability", id: "isjsa-cg-premium-3", checked: data.isjsaCgPremium and "disability" in data.isjsaCgPremium },
-            { value: "enhancedDisability", text: "Enhanced disability", id: "isjsa-cg-premium-4", checked: data.isjsaCgPremium and "enhancedDisability" in data.isjsaCgPremium },
-            { value: "bereavementPremium", text: "Bereavement premium", id: "isjsa-cg-premium-5", checked: data.isjsaCgPremium and "bereavementPremium" in data.isjsaCgPremium }
-          ]
-        }) }}
+        <div class="app-field-row app-field-row--top">
+          {{ govukCheckboxes({
+            idPrefix: "isjsa-cg-premium",
+            name: "isjsaCgPremium",
+            classes: "govuk-checkboxes--small",
+            formGroup: { classes: "app-field--wide" },
+            fieldset: { legend: { text: "Client group premium", classes: "govuk-visually-hidden" } },
+            items: [
+              { value: "familyPremiumLp", text: "Family premium (LP)", id: "isjsa-cg-premium", checked: data.isjsaCgPremium and "familyPremiumLp" in data.isjsaCgPremium },
+              { value: "minimumIncomeGuarantee", text: "Minimum Income Guarantee (HPP)", id: "isjsa-cg-premium-2", checked: data.isjsaCgPremium and "minimumIncomeGuarantee" in data.isjsaCgPremium },
+              { value: "disability", text: "Disability", id: "isjsa-cg-premium-3", checked: data.isjsaCgPremium and "disability" in data.isjsaCgPremium },
+              { value: "enhancedDisability", text: "Enhanced disability", id: "isjsa-cg-premium-4", checked: data.isjsaCgPremium and "enhancedDisability" in data.isjsaCgPremium },
+              { value: "bereavementPremium", text: "Bereavement premium", id: "isjsa-cg-premium-5", checked: data.isjsaCgPremium and "bereavementPremium" in data.isjsaCgPremium }
+            ]
+          }) }}
 
-        {{ govukSummaryList({
-          rows: [
-            { key: { text: "Premium payable" }, value: { text: "£" + (data.isjsaCgPremiumPayable if data.isjsaCgPremiumPayable else "0.00") } }
-          ]
-        }) }}
-
-        {{ govukInput({
-          id: "isjsa-cg-premium-reason",
-          name: "isjsaCgPremiumReason",
-          label: {
-            text: "Reason for MIG or disability premium"
-          },
-          value: data.isjsaCgPremiumReason
-        }) }}
+          <dl class="app-inline-value app-field-row__end">
+            <dt>Premium payable</dt>
+            <dd>£{{ data.isjsaCgPremiumPayable if data.isjsaCgPremiumPayable else "0.00" }}</dd>
+          </dl>
+        </div>
 
       {% endset %}
 
@@ -243,101 +206,48 @@
 
         <h2 class="govuk-heading-m">Housing costs</h2>
 
-        {{ govukInput({
-          id: "isjsa-interest",
-          name: "isjsaInterest",
-          classes: "govuk-input--width-5",
-          prefix: { text: "£" },
-          label: { text: "Interest" },
-          value: data.isjsaInterest
-        }) }}
+        <p class="govuk-body">Enter each cost, or just a yearly or weekly total.</p>
 
-        {{ govukInput({
-          id: "isjsa-ground-rent",
-          name: "isjsaGroundRent",
-          classes: "govuk-input--width-5",
-          prefix: { text: "£" },
-          label: { text: "Ground rent / Service or rent charge" },
-          value: data.isjsaGroundRent
-        }) }}
+        <div class="app-field-row">
+          {{ govukInput({ id: "isjsa-interest", name: "isjsaInterest", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Interest" }, value: data.isjsaInterest }) }}
+          {{ govukInput({ id: "isjsa-ground-rent", name: "isjsaGroundRent", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Ground rent / Service or rent charge" }, value: data.isjsaGroundRent }) }}
+          {{ govukInput({ id: "isjsa-other-costs", name: "isjsaOtherCosts", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Other costs" }, value: data.isjsaOtherCosts }) }}
+          {{ govukInput({ id: "isjsa-yearly-total", name: "isjsaYearlyTotal", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Yearly total" }, value: data.isjsaYearlyTotal }) }}
+          {{ govukInput({ id: "isjsa-weekly-total-housing", name: "isjsaWeeklyTotalHousing", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Weekly total" }, value: data.isjsaWeeklyTotalHousing }) }}
+        </div>
 
-        {{ govukInput({
-          id: "isjsa-other-costs",
-          name: "isjsaOtherCosts",
-          classes: "govuk-input--width-5",
-          prefix: { text: "£" },
-          label: { text: "Other costs" },
-          value: data.isjsaOtherCosts
-        }) }}
-
-        <p class="govuk-body govuk-hint">You can enter a yearly or weekly total instead of the individual costs above.</p>
-
-        {{ govukInput({
-          id: "isjsa-yearly-total",
-          name: "isjsaYearlyTotal",
-          classes: "govuk-input--width-5",
-          prefix: { text: "£" },
-          label: { text: "Yearly total" },
-          value: data.isjsaYearlyTotal
-        }) }}
-
-        {{ govukInput({
-          id: "isjsa-weekly-total-housing",
-          name: "isjsaWeeklyTotalHousing",
-          classes: "govuk-input--width-5",
-          prefix: { text: "£" },
-          label: { text: "Weekly total" },
-          value: data.isjsaWeeklyTotalHousing
-        }) }}
-
+        {# 0% allowable has gone: it is greyed out in the real OpCalc. #}
         <h2 class="govuk-heading-m">Allowable</h2>
 
-        {{ govukRadios({
-          idPrefix: "isjsa-loan-before-021095",
-          name: "isjsaLoanBefore021095",
-          classes: "govuk-radios--inline",
-          fieldset: {
-            legend: {
-              text: "Loan commenced before 2 October 1995"
-            }
-          },
-          items: [
-            { value: "yes", text: "Yes", checked: data.isjsaLoanBefore021095 == "yes" or not data.isjsaLoanBefore021095 },
-            { value: "no", text: "No", checked: data.isjsaLoanBefore021095 == "no" }
-          ]
-        }) }}
+        <div class="app-field-row app-field-row--top">
+          {{ govukRadios({
+            idPrefix: "isjsa-loan-before-021095",
+            name: "isjsaLoanBefore021095",
+            classes: "govuk-radios--inline govuk-radios--small",
+            formGroup: { classes: "app-field--wide" },
+            fieldset: { legend: { text: "Loan commenced before 2 October 1995" } },
+            items: [
+              { value: "yes", text: "Yes", checked: data.isjsaLoanBefore021095 == "yes" or not data.isjsaLoanBefore021095 },
+              { value: "no", text: "No", checked: data.isjsaLoanBefore021095 == "no" }
+            ]
+          }) }}
 
-        {{ govukDateInput({
-          id: "isjsa-first-day-entitlement",
-          namePrefix: "isjsaFirstDayEntitlement",
-          fieldset: {
-            legend: {
-              text: "First day of entitlement"
-            }
-          },
-          items: [
-            { name: "day", classes: "govuk-input--width-2", value: data["isjsaFirstDayEntitlement-day"] },
-            { name: "month", classes: "govuk-input--width-2", value: data["isjsaFirstDayEntitlement-month"] },
-            { name: "year", classes: "govuk-input--width-4", value: data["isjsaFirstDayEntitlement-year"] }
-          ]
-        }) }}
+          {{ appDateStepper({
+            id: "isjsa-first-day-entitlement",
+            namePrefix: "isjsaFirstDayEntitlement",
+            legend: "First day of entitlement",
+            legendClasses: "",
+            date: { day: data["isjsaFirstDayEntitlement-day"], month: data["isjsaFirstDayEntitlement-month"], year: data["isjsaFirstDayEntitlement-year"] }
+          }) }}
 
-        {{ govukInput({
-          id: "isjsa-0-percent-weeks",
-          name: "isjsa0PercentWeeks",
-          classes: "govuk-input--width-3",
-          label: { text: "0% allowable for (weeks)" },
-          hint: { text: "For example, 26 weeks at 0%, then 13 weeks at 50% below means 100% applies from week 40 onwards" },
-          value: data.isjsa0PercentWeeks
-        }) }}
-
-        {{ govukInput({
-          id: "isjsa-50-percent-weeks",
-          name: "isjsa50PercentWeeks",
-          classes: "govuk-input--width-3",
-          label: { text: "50% allowable for (weeks)" },
-          value: data.isjsa50PercentWeeks
-        }) }}
+          {{ govukInput({
+            id: "isjsa-50-percent-weeks",
+            name: "isjsa50PercentWeeks",
+            classes: "govuk-input--width-3",
+            label: { text: "50% allowable for (weeks)" },
+            value: data.isjsa50PercentWeeks
+          }) }}
+        </div>
 
         <h2 class="govuk-heading-m">Calculation</h2>
 
@@ -360,15 +270,16 @@
 
         <h2 class="govuk-heading-m">Benefits</h2>
 
+        {# Columns in the same order as OpCalc. #}
         {{ a14Table(
             data.a14Benefits,
             [
-              { text: "Paid to", field: ["benefitPaidTo", "paidTo", "benefitPaid"] },
-              { text: "Amount", field: ["benefitAmount", "amount"] },
-              { text: "Qualifying period", field: ["benefitQualifyingPeriod", "qualifyingPeriod", "benefitPeriod", "period"] },
-              { text: "Disregards", field: ["benefitDisregards", "disregards", "benefitDisregard"] },
-              { text: "Type", field: ["benefitType", "type"] },
-              { text: "Text", field: ["benefitText", "text", "benefitDescription"] }
+              { text: "Paid to", field: ["benefitPaidTo", "paidTo"] },
+              { text: "Amount", field: ["benefitAmount", "amount"], prefix: "£" },
+              { text: "Period", field: ["benefitQualifyingPeriod", "period"] },
+              { text: "Disregards", field: ["benefitDisregards", "disregards"], prefix: "£" },
+              { text: "Type", field: ["benefitType"] },
+              { text: "Benefit", field: ["benefitName"] }
             ],
             "No benefits recorded",
             "a14Benefits",
@@ -382,12 +293,12 @@
         {{ a14Table(
             data.a14OtherIncome,
             [
-              { text: "Paid to", field: ["otherIncomePaidTo", "paidTo", "incomePaidTo"] },
-              { text: "Amount", field: ["otherIncomeAmount", "incomeAmount", "amount"] },
-              { text: "Qualifying period", field: ["otherIncomeQualifyingPeriod", "qualifyingPeriod", "otherIncomePeriod", "period"] },
-              { text: "Disregards", field: ["otherIncomeDisregards", "disregards", "otherIncomeDisregard"] },
-              { text: "Type", field: ["otherIncomeType", "type"] },
-              { text: "Text", field: ["otherIncomeText", "text", "otherIncomeDescription"] }
+              { text: "Paid to", field: ["otherIncomePaidTo", "paidTo"] },
+              { text: "Amount", field: ["otherIncomeAmount", "amount"], prefix: "£" },
+              { text: "Period", field: ["otherIncomeQualifyingPeriod", "period"] },
+              { text: "Disregards", field: ["otherIncomeDisregards", "disregards"], prefix: "£" },
+              { text: "Type", field: ["otherIncomeType"] },
+              { text: "Category", field: ["otherIncomeCategory"] }
             ],
             "No other income recorded",
             "a14OtherIncome",
@@ -396,119 +307,83 @@
 
         <p class="govuk-body"><a class="govuk-link" href="/A14isjsa/newotherincomeisjsa?returnTo=/A14isjsa/a14isjsa%23income">New other income</a></p>
 
-        <h2 class="govuk-heading-m">Total capital</h2>
+        {# Residential care and Pensioner limit have gone (Maisie, 12 Oct
+           2026). #}
+        <h2 class="govuk-heading-m">Capital</h2>
 
-        {{ govukInput({
-          id: "isjsa-total-capital",
-          name: "isjsaTotalCapital",
-          classes: "govuk-input--width-5",
-          prefix: { text: "£" },
-          label: { text: "Total capital" },
-          value: data.isjsaTotalCapital
-        }) }}
+        <div class="app-field-row">
+          {{ govukInput({
+            id: "isjsa-total-capital",
+            name: "isjsaTotalCapital",
+            classes: "govuk-input--width-5",
+            prefix: { text: "£" },
+            label: { text: "Total capital" },
+            value: data.isjsaTotalCapital
+          }) }}
 
-        {{ govukCheckboxes({
-          idPrefix: "isjsa-residential-care",
-          name: "isjsaResidentialCare",
-          items: [
-            { value: "residentialCare", text: "Residential care", id: "isjsa-residential-care", checked: data.isjsaResidentialCare }
-          ]
-        }) }}
-
-        {{ govukCheckboxes({
-          idPrefix: "isjsa-pensioner-limit",
-          name: "isjsaPensionerLimit",
-          hint: {
-            text: "Automatically selected and disabled if the customer is over pension age"
-          },
-          items: [
-            { value: "pensionerLimit", text: "Pensioner limit", id: "isjsa-pensioner-limit", checked: data.isjsaPensionerLimit }
-          ]
-        }) }}
+          <dl class="app-field-row__end app-inline-value">
+            <dt>Tariff income</dt>
+            <dd>£{{ data.isjsaTariffIncome if data.isjsaTariffIncome else "0.00" }}</dd>
+          </dl>
+        </div>
 
       {% endset %}
 
       {% set aaDlaHtml %}
+        <div data-a14-prices="aadla">
 
-        {{ govukRadios({
-          idPrefix: "isjsa-attendance-allowance",
-          name: "isjsaAttendanceAllowance",
-          classes: "govuk-radios--inline",
-          fieldset: {
-            legend: {
-              text: "Attendance Allowance"
-            }
-          },
-          items: [
-            { value: "no", text: "No", checked: data.isjsaAttendanceAllowance == "no" or not data.isjsaAttendanceAllowance },
-            { value: "lower", text: "Lower", checked: data.isjsaAttendanceAllowance == "lower" },
-            { value: "higher", text: "Higher", checked: data.isjsaAttendanceAllowance == "higher" }
-          ]
-        }) }}
+          {{ a14PriceRow("isjsaAttendanceAllowance", "isjsa-attendance-allowance", "Attendance Allowance", [
+            { value: "no", text: "No", price: "0" },
+            { value: "lower", text: "Lower", price: "39.35" },
+            { value: "higher", text: "Higher", price: "58.80" }
+          ], data.isjsaAttendanceAllowance) }}
 
-        {{ govukRadios({
-          idPrefix: "isjsa-dla-care",
-          name: "isjsaDlaCare",
-          classes: "govuk-radios--inline",
-          fieldset: {
-            legend: {
-              text: "DLA Care Component"
-            }
-          },
-          items: [
-            { value: "no", text: "No", checked: data.isjsaDlaCare == "no" or not data.isjsaDlaCare },
-            { value: "lower", text: "Lower", checked: data.isjsaDlaCare == "lower" },
-            { value: "middle", text: "Middle", checked: data.isjsaDlaCare == "middle" },
-            { value: "higher", text: "Higher", checked: data.isjsaDlaCare == "higher" }
-          ]
-        }) }}
+          <h2 class="govuk-heading-s govuk-!-margin-top-6 govuk-!-margin-bottom-2">DLA</h2>
 
-        {{ govukRadios({
-          idPrefix: "isjsa-dla-mobility",
-          name: "isjsaDlaMobility",
-          classes: "govuk-radios--inline",
-          fieldset: {
-            legend: {
-              text: "DLA Mobility Component"
-            }
-          },
-          items: [
-            { value: "no", text: "No", checked: data.isjsaDlaMobility == "no" or not data.isjsaDlaMobility },
-            { value: "lower", text: "Lower", checked: data.isjsaDlaMobility == "lower" },
-            { value: "higher", text: "Higher", checked: data.isjsaDlaMobility == "higher" }
-          ]
-        }) }}
+          {{ a14PriceRow("isjsaDlaCare", "isjsa-dla-care", "Care component", [
+            { value: "no", text: "No", price: "0" },
+            { value: "lower", text: "Lower", price: "15.55" },
+            { value: "middle", text: "Middle", price: "39.35" },
+            { value: "higher", text: "Higher", price: "58.80" }
+          ], data.isjsaDlaCare) }}
 
-        <h2 class="govuk-heading-m">Summary</h2>
+          {{ a14PriceRow("isjsaDlaMobility", "isjsa-dla-mobility", "Mobility component", [
+            { value: "no", text: "No", price: "0" },
+            { value: "lower", text: "Lower", price: "15.55" },
+            { value: "higher", text: "Higher", price: "41.05" }
+          ], data.isjsaDlaMobility) }}
 
-        {{ govukSummaryList({
-          rows: [
-            { key: { text: "Applicable amount" }, value: { text: "£102.10" } },
-            { key: { text: "LESS: Weekly income" }, value: { text: "£0.00" } },
-            { key: { text: "Entitlement" }, value: { text: "£102.10" } },
-            { key: { text: "PLUS: AA/DLA not in payment" }, value: { text: "£0.00" } },
-            { key: { text: "Weekly total" }, value: { text: "£102.10" } }
-          ]
-        }) }}
+          <h2 class="govuk-heading-m govuk-!-margin-top-7">Summary</h2>
 
-        <p class="govuk-body govuk-hint">Summary figures shown are illustrative and would be calculated automatically in the live system.</p>
+          {{ govukSummaryList({
+            classes: "app-a14-summary",
+            rows: [
+              { key: { text: "Applicable amount" }, value: { text: "£102.10" } },
+              { key: { text: "Less weekly income" }, value: { text: "£0.00" } },
+              { key: { html: "<strong>Entitlement</strong>" }, value: { html: "<strong>£102.10</strong>" } },
+              { key: { text: "Plus AA or DLA not in payment" }, value: { text: "£0.00" } },
+              { key: { html: "<strong>Weekly total</strong>" }, value: { html: "<strong>£102.10</strong>" } }
+            ]
+          }) }}
 
+        </div>
       {% endset %}
 
       {% set bweBwcHtml %}
 
         <h2 class="govuk-heading-m">Benefit weeks</h2>
 
-        <p class="govuk-body">Initial Benefit Week: Monday Week Commencing</p>
-
-        <p class="govuk-body govuk-hint">Payday changes should be entered on the initial A14, rather than at the point they actually occur. Details will then show on every A14 for this case.</p>
+        <dl class="app-inline-value app-inline-value--row">
+          <dt>Initial benefit week</dt>
+          <dd>{{ (data.initialBenefitWeek if data.initialBenefitWeek else "Monday") + (" Week Ending" if data.benefitWeekType == "BWE" else " Week Commencing") }}</dd>
+        </dl>
 
         {{ a14Table(
             data.a14BenefitWeeks,
             [
               { text: "Start date", field: ["bwDateOfChange", "benefitWeekStart", "startDate"] },
-              { text: "Pay day", field: ["benefitPayDay", "payDay"] },
-              { text: "Ben week", field: ["benefitWeekType", "benWeek"] },
+              { text: "Pay day", field: ["bwPayDay", "benefitPayDay", "payDay"] },
+              { text: "Ben week", field: ["bwType", "benWeek"] },
               { text: "Part week(s)", field: ["partWeeks", "partWeek"] }
             ],
             "No benefit weeks recorded",
@@ -520,13 +395,13 @@
 
         <h2 class="govuk-heading-m">Exclusions</h2>
 
-        <p class="govuk-body govuk-hint">Exclusions from the Average Hours Calculation are added for you. Do not enter them again here.</p>
+        <p class="govuk-body">Exclusions from the Average Hours Calculation are added for you, so do not enter them again here.</p>
 
         {{ a14Table(
             data.a14Exclusions,
             [
-              { text: "Start date", field: ["exclusionFrom", "exclusionStart", "startDate"] },
-              { text: "End date", field: ["exclusionTo", "exclusionEnd", "endDate"] },
+              { text: "Start date", field: ["exclusionStartDate", "exclusionFrom", "startDate"] },
+              { text: "End date", field: ["exclusionEndDate", "exclusionTo", "endDate"] },
               { text: "Code", field: ["exclusionCode", "code"] },
               { text: "Reason", field: ["exclusionReason", "reason"] }
             ],

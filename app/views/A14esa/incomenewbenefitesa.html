@@ -1,4 +1,5 @@
 {% extends "layouts/main.html" %}
+{% from "a14-tables.html" import a14BenefitFields %}
 {% from "components/date-stepper.njk" import appDateStepper %}
 
 {% block pageTitle %}
@@ -68,33 +69,7 @@
         <input type="hidden" name="returnTo" value="/a14esa#income">
 
         <h2 class="govuk-heading-m">Benefit</h2>
-        <div class="app-field-row">
-          {{ govukSelect({
-            id: "esa-benefit-type",
-            name: "esaBenefitType",
-            label: { text: "Type" },
-            items: [
-              { value: "", text: "Select", selected: not data.esaBenefitType },
-              { value: "Contributory", text: "Contributory", selected: data.esaBenefitType == "Contributory" },
-              { value: "Income related", text: "Income related", selected: data.esaBenefitType == "Income related" },
-              { value: "Non-contributory", text: "Non-contributory", selected: data.esaBenefitType == "Non-contributory" },
-              { value: "Other", text: "Other", selected: data.esaBenefitType == "Other" }
-            ]
-          }) }}
-
-          {% set benefitNames = ["Attendance Allowance", "Bereavement Allowance", "Child Benefit", "DLA Care Component", "DLA Mobility Component", "Incapacity Benefit", "Income Support", "Jobseeker's Allowance", "Maternity Allowance", "Pension Credit", "Severe Disablement Allowance", "State Pension", "Widowed Parent's Allowance"] %}
-          {% set benefitItems = [{ value: "", text: "Select a benefit", selected: not data.esaBenefit }] %}
-          {% for name in benefitNames %}
-            {% set _ = benefitItems.push({ value: name, text: name, selected: data.esaBenefit == name }) %}
-          {% endfor %}
-          {{ govukSelect({
-            id: "esa-benefit",
-            name: "esaBenefit",
-            label: { text: "Benefit" },
-            formGroup: { classes: "app-field--wide" },
-            items: benefitItems
-          }) }}
-        </div>
+        {{ a14BenefitFields("esaBenefitType", "esa-benefit-type", "esaBenefit", "esa-benefit", data.esaBenefitType, data.esaBenefit) }}
 
         <h2 class="govuk-heading-m">How it is paid</h2>
         <div class="app-field-row">
@@ -132,6 +107,7 @@
             id: "esa-uprating-payday",
             namePrefix: "esaUpratingPayday",
             legend: "Payday",
+            legendClasses: "",
             date: { day: data["esaUpratingPayday-day"], month: data["esaUpratingPayday-month"], year: data["esaUpratingPayday-year"] }
           }) }}
         {% endset %}

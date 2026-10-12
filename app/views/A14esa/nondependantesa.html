@@ -75,6 +75,7 @@
         <p class="govuk-body">Enter how many non-dependants live with the customer in each group.</p>
 
         <div data-nde>
+          <input type="hidden" name="esaNonDependantDeductions" data-nde-total-field value="{{ data.esaNonDependantDeductions if data.esaNonDependantDeductions else '0.00' }}">
           {{ ndeRow("nde-25-and-over", "nde25AndOver", "Aged 25 and over on Income Support, JSA (IB) or ESA", "7.40", data.nde25AndOver) }}
           {{ ndeRow("nde-18-24", "nde18To24", "Aged 18 to 24 on Income Support, JSA (IB) or ESA, or other exemptions", "0.00", data.nde18To24) }}
           {{ ndeRow("nde-others-not-working", "ndeOthersNotWorking", "Others aged 18 and over not working", "7.40", data.ndeOthersNotWorking) }}

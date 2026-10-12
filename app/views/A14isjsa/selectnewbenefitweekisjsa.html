@@ -1,4 +1,5 @@
 {% extends "layouts/main.html" %}
+{% from "components/date-stepper.njk" import appDateStepper %}
 
 {% block pageTitle %}
   Change of benefit payment day – A14 form (IS or JSA) – OpCalc – GOV.UK Prototype Kit
@@ -43,6 +44,10 @@
   }) }}
 {% endblock %}
 
+{% block pageScripts %}
+  <script src="/public/javascripts/date-stepper.js"></script>
+{% endblock %}
+
 {% block content %}
 
   <div class="govuk-grid-row">
@@ -57,55 +62,47 @@
 
       <form action="/return-to-tab" method="post">
 
-        {{ govukDateInput({
+        {# Laid out like OpCalc's Change of Benefit Payment Day (Maisie, 12
+           Oct 2026): the date with its day of the week, then the pay day and
+           BWE or BWC on one line. #}
+        <p class="govuk-body">Enter pay day changes on the first A14, not at the point they happen.</p>
+
+        {{ appDateStepper({
           id: "bw-date-of-change",
           namePrefix: "bwDateOfChange",
-          fieldset: {
-            legend: {
-              text: "Date of change"
-            }
-          },
-          hint: {
-            text: "For example, 1 9 2003"
-          },
-          items: [
-            { name: "day", classes: "govuk-input--width-2", value: data["bwDateOfChange-day"] },
-            { name: "month", classes: "govuk-input--width-2", value: data["bwDateOfChange-month"] },
-            { name: "year", classes: "govuk-input--width-4", value: data["bwDateOfChange-year"] }
-          ]
+          legend: "Date of change",
+          legendClasses: "",
+          date: { day: data["bwDateOfChange-day"], month: data["bwDateOfChange-month"], year: data["bwDateOfChange-year"] }
         }) }}
 
-        {{ govukSelect({
-          id: "bw-pay-day",
-          name: "bwPayDay",
-          label: {
-            text: "Benefit pay day"
-          },
-          items: [
-            { value: "Monday", text: "Monday", selected: data.bwPayDay == "Monday" or not data.bwPayDay },
-            { value: "Tuesday", text: "Tuesday", selected: data.bwPayDay == "Tuesday" },
-            { value: "Wednesday", text: "Wednesday", selected: data.bwPayDay == "Wednesday" },
-            { value: "Thursday", text: "Thursday", selected: data.bwPayDay == "Thursday" },
-            { value: "Friday", text: "Friday", selected: data.bwPayDay == "Friday" },
-            { value: "Saturday", text: "Saturday", selected: data.bwPayDay == "Saturday" },
-            { value: "Sunday", text: "Sunday", selected: data.bwPayDay == "Sunday" }
-          ]
-        }) }}
+        <div class="app-field-row">
+          {{ govukSelect({
+            id: "bw-pay-day",
+            name: "bwPayDay",
+            label: { text: "Benefit pay day" },
+            items: [
+              { value: "Monday", text: "Monday", selected: data.bwPayDay == "Monday" or not data.bwPayDay },
+              { value: "Tuesday", text: "Tuesday", selected: data.bwPayDay == "Tuesday" },
+              { value: "Wednesday", text: "Wednesday", selected: data.bwPayDay == "Wednesday" },
+              { value: "Thursday", text: "Thursday", selected: data.bwPayDay == "Thursday" },
+              { value: "Friday", text: "Friday", selected: data.bwPayDay == "Friday" },
+              { value: "Saturday", text: "Saturday", selected: data.bwPayDay == "Saturday" },
+              { value: "Sunday", text: "Sunday", selected: data.bwPayDay == "Sunday" }
+            ]
+          }) }}
 
-        {{ govukRadios({
-          idPrefix: "bw-type",
-          name: "bwType",
-          classes: "govuk-radios--inline",
-          fieldset: {
-            legend: {
-              text: "Benefit week type"
-            }
-          },
-          items: [
-            { value: "BWE", text: "BWE", checked: data.bwType == "BWE" },
-            { value: "BWC", text: "BWC", checked: data.bwType == "BWC" or not data.bwType }
-          ]
-        }) }}
+          {{ govukRadios({
+            idPrefix: "bw-type",
+            name: "bwType",
+            classes: "govuk-radios--inline govuk-radios--small",
+            formGroup: { classes: "app-field--wide" },
+            fieldset: { legend: { text: "Benefit week" } },
+            items: [
+              { value: "BWE", text: "BWE", checked: data.bwType == "BWE" },
+              { value: "BWC", text: "BWC", checked: data.bwType == "BWC" or not data.bwType }
+            ]
+          }) }}
+        </div>
 
         <h2 class="govuk-heading-m">Benefit week information</h2>
 
@@ -115,10 +112,6 @@
             { key: { text: "First week" }, value: { text: "01/09/2003 to 07/09/2003" } },
             { key: { text: "Last week" }, value: { text: "31/05/2004 to 06/06/2004" } }
           ]
-        }) }}
-
-        {{ govukInsetText({
-          text: "Payday changes should be entered on the initial A14, rather than at the point they actually occur."
         }) }}
 
         <div class="govuk-button-group">

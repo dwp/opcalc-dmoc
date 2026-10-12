@@ -184,7 +184,9 @@ window.GOVUKPrototypeKit.documentReady(() => {
   // withAllowable false: the form has no Allowable section. The ESA form
   // lost it on 12 Oct 2026 (Maisie), so its checks must not point at fields
   // that are no longer there.
-  function housingRules (prefix, idPrefix, withAllowable) {
+  // withZero false: the form has no "0% allowable for (weeks)" box. IS/JSA
+  // lost it on 12 Oct 2026, as it is greyed out in the real OpCalc.
+  function housingRules (prefix, idPrefix, withAllowable, withZero) {
     const rules = [
       { field: prefix + 'Interest', id: idPrefix + 'interest', label: 'Interest', tab: 'housing', type: 'money' },
       { field: prefix + 'GroundRent', id: idPrefix + 'ground-rent', label: 'Ground rent / Service or rent charge', tab: 'housing', type: 'money' },
@@ -206,7 +208,9 @@ window.GOVUKPrototypeKit.documentReady(() => {
       },
       { field: prefix + '0PercentWeeks', id: idPrefix + '0-percent-weeks', label: '0% allowable for (weeks)', tab: 'housing', type: 'wholeNumber' },
       { field: prefix + '50PercentWeeks', id: idPrefix + '50-percent-weeks', label: '50% allowable for (weeks)', tab: 'housing', type: 'wholeNumber' }
-    ])
+    ]).filter(function (rule) {
+      return withZero !== false || rule.field !== prefix + '0PercentWeeks'
+    })
   }
 
   // -------------------------------------------------------------------------
@@ -350,23 +354,10 @@ window.GOVUKPrototypeKit.documentReady(() => {
           missingMessage: 'Enter the personal allowance amount'
         },
         { field: 'isjsaClericalComponents', id: 'isjsa-clerical-components', label: 'Clerical components', tab: 'customer', type: 'money' },
-        {
-          field: 'isjsaCgPremiumReason',
-          id: 'isjsa-cg-premium-reason',
-          label: 'Reason for MIG or disability premium',
-          tab: 'cg-premium',
-          type: 'text',
-          // The field is literally labelled "Reason for MIG or disability
-          // premium", so ticking one of those two and leaving it blank is an
-          // unfinished answer. The other premiums do not ask for a reason.
-          requiredWhen: function (value, values) {
-            const ticked = values('isjsaCgPremium')
-            return ticked.indexOf('minimumIncomeGuarantee') !== -1 || ticked.indexOf('disability') !== -1
-          },
-          missingMessage: 'Enter a reason for the MIG or disability premium'
-        },
+        // The reason for a MIG or disability premium was taken off the CG
+        // Premium tab (Maisie, 12 Oct 2026), so it is no longer checked.
         { field: 'isjsaTotalCapital', id: 'isjsa-total-capital', label: 'Total capital', tab: 'income', type: 'money' }
-      ].concat(housingRules('isjsa', 'isjsa-')),
+      ].concat(housingRules('isjsa', 'isjsa-', true, false)),
       checks: housingChecks('isjsa', 'isjsa-')
     }
   }
@@ -1293,6 +1284,15 @@ window.GOVUKPrototypeKit.documentReady(() => {
         select.dispatchEvent(new Event('change', { bubbles: true }))
       }
     })
+
+    // And the other way (12 Oct 2026): picking from the list fills in its
+    // code, as OpCalc does with a benefit's type code. An item with no code
+    // empties the box.
+    select.addEventListener('change', function () {
+      const option = select.options[select.selectedIndex]
+      if (!option || !option.hasAttribute('data-code')) { return }
+      input.value = option.getAttribute('data-code')
+    })
   })
 
   // Hide or show a row. GOV.UK styles give summary list rows and radio items
@@ -1472,20 +1472,26 @@ window.GOVUKPrototypeKit.documentReady(() => {
     })
   })
 
-  // ---- A14 ESA Customer tab: prices and which answers are allowed ---------------
-  // Added 12 Oct 2026 (Maisie), to match the real OpCalc A14 ESA screen: each
+  // ---- A14 tabs with prices: which answers are allowed, and the amounts ----------
+  // Added 12 Oct 2026 (Maisie), to match the real OpCalc A14 screens: each
   // row shows its weekly amount on the right, and answers that cannot apply
   // are taken off the page instead of being explained in hint text.
   //
+  // Used on the ESA Customer tab (data-a14-prices="esa"), the IS/JSA
+  // Customer tab ("isjsa") and the IS/JSA AA/DLA tab ("aadla").
+  //
   // Amounts come from data-price on each radio (data-price-couple for a
   // couple case) and from data-price on each age band option. They are
-  // 2008/09 rates, for the prototype only.
+  // rates for the prototype only.
   document.querySelectorAll('[data-a14-prices]').forEach(function (tab) {
-    const allowance = tab.querySelector('#esa-personal-allowance')
-    const ageBand = tab.querySelector('#esa-age-band')
+    const form = tab.getAttribute('data-a14-prices')
+    const prefix = form === 'aadla' ? 'isjsa' : form
+    const root = tab.closest('form') || document
+    const allowance = tab.querySelector('#' + prefix + '-personal-allowance')
+    const ageBand = tab.querySelector('#' + prefix + '-age-band')
 
     function picked (name) {
-      const radio = tab.querySelector('input[name="' + name + '"]:checked')
+      const radio = root.querySelector('input[name="' + name + '"]:checked')
       return radio ? radio.value : ''
     }
 
@@ -1518,27 +1524,39 @@ window.GOVUKPrototypeKit.documentReady(() => {
     }
 
     function update () {
-      const couple = picked('esaClientGroup') === 'couple'
+      const group = picked(prefix + 'ClientGroup')
+      const couple = group === 'couple'
       const band = ageBand ? ageBand.value : ''
-      const assessment = band === '16-24' || band === '16-17-both'
 
-      // Higher and Both only apply to a couple.
-      allow('esaSevereDisabilityPremium', 'higher', couple)
-      allow('esaCarerPremium', 'both', couple)
-      // Enhanced disability premium cannot go with Pensioner.
-      allow('esaEnhancedDisabilityPremium', 'yes', picked('esaPensioner') !== 'yes')
-      // The components start after the assessment phase, and only one of
-      // them can apply at a time.
-      allow('esaSupportComponent', 'yes', !assessment && picked('esaWorkRelatedActivityComponent') !== 'yes')
-      allow('esaWorkRelatedActivityComponent', 'yes', !assessment && picked('esaSupportComponent') !== 'yes')
+      if (form === 'esa') {
+        const assessment = band === '16-24' || band === '16-17-both'
+        // Higher and Both only apply to a couple.
+        allow('esaSevereDisabilityPremium', 'higher', couple)
+        allow('esaCarerPremium', 'both', couple)
+        // Enhanced disability premium cannot go with Pensioner.
+        allow('esaEnhancedDisabilityPremium', 'yes', picked('esaPensioner') !== 'yes')
+        // The components start after the assessment phase, and only one of
+        // them can apply at a time.
+        allow('esaSupportComponent', 'yes', !assessment && picked('esaWorkRelatedActivityComponent') !== 'yes')
+        allow('esaWorkRelatedActivityComponent', 'yes', !assessment && picked('esaSupportComponent') !== 'yes')
+      }
+
+      if (form === 'isjsa') {
+        // Family premium needs a couple or a lone parent. Higher and Both
+        // only apply to a couple.
+        allow('isjsaFamilyPremium', 'yes', group === 'couple' || group === 'lone-parent')
+        allow('isjsaSevereDisabilityPremium', 'higher', couple)
+        allow('isjsaCarerPremium', 'both', couple)
+      }
 
       // Personal allowance: worked out from the age band and shown as an
       // amount, unless Manual, when the box to type it in appears.
       if (allowance && ageBand) {
         const manual = band === 'manual'
         const option = ageBand.options[ageBand.selectedIndex]
-        if (!manual && option && option.getAttribute('data-price')) {
-          allowance.value = parseFloat(option.getAttribute('data-price')).toFixed(2)
+        const price = option ? (couple && option.getAttribute('data-price-couple')) || option.getAttribute('data-price') : ''
+        if (!manual && price) {
+          allowance.value = parseFloat(price).toFixed(2)
         }
         const box = allowance.closest('.govuk-form-group')
         const shown = tab.querySelector('[data-allowance-text]')
@@ -1554,21 +1572,22 @@ window.GOVUKPrototypeKit.documentReady(() => {
       tab.querySelectorAll('[data-price-row]').forEach(function (row) {
         const name = row.getAttribute('data-price-row')
         const radio = tab.querySelector('input[name="' + name + '"]:checked')
-        let amount = priceOf(radio, couple)
+        const amount = priceOf(radio, couple)
         if (name === 'esaSupportComponent' || name === 'esaWorkRelatedActivityComponent') { component += amount }
         row.setAttribute('data-amount', amount)
       })
 
       tab.querySelectorAll('[data-price-row]').forEach(function (row) {
         let amount = parseFloat(row.getAttribute('data-amount')) || 0
-        // The Pensioner amount is reduced by any component being paid.
+        // ESA: the Pensioner amount is reduced by any component being paid.
         if (row.getAttribute('data-price-row') === 'esaPensioner' && amount) {
           amount = Math.max(0, amount - component)
         }
         const out = row.querySelector('[data-price-out]')
         if (out) { out.textContent = money(amount) }
         // A row left with nothing but No (Enhanced disability premium once
-        // Pensioner is Yes) is taken off the page too. Its No still counts.
+        // Pensioner is Yes, Family premium for a single person) is taken off
+        // the page too. Its No still counts.
         const radios = row.querySelectorAll('input[type="radio"]')
         const onlyNo = Array.prototype.every.call(radios, function (r) { return r.disabled || r.value === 'no' })
         hide(row, onlyNo && radios.length > 0)
@@ -1576,17 +1595,22 @@ window.GOVUKPrototypeKit.documentReady(() => {
     }
 
     // Picking Couple, or going back to Single or Lone parent, moves the age
-    // band to the usual one for that group, unless Manual was chosen.
-    tab.querySelectorAll('input[name="esaClientGroup"]').forEach(function (radio) {
-      radio.addEventListener('change', function () {
-        if (!ageBand || ageBand.value === 'manual') { return }
-        const coupleBand = ageBand.value === '16-17-both' || ageBand.value === '18-and-over'
-        if (radio.value === 'couple' && !coupleBand) { ageBand.value = '18-and-over' }
-        if (radio.value !== 'couple' && coupleBand) { ageBand.value = '25-and-over' }
+    // band to the usual one for that group, unless Manual was chosen. (ESA
+    // only: its age bands are different for a couple.)
+    if (form === 'esa') {
+      tab.querySelectorAll('input[name="esaClientGroup"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+          if (!ageBand || ageBand.value === 'manual') { return }
+          const coupleBand = ageBand.value === '16-17-both' || ageBand.value === '18-and-over'
+          if (radio.value === 'couple' && !coupleBand) { ageBand.value = '18-and-over' }
+          if (radio.value !== 'couple' && coupleBand) { ageBand.value = '25-and-over' }
+        })
       })
-    })
+    }
 
-    tab.addEventListener('change', update)
+    // The AA/DLA tab reads the client group from the Customer tab, so it
+    // listens to the whole form.
+    root.addEventListener('change', update)
     update()
   })
 
@@ -1606,6 +1630,10 @@ window.GOVUKPrototypeKit.documentReady(() => {
       const working = box.querySelector('[data-nde-working]')
       sum += working ? (parseFloat(working.getAttribute('data-nde-working')) || 0) : 0
       box.querySelector('[data-nde-sum]').textContent = '£' + sum.toFixed(2)
+      // Saved with the page, so the Housing tab can show it as the
+      // non-dependant deductions.
+      const out = box.querySelector('[data-nde-total-field]')
+      if (out) { out.value = sum.toFixed(2) }
     }
     box.addEventListener('input', update)
     update()

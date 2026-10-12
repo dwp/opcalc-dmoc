@@ -519,3 +519,105 @@
   margin: 0 0 15px;
   font-size: 1.1875rem;
 }
+
+// A label and value on one line (IS/JSA BWE/BWC tab).
+.app-inline-value--row {
+  display: flex;
+  gap: 20px;
+}
+
+.app-inline-value--row dd {
+  font-weight: 400;
+}
+
+// Keep four answers on one line in a priced row (DLA care component).
+.app-a14-row .govuk-radios--inline .govuk-radios__item {
+  margin-right: 10px;
+}
+
+// Tick boxes on one line.
+.app-checkboxes--inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 20px;
+}
+
+.app-inline-value--row dt {
+  font-size: 1.1875rem;
+  color: inherit;
+}
+
+
+// ---------------------------------------------------------------------------
+// Fields side by side: one consistent format (12 Oct 2026, Maisie)
+// ---------------------------------------------------------------------------
+// Every label in a row is the same size and weight and sits on the same
+// line, and every box, list, set of radios and worked out amount lines up
+// with the others.
+
+.app-field-row .govuk-label,
+.app-field-row .govuk-fieldset__legend:not(.govuk-visually-hidden),
+.app-inline-value dt {
+  font-size: 1.1875rem;
+  line-height: 1.3157894737;
+  font-weight: 400;
+  color: #0b0c0c;
+  margin-bottom: 5px;
+}
+
+// A worked out amount sits on the same line as the boxes beside it.
+.app-inline-value dd {
+  margin: 0;
+  min-height: 40px;
+  line-height: 40px;
+  font-size: 1.1875rem;
+  font-weight: 700;
+}
+
+// Radios beside a box are the same height as the box, so they line up.
+.app-field-row .govuk-radios--inline {
+  min-height: 40px;
+  align-items: center;
+}
+
+.app-field-row .govuk-radios--small .govuk-radios__item {
+  margin-bottom: 0;
+}
+
+// Beside a date: every label starts on the same line as the date's label,
+// and every box lines up with the day, month and year boxes, which sit
+// under their own Day, Month and Year labels.
+.app-field-row:has(> .app-date-stepper) {
+  align-items: flex-start;
+}
+
+.app-field-row:has(> .app-date-stepper) > .govuk-form-group > .govuk-label,
+.app-field-row:has(> .app-date-stepper) > .govuk-form-group > .govuk-fieldset > .govuk-fieldset__legend,
+.app-field-row:has(> .app-date-stepper) > .app-inline-value dt {
+  margin-bottom: 40px;
+}
+
+.app-field-row:has(> .app-date-stepper) > .app-date-stepper .govuk-fieldset__legend {
+  margin-bottom: 10px;
+}
+
+.app-field-row .govuk-radios--inline {
+  height: 40px;
+}
+
+.app-field-row .govuk-radios--small .govuk-radios__item {
+  min-height: 40px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+// A tick box beside a box lines up with it.
+.app-field-row .govuk-checkboxes--small:not(.app-checkboxes--inline) {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.app-field-row .govuk-checkboxes--small .govuk-checkboxes__item {
+  margin-bottom: 0;
+}
