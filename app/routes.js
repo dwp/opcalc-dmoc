@@ -63,7 +63,7 @@ const a14RowTypes = [
   // A non-dependant's earnings (Name and Earnings, opened from the
   // non-dependant deductions page). Checked first, as its page name also
   // contains "nondependant". The IS/JSA page is spelt "nonependants".
-  { match: /nonependants|nondependantearnings/, key: 'a14NonDepEarnings', label: 'non-dependant earnings' },
+  { match: /nonependants|nondependantearnings|selectnewnondependant/, key: 'a14NonDepEarnings', label: 'non-dependant earnings' },
   { match: /nondependant/, key: 'a14NonDependants', label: 'non-dependant' },
   { match: /benefitweek/, key: 'a14BenefitWeeks', label: 'benefit week' },
   { match: /exclusion/, key: 'a14Exclusions', label: 'exclusion' },

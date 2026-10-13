@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {% block pageTitle %}
-  Non-dependant's earnings – OpCalc – GOV.UK Prototype Kit
+  Non-dependant's earnings – A14 form (ESA) – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
@@ -37,7 +37,7 @@
 {% block containerStart %}
   {{ govukBackLink({
     text: "Back",
-    href: "/nondependantesa"
+    href: "/A14esa/nondependantesa"
   }) }}
 {% endblock %}
 
@@ -46,34 +46,23 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
 
+      <span class="govuk-caption-l">A14 housing costs</span>
+
       <h1 class="govuk-heading-l">
         Non-dependant's earnings
       </h1>
 
-      <form action="/nondependantesa" method="post">
+      {# Name and Earnings side by side, no hint text. Saved as a row in the
+         earnings table on the non-dependant deductions page (Maisie, 13 Oct
+         2026). #}
+      <form action="/return-to-tab" method="post">
 
-        {{ govukInput({
-          id: "ndee-name",
-          name: "ndeeName",
-          label: {
-            text: "Name"
-          },
-          value: data.ndeeName
-        }) }}
+        <input type="hidden" name="returnTo" value="/A14esa/nondependantesa">
 
-        {{ govukInput({
-          id: "ndee-earnings",
-          name: "ndeeEarnings",
-          classes: "govuk-input--width-5",
-          prefix: { text: "£" },
-          label: {
-            text: "Earnings"
-          },
-          hint: {
-            text: "Please enter a valid earnings amount"
-          },
-          value: data.ndeeEarnings if data.ndeeEarnings else "0.00"
-        }) }}
+        <div class="app-field-row">
+          {{ govukInput({ id: "ndee-name", name: "ndeeName", label: { text: "Name" }, formGroup: { classes: "app-field--wide" }, value: data.ndeeName }) }}
+          {{ govukInput({ id: "ndee-earnings", name: "ndeeEarnings", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Earnings" }, value: data.ndeeEarnings }) }}
+        </div>
 
         <div class="govuk-button-group">
           {{ govukButton({
@@ -83,7 +72,7 @@
 
           {{ govukButton({
             text: "Cancel",
-            href: "/nondependantesa",
+            href: "/A14esa/nondependantesa",
             classes: "govuk-button--secondary"
           }) }}
         </div>
@@ -95,4 +84,3 @@
   </div>
 
 {% endblock %}
-

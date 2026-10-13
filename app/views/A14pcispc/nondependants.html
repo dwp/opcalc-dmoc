@@ -1,7 +1,8 @@
 {% extends "layouts/main.html" %}
+{% from "a14-tables.html" import a14Table %}
 
 {% block pageTitle %}
-  Non-dependants – A14 form – OpCalc – GOV.UK Prototype Kit
+  Non-dependant deductions – A14 form (IS or PC) – OpCalc – GOV.UK Prototype Kit
 {% endblock %}
 
 {% block header %}
@@ -35,20 +36,13 @@
 {% endblock %}
 
 {% block containerStart %}
-  {# data.returnTo comes from the link that opened this page, so Back goes    #}
-  {# to the tab it came from.                                                 #}
   {{ govukBackLink({
     text: "Back",
-    href: data.returnTo if data.returnTo else "/a14#housing"
+    href: "/A14pcispc/a14#housing"
   }) }}
 {% endblock %}
 
 {% block content %}
-
-{# Save had both a link and "submit" on it. A button with a link becomes a
-   plain link, so pressing Save went back to the form and nothing was kept.
-   It is now a real submit button. #}
-
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
@@ -56,74 +50,67 @@
       <span class="govuk-caption-l">A14 housing costs</span>
 
       <h1 class="govuk-heading-l">
-        Non-dependants
+        Non-dependant deductions
       </h1>
 
+      {# Rebuilt to match OpCalc's Non-Dependant Deductions (Maisie, 13 Oct
+         2026): how many in each group, the deduction for each and the total
+         on one line, then the earnings of any who work. The total is saved
+         with the page so the Housing tab shows it. 2005/06 rates, for the
+         prototype only. #}
+      {% macro ndeRow(id, name, label, rate, value) %}
+        <div class="app-a14-row app-nde-row" data-nde-rate="{{ rate }}">
+          {{ govukInput({
+            id: id,
+            name: name,
+            classes: "govuk-input--width-2",
+            inputmode: "numeric",
+            formGroup: { classes: "app-a14-row__group app-nde-row__group" },
+            label: { text: label, classes: "app-a14-row__label" },
+            value: value if value else "0"
+          }) }}
+          <p class="govuk-body app-nde-row__rate">at £{{ rate }}</p>
+          <p class="govuk-body app-a14-row__price" data-nde-total>£0.00</p>
+        </div>
+      {% endmacro %}
 
-      <form action="/return-to-tab" method="post">
+      <form action="/A14pcispc/a14#housing" method="post">
 
-        <p class="govuk-body">Record each non-dependant living with the customer. Their circumstances set the deduction taken from the housing costs.</p>
+        <p class="govuk-body">Enter how many non-dependants live with the customer in each group.</p>
 
-        {{ govukTable({
-          caption: "Non-dependants recorded",
-          captionClasses: "govuk-visually-hidden",
-          head: [
-            { text: "Gross income" }, { text: "Circumstances" }, { text: "Deduction" }
+        <div data-nde>
+          <input type="hidden" name="a14NonDependantDeductions" data-nde-total-field value="{{ data.a14NonDependantDeductions if data.a14NonDependantDeductions else '0.00' }}">
+
+          {{ ndeRow("a14-nde-25-and-over", "a14Nde25AndOver", "Aged 25 and over on Income Support, JSA (IB) or ESA", "14.55", data.a14Nde25AndOver) }}
+          {{ ndeRow("a14-nde-18-to-24", "a14Nde18To24", "Aged 18 to 24 on Income Support, JSA (IB) or ESA, or other exemptions", "0.00", data.a14Nde18To24) }}
+          {{ ndeRow("a14-nde-not-working", "a14NdeNotWorking", "Others aged 18 and over not working", "14.55", data.a14NdeNotWorking) }}
+
+          <div class="app-a14-row">
+            <p class="govuk-body app-nde-row__text">18 and over working (from the table below)</p>
+            <p class="govuk-body app-a14-row__price" data-nde-working="0.00">£0.00</p>
+          </div>
+          <div class="app-a14-row app-nde-row--total">
+            <p class="govuk-body app-nde-row__text govuk-!-font-weight-bold">Total non-dependant deductions</p>
+            <p class="govuk-body app-a14-row__price" data-nde-sum>£0.00</p>
+          </div>
+        </div>
+
+        <h2 class="govuk-heading-m">Non-dependants' earnings</h2>
+
+        {{ a14Table(
+          data.a14NonDepEarnings,
+          [
+            { text: "Name", field: ["ndEarningsName", "hsnneName", "ndeeName"] },
+            { text: "Earnings", field: ["ndEarningsAmount", "hsnneEarnings", "ndeeEarnings"], prefix: "£" },
+            { text: "Deduction", field: ["ndEarningsDeduction"] },
+            { text: "Band", field: ["ndEarningsBand"] }
           ],
-          rows: [
-            [
-              { text: "£" + data.nonDependantGrossIncome },
-              { text: data.nonDependantCircumstances },
-              { text: "£0.00" }
-            ]
-          ] if data.nonDependantCircumstances else [
-            [{ html: '<span class="govuk-hint">No non-dependants recorded</span>' }, { text: "" }, { text: "" }]
-          ]
-        }) }}
+          "No non-dependant earnings recorded",
+          "a14NonDepEarnings",
+          "/A14pcispc/nondependants"
+        ) }}
 
-        <h2 class="govuk-heading-m">Add a non-dependant</h2>
-
-        {{ govukInput({
-          id: "non-dependant-gross-income",
-          name: "nonDependantGrossIncome",
-          classes: "govuk-input--width-5",
-          prefix: { text: "£" },
-          label: {
-            text: "Gross weekly income"
-          },
-          value: data.nonDependantGrossIncome
-        }) }}
-
-        {{ govukRadios({
-          idPrefix: "non-dependant-circumstances",
-          name: "nonDependantCircumstances",
-          fieldset: {
-            legend: {
-              text: "Circumstances"
-            }
-          },
-          hint: {
-            text: "This decides which deduction rate applies"
-          },
-          items: [
-            { value: "In remunerative work", text: "In remunerative work", checked: data.nonDependantCircumstances == "In remunerative work" },
-            { value: "Not in remunerative work", text: "Not in remunerative work", checked: data.nonDependantCircumstances == "Not in remunerative work" },
-            { value: "Aged under 18", text: "Aged under 18", checked: data.nonDependantCircumstances == "Aged under 18" },
-            { value: "On a qualifying benefit", text: "On a qualifying benefit", checked: data.nonDependantCircumstances == "On a qualifying benefit" },
-            { value: "No deduction applies", text: "No deduction applies", checked: data.nonDependantCircumstances == "No deduction applies" }
-          ]
-        }) }}
-
-        {{ govukSummaryList({
-          rows: [
-            {
-              key: { text: "Total non-dependant deductions" },
-              value: { text: "£" + (data.a14NonDependantDeductions if data.a14NonDependantDeductions else "0.00") }
-            }
-          ]
-        }) }}
-
-        <p class="govuk-body govuk-hint">The deduction is worked out from the income and circumstances once this is saved.</p>
+        <p class="govuk-body"><a class="govuk-link" href="/A14pcispc/selectnewnondependant">New non-dependant earnings</a></p>
 
         <div class="govuk-button-group">
           {{ govukButton({
@@ -133,7 +120,7 @@
 
           {{ govukButton({
             text: "Cancel",
-            href: data.returnTo if data.returnTo else "/a14#housing",
+            href: "/A14pcispc/a14#housing",
             classes: "govuk-button--secondary"
           }) }}
         </div>
@@ -145,4 +132,3 @@
   </div>
 
 {% endblock %}
-

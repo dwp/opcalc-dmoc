@@ -1,7 +1,7 @@
 {% extends "layouts/main.html" %}
 
 {# Tables on this page are drawn from what the sub-pages saved. #}
-{% from "a14-tables.html" import a14Table %}
+{% from "a14-tables.html" import a14Table, a14PriceRow %}
 
 {% block pageTitle %}
   A14 form – OpCalc – GOV.UK Prototype Kit
@@ -49,233 +49,117 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
 
-      <h1 class="govuk-heading-l">
-        A14 form (Income Support or Pension Credit)
-      </h1>
+      {# Title as on the other A14 forms (Maisie, 13 Oct 2026): "A14 IS/PC"
+         and the day this A14 starts. #}
+      {% set sd = data["a14StartDate-day"] if data["a14StartDate-year"] else data["discrepancyFrom-day"] %}
+      {% set sm = data["a14StartDate-month"] if data["a14StartDate-year"] else data["discrepancyFrom-month"] %}
+      {% set sy = data["a14StartDate-year"] if data["a14StartDate-year"] else data["discrepancyFrom-year"] %}
+      {% set a14Date = ((("0" + sd) if (sd | string | length) == 1 else sd) + "/" + (("0" + sm) if (sm | string | length) == 1 else sm) + "/" + sy) if sy else "03/03/2006" %}
+      <h1 class="govuk-heading-l">A14 IS/PC: {{ a14Date }}</h1>
+
+      {#
+        13 Oct 2026 (Maisie): every tab rebuilt to follow the real OpCalc
+        A14PC screens, shorter, with no hint text. Answers that cannot apply
+        are taken off the page. Amounts are 2005/06 rates, for the prototype
+        only (see application.js, "A14 tabs with prices").
+      #}
 
       <form action="/a14caseoverview" method="post">
 
         {% set customerHtml %}
+          <div data-a14-prices="pcispc">
 
-          <h2 class="govuk-heading-m">Standard amount</h2>
+            <div class="app-a14-allowance">
+              <h2 class="govuk-heading-s govuk-!-margin-bottom-2">Standard amount</h2>
+              <div class="app-field-row app-field-row--centre">
+                {{ govukRadios({
+                  idPrefix: "a14-standard-amount-type",
+                  name: "a14StandardAmountType",
+                  classes: "govuk-radios--inline govuk-radios--small",
+                  fieldset: { legend: { text: "Single or couple", classes: "govuk-visually-hidden" } },
+                  items: [
+                    { value: "single", text: "Single", checked: data.a14StandardAmountType == "single" or not data.a14StandardAmountType },
+                    { value: "couple", text: "Couple", checked: data.a14StandardAmountType == "couple" }
+                  ]
+                }) }}
 
-          {{ govukRadios({
-            idPrefix: "a14-standard-amount-type",
-            name: "a14StandardAmountType",
-            classes: "govuk-radios--inline",
-            fieldset: {
-              legend: {
-                text: "Single or couple"
-              }
-            },
-            items: [
-              { value: "single", text: "Single", checked: data.a14StandardAmountType == "single" or not data.a14StandardAmountType },
-              { value: "couple", text: "Couple", checked: data.a14StandardAmountType == "couple" }
-            ]
-          }) }}
+                {{ govukSelect({
+                  id: "a14-standard-rate",
+                  name: "a14StandardRate",
+                  label: { text: "Rate", classes: "govuk-visually-hidden" },
+                  items: [
+                    { value: "standard", text: "Standard", selected: data.a14StandardRate == "standard" or not data.a14StandardRate, attributes: { "data-price": "109.45", "data-price-couple": "167.05" } },
+                    { value: "manual", text: "Manual", selected: data.a14StandardRate == "manual" }
+                  ]
+                }) }}
 
-          {{ govukSelect({
-            id: "a14-standard-rate",
-            name: "a14StandardRate",
-            label: {
-              text: "Rate"
-            },
-            hint: {
-              text: "Choose Manual if a different amount applies and enter it below"
-            },
-            items: [
-              { value: "standard", text: "Standard", selected: data.a14StandardRate == "standard" or not data.a14StandardRate },
-              { value: "manual", text: "Manual", selected: data.a14StandardRate == "manual" }
-            ]
-          }) }}
+                <div class="app-field-row__end">
+                  <p class="govuk-body govuk-!-font-weight-bold app-a14-allowance__amount" data-allowance-text aria-live="polite">£{{ data.a14StandardAmount if data.a14StandardAmount else "109.45" }}</p>
+                  {{ govukInput({
+                    id: "a14-standard-amount",
+                    name: "a14StandardAmount",
+                    classes: "govuk-input--width-5",
+                    prefix: { text: "£" },
+                    label: { text: "Standard amount", classes: "govuk-visually-hidden" },
+                    value: data.a14StandardAmount if data.a14StandardAmount else "109.45"
+                  }) }}
+                </div>
+              </div>
+            </div>
 
-          {{ govukInput({
-            id: "a14-standard-amount",
-            name: "a14StandardAmount",
-            classes: "govuk-input--width-5",
-            prefix: { text: "£" },
-            label: {
-              text: "Standard amount"
-            },
-            hint: {
-              text: "Calculated automatically unless Manual is selected above"
-            },
-            value: data.a14StandardAmount if data.a14StandardAmount else "109.45"
-          }) }}
+            {# Partner's date of birth has gone (Maisie, 13 Oct 2026). #}
+            <h2 class="govuk-heading-s govuk-!-margin-top-6 govuk-!-margin-bottom-2">Extra amounts</h2>
 
-          {{ govukDateInput({
-            id: "a14-partner-dob",
-            namePrefix: "a14PartnerDob",
-            fieldset: {
-              legend: {
-                text: "Partner's date of birth"
-              }
-            },
-            hint: {
-              text: "Only needed if Couple is selected above"
-            },
-            items: [
-              { name: "day", classes: "govuk-input--width-2", value: data["a14PartnerDob-day"] },
-              { name: "month", classes: "govuk-input--width-2", value: data["a14PartnerDob-month"] },
-              { name: "year", classes: "govuk-input--width-4", value: data["a14PartnerDob-year"] }
-            ]
-          }) }}
+            {{ a14PriceRow("a14SevereDisability", "a14-severe-disability", "Extra amount for severe disability", [
+              { value: "no", text: "No", price: "0" },
+              { value: "lower", text: "Lower", price: "45.50" },
+              { value: "higher", text: "Higher", price: "91.00" }
+            ], data.a14SevereDisability) }}
 
-          {{ govukRadios({
-            idPrefix: "a14-severe-disability",
-            name: "a14SevereDisability",
-            classes: "govuk-radios--inline",
-            fieldset: {
-              legend: {
-                text: "Extra amount for severe disability"
-              }
-            },
-            hint: {
-              text: "Higher only applies to Couple cases"
-            },
-            items: [
-              { value: "no", text: "No", checked: data.a14SevereDisability == "no" or not data.a14SevereDisability },
-              { value: "lower", text: "Lower", checked: data.a14SevereDisability == "lower" },
-              { value: "higher", text: "Higher", checked: data.a14SevereDisability == "higher" }
-            ]
-          }) }}
+            {{ a14PriceRow("a14CaringResponsibilities", "a14-caring-responsibilities", "Extra amount for caring responsibilities", [
+              { value: "no", text: "No", price: "0" },
+              { value: "yes", text: "Yes", price: "25.80" },
+              { value: "both", text: "Both", price: "51.60" }
+            ], data.a14CaringResponsibilities) }}
 
-          {{ govukRadios({
-            idPrefix: "a14-caring-responsibilities",
-            name: "a14CaringResponsibilities",
-            classes: "govuk-radios--inline",
-            fieldset: {
-              legend: {
-                text: "Extra amount for caring responsibilities"
-              }
-            },
-            hint: {
-              text: "Both only applies to Couple cases"
-            },
-            items: [
-              { value: "no", text: "No", checked: data.a14CaringResponsibilities == "no" or not data.a14CaringResponsibilities },
-              { value: "yes", text: "Yes", checked: data.a14CaringResponsibilities == "yes" },
-              { value: "both", text: "Both", checked: data.a14CaringResponsibilities == "both" }
-            ]
-          }) }}
+            <h2 class="govuk-heading-s govuk-!-margin-top-6 govuk-!-margin-bottom-2">Other amounts</h2>
+            <div class="app-field-row">
+              {{ govukInput({
+                id: "a14-clerical-components",
+                name: "a14ClericalComponents",
+                classes: "govuk-input--width-5",
+                prefix: { text: "£" },
+                label: { text: "Clerical components" },
+                value: data.a14ClericalComponents
+              }) }}
+            </div>
 
-          {{ govukInput({
-            id: "a14-clerical-components",
-            name: "a14ClericalComponents",
-            classes: "govuk-input--width-5",
-            prefix: { text: "£" },
-            label: {
-              text: "Clerical components"
-            },
-            value: data.a14ClericalComponents
-          }) }}
+            {# David reads these lines as a check: a part week at the start or
+               end can mean the benefit week type is wrong. #}
+            <dl class="app-benefit-week">
+              <dt>Benefit week</dt>
+              <dd>{{ (data.initialBenefitWeek if data.initialBenefitWeek else "Tuesday") + (" Week Ending" if data.benefitWeekType == "BWE" else " Week Commencing") }}</dd>
+              <dt>Currently to be used from</dt>
+              <dd>03/03/2006 to 06/03/2006 (4 day part week)<br>07/03/2006 to 13/07/2026 (1062 weeks)<br>14/07/2026 to 14/07/2026 (1 day part week)</dd>
+            </dl>
 
-          {# David reads these lines as a check: if the first or last line is a
-             part week, the benefit week type is probably wrong. #}
-          {{ govukInsetText({
-            html: "<p class=\"govuk-body\">Benefit week: Tuesday Week Commencing</p><p class=\"govuk-body\">Currently to be used from:</p><ul class=\"govuk-list\"><li>03/03/2006 to 06/03/2006 (4 day part week)</li><li>07/03/2006 to 13/07/2026 (1062 weeks)</li><li>14/07/2026 to 14/07/2026 (1 day part week)</li></ul><p class=\"govuk-body govuk-hint\">Part weeks at the start or end can mean the benefit week type is wrong. If you were not expecting them, check it on the benefit details.</p>"
-          }) }}
-
+          </div>
         {% endset %}
 
         {% set housingHtml %}
 
           <h2 class="govuk-heading-m">Housing costs</h2>
 
-          {{ govukInput({
-            id: "a14-interest",
-            name: "a14Interest",
-            classes: "govuk-input--width-5",
-            prefix: { text: "£" },
-            label: { text: "Interest" },
-            value: data.a14Interest
-          }) }}
+          <p class="govuk-body">Enter each cost, or just a yearly or weekly total.</p>
 
-          {{ govukInput({
-            id: "a14-ground-rent",
-            name: "a14GroundRent",
-            classes: "govuk-input--width-5",
-            prefix: { text: "£" },
-            label: { text: "Ground rent / Service or rent charge" },
-            value: data.a14GroundRent
-          }) }}
-
-          {{ govukInput({
-            id: "a14-other-costs",
-            name: "a14OtherCosts",
-            classes: "govuk-input--width-5",
-            prefix: { text: "£" },
-            label: { text: "Other costs" },
-            value: data.a14OtherCosts
-          }) }}
-
-          <p class="govuk-body govuk-hint">You can enter a yearly or weekly total instead of the individual costs above.</p>
-
-          {{ govukInput({
-            id: "a14-yearly-total",
-            name: "a14YearlyTotal",
-            classes: "govuk-input--width-5",
-            prefix: { text: "£" },
-            label: { text: "Yearly total" },
-            value: data.a14YearlyTotal
-          }) }}
-
-          {{ govukInput({
-            id: "a14-weekly-total-housing",
-            name: "a14WeeklyTotalHousing",
-            classes: "govuk-input--width-5",
-            prefix: { text: "£" },
-            label: { text: "Weekly total" },
-            value: data.a14WeeklyTotalHousing
-          }) }}
-
-          <h2 class="govuk-heading-m">Allowable</h2>
-
-          {{ govukRadios({
-            idPrefix: "a14-loan-before-021095",
-            name: "a14LoanBefore021095",
-            classes: "govuk-radios--inline",
-            fieldset: {
-              legend: {
-                text: "Loan commenced before 2 October 1995"
-              }
-            },
-            items: [
-              { value: "yes", text: "Yes", checked: data.a14LoanBefore021095 == "yes" },
-              { value: "no", text: "No", checked: data.a14LoanBefore021095 == "no" or not data.a14LoanBefore021095 }
-            ]
-          }) }}
-
-          {{ govukDateInput({
-            id: "a14-first-day-entitlement",
-            namePrefix: "a14FirstDayEntitlement",
-            fieldset: {
-              legend: {
-                text: "First day of entitlement"
-              }
-            },
-            items: [
-              { name: "day", classes: "govuk-input--width-2", value: data["a14FirstDayEntitlement-day"] },
-              { name: "month", classes: "govuk-input--width-2", value: data["a14FirstDayEntitlement-month"] },
-              { name: "year", classes: "govuk-input--width-4", value: data["a14FirstDayEntitlement-year"] }
-            ]
-          }) }}
-
-          {{ govukInput({
-            id: "a14-0-percent-weeks",
-            name: "a140PercentWeeks",
-            classes: "govuk-input--width-3",
-            label: { text: "0% allowable for (weeks)" },
-            value: data.a140PercentWeeks
-          }) }}
-
-          {{ govukInput({
-            id: "a14-50-percent-weeks",
-            name: "a1450PercentWeeks",
-            classes: "govuk-input--width-3",
-            label: { text: "50% allowable for (weeks)" },
-            value: data.a1450PercentWeeks
-          }) }}
+          {# The Allowable section has gone (Maisie, 13 Oct 2026). #}
+          <div class="app-field-row">
+            {{ govukInput({ id: "a14-interest", name: "a14Interest", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Interest" }, value: data.a14Interest }) }}
+            {{ govukInput({ id: "a14-ground-rent", name: "a14GroundRent", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Ground rent / Service or rent charge" }, value: data.a14GroundRent }) }}
+            {{ govukInput({ id: "a14-other-costs", name: "a14OtherCosts", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Other costs" }, value: data.a14OtherCosts }) }}
+            {{ govukInput({ id: "a14-yearly-total", name: "a14YearlyTotal", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Yearly total" }, value: data.a14YearlyTotal }) }}
+            {{ govukInput({ id: "a14-weekly-total-housing", name: "a14WeeklyTotalHousing", classes: "govuk-input--width-5", prefix: { text: "£" }, label: { text: "Weekly total" }, value: data.a14WeeklyTotalHousing }) }}
+          </div>
 
           <h2 class="govuk-heading-m">Calculation</h2>
 
@@ -284,7 +168,7 @@
               { key: { text: "Weekly amount" }, value: { text: "£" + (data.a14HousingWeeklyAmount if data.a14HousingWeeklyAmount else "0.00") } },
               {
                 key: {
-                  html: 'Less non-dependant deductions. <a class="govuk-link" href="/A14pcispc/nondependants?returnTo=/a14%23housing">Add or change non-dependants</a>'
+                  html: 'Less non-dependant deductions. <a class="govuk-link" href="/A14pcispc/nondependants?returnTo=/A14pcispc/a14%23housing">Add or change non-dependants</a>'
                 },
                 value: { text: "£" + (data.a14NonDependantDeductions if data.a14NonDependantDeductions else "0.00") }
               },
@@ -298,15 +182,18 @@
 
           <h2 class="govuk-heading-m">Benefits</h2>
 
+          {# Columns in the same order as OpCalc. Qualifying is whether it is
+             savings credit qualifying income. #}
           {{ a14Table(
             data.a14Benefits,
             [
-              { text: "Paid to", field: ["benefitPaidTo", "paidTo", "benefitPaid"] },
+              { text: "Paid to", field: ["benefitPaidTo", "paidTo"] },
               { text: "Amount", field: ["benefitAmount", "amount"], prefix: "£" },
-              { text: "Qualifying period", field: ["benefitQualifyingPeriod", "qualifyingPeriod", "benefitPeriod", "period"] },
-              { text: "Disregards", field: ["benefitDisregards", "disregards", "benefitDisregard"] },
-              { text: "Benefit", field: ["benefitName", "benefitTypeCode"] },
-              { text: "Savings credit qualifying", field: ["benefitSavingsCredit"] }
+              { text: "Qualifying", field: ["benefitSavingsCredit"] },
+              { text: "Payment period", field: ["benefitQualifyingPeriod", "period"] },
+              { text: "Disregards", field: ["benefitDisregards", "disregards"], prefix: "£" },
+              { text: "Type", field: ["benefitTypeCode"] },
+              { text: "Benefit", field: ["benefitName"] }
             ],
             "No benefits recorded",
             "a14Benefits",
@@ -320,12 +207,13 @@
           {{ a14Table(
             data.a14OtherIncome,
             [
-              { text: "Paid to", field: ["otherIncomePaidTo", "paidTo", "incomePaidTo"] },
-              { text: "Amount", field: ["otherIncomeAmount", "incomeAmount", "amount"], prefix: "£" },
-              { text: "Qualifying period", field: ["otherIncomeQualifyingPeriod", "qualifyingPeriod", "otherIncomePeriod", "period"] },
-              { text: "Disregards", field: ["otherIncomeDisregards", "disregards", "otherIncomeDisregard"] },
-              { text: "Type", field: ["otherIncomeType", "type"] },
-              { text: "Text", field: ["otherIncomeText", "text", "otherIncomeDescription"] }
+              { text: "Paid to", field: ["otherIncomePaidTo", "paidTo"] },
+              { text: "Amount", field: ["otherIncomeAmount", "amount"], prefix: "£" },
+              { text: "Qualifying", field: ["otherIncomeSavingsCredit"] },
+              { text: "Payment period", field: ["otherIncomeQualifyingPeriod", "period"] },
+              { text: "Disregards", field: ["otherIncomeDisregards", "disregards"], prefix: "£" },
+              { text: "Type", field: ["otherIncomeType"] },
+              { text: "Category", field: ["otherIncomeCategory"] }
             ],
             "No other income recorded",
             "a14OtherIncome",
@@ -334,127 +222,102 @@
 
           <p class="govuk-body"><a class="govuk-link" href="/A14pcispc/newotherincome?returnTo=/A14pcispc/a14%23income">New other income</a></p>
 
-          <h2 class="govuk-heading-m">Total capital</h2>
+          {# Pensioner limit has gone (Maisie, 13 Oct 2026). #}
+          <h2 class="govuk-heading-m">Capital</h2>
 
-          {{ govukInput({
-            id: "a14-total-capital",
-            name: "a14TotalCapital",
-            classes: "govuk-input--width-5",
-            prefix: { text: "£" },
-            label: { text: "Total capital" },
-            value: data.a14TotalCapital
-          }) }}
+          <div class="app-field-row">
+            {{ govukInput({
+              id: "a14-total-capital",
+              name: "a14TotalCapital",
+              classes: "govuk-input--width-5",
+              prefix: { text: "£" },
+              label: { text: "Total capital" },
+              value: data.a14TotalCapital
+            }) }}
 
-          {{ govukCheckboxes({
-            idPrefix: "a14-residential-care",
-            name: "a14ResidentialCare",
-            hint: { text: "Income Support only. Pension Credit uses the same capital limit for everyone, so leave this unticked for Pension Credit cases." },
-            items: [
-              { value: "residentialCare", text: "Residential care", id: "a14-residential-care", checked: data.a14ResidentialCare }
-            ]
-          }) }}
+            <div class="app-field-row__end">
+              {{ govukCheckboxes({
+                idPrefix: "a14-residential-care",
+                name: "a14ResidentialCare",
+                classes: "govuk-checkboxes--small",
+                items: [
+                  { value: "residentialCare", text: "Residential care", id: "a14-residential-care", checked: data.a14ResidentialCare }
+                ]
+              }) }}
+            </div>
 
-          {{ govukCheckboxes({
-            idPrefix: "a14-pensioner-limit",
-            name: "a14PensionerLimit",
-            items: [
-              { value: "pensionerLimit", text: "Pensioner limit (assumed income)", id: "a14-pensioner-limit", checked: true }
-            ]
-          }) }}
+            <dl class="app-field-row__end app-inline-value">
+              <dt>Assumed income</dt>
+              <dd>£{{ data.a14AssumedIncome if data.a14AssumedIncome else "0.00" }}</dd>
+            </dl>
+          </div>
 
         {% endset %}
 
         {% set aaDlaHtml %}
+          <div data-a14-prices="aadla">
 
-          {{ govukRadios({
-            idPrefix: "a14-attendance-allowance",
-            name: "a14AttendanceAllowance",
-            classes: "govuk-radios--inline",
-            fieldset: {
-              legend: {
-                text: "Attendance Allowance"
-              }
-            },
-            items: [
-              { value: "no", text: "No", checked: data.a14AttendanceAllowance == "no" or not data.a14AttendanceAllowance },
-              { value: "lower", text: "Lower", checked: data.a14AttendanceAllowance == "lower" },
-              { value: "higher", text: "Higher", checked: data.a14AttendanceAllowance == "higher" }
-            ]
-          }) }}
+            {{ a14PriceRow("a14AttendanceAllowance", "a14-attendance-allowance", "Attendance Allowance", [
+              { value: "no", text: "No", price: "0" },
+              { value: "lower", text: "Lower", price: "41.05" },
+              { value: "higher", text: "Higher", price: "61.30" }
+            ], data.a14AttendanceAllowance) }}
 
-          {{ govukRadios({
-            idPrefix: "a14-dla-care",
-            name: "a14DlaCare",
-            classes: "govuk-radios--inline",
-            fieldset: {
-              legend: {
-                text: "DLA Care Component"
-              }
-            },
-            items: [
-              { value: "no", text: "No", checked: data.a14DlaCare == "no" or not data.a14DlaCare },
-              { value: "lower", text: "Lower", checked: data.a14DlaCare == "lower" },
-              { value: "middle", text: "Middle", checked: data.a14DlaCare == "middle" },
-              { value: "higher", text: "Higher", checked: data.a14DlaCare == "higher" }
-            ]
-          }) }}
+            <h2 class="govuk-heading-s govuk-!-margin-top-6 govuk-!-margin-bottom-2">DLA</h2>
 
-          {{ govukRadios({
-            idPrefix: "a14-dla-mobility",
-            name: "a14DlaMobility",
-            classes: "govuk-radios--inline",
-            fieldset: {
-              legend: {
-                text: "DLA Mobility Component"
-              }
-            },
-            items: [
-              { value: "no", text: "No", checked: data.a14DlaMobility == "no" or not data.a14DlaMobility },
-              { value: "lower", text: "Lower", checked: data.a14DlaMobility == "lower" },
-              { value: "higher", text: "Higher", checked: data.a14DlaMobility == "higher" }
-            ]
-          }) }}
+            {{ a14PriceRow("a14DlaCare", "a14-dla-care", "Care component", [
+              { value: "no", text: "No", price: "0" },
+              { value: "lower", text: "Lower", price: "16.25" },
+              { value: "middle", text: "Middle", price: "41.05" },
+              { value: "higher", text: "Higher", price: "61.30" }
+            ], data.a14DlaCare) }}
 
-          <h2 class="govuk-heading-m">Summary</h2>
+            {{ a14PriceRow("a14DlaMobility", "a14-dla-mobility", "Mobility component", [
+              { value: "no", text: "No", price: "0" },
+              { value: "lower", text: "Lower", price: "16.25" },
+              { value: "higher", text: "Higher", price: "42.80" }
+            ], data.a14DlaMobility) }}
 
-          {{ govukSummaryList({
-            rows: [
-              { key: { text: "Appropriate amount" }, value: { text: "£109.45" } },
-              { key: { text: "LESS: Weekly income" }, value: { text: "£0.00" } },
-              { key: { text: "Guarantee credit" }, value: { text: "£109.45" } },
-              { key: { text: "PLUS: Savings credit" }, value: { text: "£0.00" } },
-              { key: { text: "Pension Credit" }, value: { text: "£109.45" } },
-              { key: { text: "PLUS: AA/DLA not in payment" }, value: { text: "£0.00" } },
-              { key: { text: "Weekly total" }, value: { text: "£109.45" } }
-            ]
-          }) }}
+            <h2 class="govuk-heading-m govuk-!-margin-top-7">Summary</h2>
 
-          <p class="govuk-body govuk-hint">Summary figures shown are illustrative and would be calculated automatically in the live system.</p>
+            {{ govukSummaryList({
+              rows: [
+                { key: { text: "Appropriate amount" }, value: { text: "£109.45" } },
+                { key: { text: "Less weekly income" }, value: { text: "£0.00" } },
+                { key: { html: "<strong>Guarantee credit</strong>" }, value: { html: "<strong>£109.45</strong>" } },
+                { key: { text: "Plus savings credit" }, value: { text: "£0.00" } },
+                { key: { html: "<strong>Pension Credit</strong>" }, value: { html: "<strong>£109.45</strong>" } },
+                { key: { text: "Plus AA or DLA not in payment" }, value: { text: "£0.00" } },
+                { key: { html: "<strong>Weekly total</strong>" }, value: { html: "<strong>£109.45</strong>" } }
+              ]
+            }) }}
 
+          </div>
         {% endset %}
 
         {% set savingsCreditHtml %}
-
-          <p class="govuk-body govuk-hint">This tab is only shown in the live system when savings credit forms part of the assessment.</p>
 
           <h2 class="govuk-heading-m">Savings credit calculation</h2>
 
           {{ govukSummaryList({
             rows: [
-              { key: { text: "Benefits" }, value: { html: '<span class="govuk-hint">No benefits recorded</span>' } },
-              { key: { text: "Other income" }, value: { html: '<span class="govuk-hint">No other income recorded</span>' } },
+              { key: { text: "Benefits" }, value: { text: "None recorded" } },
+              { key: { text: "Other income" }, value: { text: "None recorded" } },
               { key: { text: "Assumed income from capital" }, value: { text: "£0.00" } },
               { key: { text: "Total qualifying income" }, value: { text: "£0.00" } },
-              { key: { text: "Savings credit starting point" }, value: { text: "£82.05" } },
-              { key: { text: "Total qualifying income × 60%" }, value: { text: "£0.00 × 60% = £0.00 (A)" } },
-              { key: { text: "Total income" }, value: { text: "£0.00 (A)" } },
-              { key: { text: "Appropriate amount minus (B)" }, value: { text: "£109.45" } },
-              { key: { text: "× 40% (B)" }, value: { text: "£0.00 × 40% = £0.00" } },
-              { key: { text: "Total savings credit" }, value: { text: "£0.00" } }
+              { key: { text: "Savings credit starting point" }, value: { text: "£82.05" } }
             ]
           }) }}
 
-          <p class="govuk-body govuk-hint">Figures shown are illustrative and would be calculated automatically in the live system.</p>
+          {{ govukSummaryList({
+            rows: [
+              { key: { text: "Total qualifying income minus starting point, times 60%" }, value: { text: "£0.00 × 60% = £0.00" } },
+              { key: { html: "<strong>Total savings credit (A)</strong>" }, value: { html: "<strong>£0.00</strong>" } },
+              { key: { text: "Total income minus appropriate amount (£109.45), times 40%" }, value: { text: "£0.00 × 40% = £0.00" } },
+              { key: { text: "A minus B" }, value: { text: "£0.00 minus £0.00" } },
+              { key: { html: "<strong>Total savings credit</strong>" }, value: { html: "<strong>£0.00</strong>" } }
+            ]
+          }) }}
 
         {% endset %}
 
@@ -462,16 +325,17 @@
 
           <h2 class="govuk-heading-m">Benefit weeks</h2>
 
-          <p class="govuk-body">Initial Benefit Week: Tuesday Week Commencing</p>
-
-          <p class="govuk-body govuk-hint">Payday changes should be entered on the initial A14, rather than at the point they actually occur. Details will then show on every A14 for this case.</p>
+          <dl class="app-inline-value app-inline-value--row">
+            <dt>Initial benefit week</dt>
+            <dd>{{ (data.initialBenefitWeek if data.initialBenefitWeek else "Tuesday") + (" Week Ending" if data.benefitWeekType == "BWE" else " Week Commencing") }}</dd>
+          </dl>
 
           {{ a14Table(
             data.a14BenefitWeeks,
             [
               { text: "Start date", field: ["bwDateOfChange", "benefitWeekStart", "startDate"] },
-              { text: "Pay day", field: ["benefitPayDay", "payDay"] },
-              { text: "Ben week", field: ["benefitWeekType", "benWeek"] },
+              { text: "Pay day", field: ["bwPayDay", "payDay"] },
+              { text: "Ben week", field: ["bwType", "benWeek"] },
               { text: "Part week(s)", field: ["partWeeks", "partWeek"] }
             ],
             "No benefit weeks recorded",
@@ -483,13 +347,13 @@
 
           <h2 class="govuk-heading-m">Exclusions</h2>
 
-          <p class="govuk-body govuk-hint">Exclusions from the Average Hours Calculation are added for you. Do not enter them again here.</p>
+          <p class="govuk-body">Exclusions from the Average Hours Calculation are added for you, so do not enter them again here.</p>
 
           {{ a14Table(
             data.a14Exclusions,
             [
-              { text: "Start date", field: ["exclusionFrom", "exclusionStart", "startDate"] },
-              { text: "End date", field: ["exclusionTo", "exclusionEnd", "endDate"] },
+              { text: "Start date", field: ["exclusionStartDate", "exclusionFrom", "startDate"] },
+              { text: "End date", field: ["exclusionEndDate", "exclusionTo", "endDate"] },
               { text: "Code", field: ["exclusionCode", "code"] },
               { text: "Reason", field: ["exclusionReason", "reason"] }
             ],

@@ -1,4 +1,5 @@
 {% extends "layouts/main.html" %}
+{% from "a14-tables.html" import a14Table %}
 
 {% block pageTitle %}
   Non-dependant deductions – OpCalc – GOV.UK Prototype Kit
@@ -37,7 +38,7 @@
 {% block containerStart %}
   {{ govukBackLink({
     text: "Back",
-    href: "/a14esa"
+    href: "/A14esa/a14esa#housing"
   }) }}
 {% endblock %}
 
@@ -50,7 +51,7 @@
         Non-dependant deductions
       </h1>
 
-      <form action="/a14esa#housing" method="post">
+      <form action="/A14esa/a14esa#housing" method="post">
 
         {# Laid out like OpCalc (Maisie, 12 Oct 2026): each line shows how
            many, the deduction for each one and the total, so the amounts that
@@ -94,25 +95,21 @@
           Non-dependants' earnings
         </h2>
 
-        {{ govukTable({
-          head: [
-            { text: "Name" },
-            { text: "Earnings" },
-            { text: "Deduction" },
-            { text: "Band" }
+        {{ a14Table(
+          data.a14NonDepEarnings,
+          [
+            { text: "Name", field: ["ndeeName", "ndEarningsName", "hsnneName"] },
+            { text: "Earnings", field: ["ndeeEarnings", "ndEarningsAmount", "hsnneEarnings"], prefix: "£" },
+            { text: "Deduction", field: ["ndeeDeduction"] },
+            { text: "Band", field: ["ndeeBand"] }
           ],
-          rows: [
-            [
-              { html: '<span class="govuk-hint">No non-dependant earnings recorded</span>' },
-              { text: "" },
-              { text: "" },
-              { text: "" }
-            ]
-          ]
-        }) }}
+          "No non-dependant earnings recorded",
+          "a14NonDepEarnings",
+          "/A14esa/nondependantesa"
+        ) }}
 
         <p class="govuk-body">
-          <a class="govuk-link" href="/selectnewnondependantearningsesa">New non-dependant earnings</a>
+          <a class="govuk-link" href="/A14pcispc/selectnewnondependantearningsesa">New non-dependant earnings</a>
         </p>
 
         <div class="govuk-button-group">
@@ -123,7 +120,7 @@
 
           {{ govukButton({
             text: "Cancel",
-            href: "/a14esa",
+            href: "/A14esa/a14esa#housing",
             classes: "govuk-button--secondary"
           }) }}
         </div>

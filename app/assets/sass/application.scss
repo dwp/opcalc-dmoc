@@ -627,3 +627,14 @@
 .app-field-row .govuk-checkboxes--small .govuk-checkboxes__item {
   margin-bottom: 0;
 }
+
+// A label and its value on one line of text (Initial benefit week on the
+// BWE/BWC tab): the value sits level with the label, not centred on a box.
+.app-inline-value--row {
+  align-items: baseline;
+}
+
+.app-inline-value--row dd {
+  min-height: 0;
+  line-height: 1.3157894737;
+}

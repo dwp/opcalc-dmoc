@@ -104,8 +104,8 @@
         {{ a14Table(
           data.a14NonDepEarnings,
           [
-            { text: "Name", field: ["hsnneName"] },
-            { text: "Earnings", field: ["hsnneEarnings"], prefix: "£" },
+            { text: "Name", field: ["hsnneName", "ndEarningsName", "ndeeName"] },
+            { text: "Earnings", field: ["hsnneEarnings", "ndEarningsAmount", "ndeeEarnings"], prefix: "£" },
             { text: "Deduction", field: ["hsnneDeduction"] },
             { text: "Band", field: ["hsnneBand"] }
           ],

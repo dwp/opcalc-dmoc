@@ -306,20 +306,12 @@ window.GOVUKPrototypeKit.documentReady(() => {
           requiredWhen: function (value) { return value('a14StandardRate') === 'manual' },
           missingMessage: 'Enter the standard amount'
         },
-        {
-          field: 'a14PartnerDob',
-          id: 'a14-partner-dob',
-          label: "Partner's date of birth",
-          tab: 'customer',
-          type: 'date',
-          mustBePast: true,
-          requiredWhen: function (value) { return value('a14StandardAmountType') === 'couple' },
-          missingMessage: "Enter the partner's date of birth"
-        },
+        // Partner's date of birth was taken off the Customer tab (Maisie, 13
+        // Oct 2026), so it is no longer checked.
         { field: 'a14ClericalComponents', id: 'a14-clerical-components', label: 'Clerical components', tab: 'customer', type: 'money' },
         { field: 'a14TotalCapital', id: 'a14-total-capital', label: 'Total capital', tab: 'income', type: 'money' }
-      ].concat(housingRules('a14', 'a14-')),
-      checks: housingChecks('a14', 'a14-')
+      ].concat(housingRules('a14', 'a14-', false)),
+      checks: housingChecks('a14', 'a14-', false)
     },
 
     // ---- Employment and Support Allowance -----------------------------------
@@ -1478,7 +1470,8 @@ window.GOVUKPrototypeKit.documentReady(() => {
   // are taken off the page instead of being explained in hint text.
   //
   // Used on the ESA Customer tab (data-a14-prices="esa"), the IS/JSA
-  // Customer tab ("isjsa") and the IS/JSA AA/DLA tab ("aadla").
+  // Customer tab ("isjsa"), the IS/PC Customer tab ("pcispc") and the AA/DLA
+  // tabs ("aadla").
   //
   // Amounts come from data-price on each radio (data-price-couple for a
   // couple case) and from data-price on each age band option. They are
@@ -1487,8 +1480,12 @@ window.GOVUKPrototypeKit.documentReady(() => {
     const form = tab.getAttribute('data-a14-prices')
     const prefix = form === 'aadla' ? 'isjsa' : form
     const root = tab.closest('form') || document
-    const allowance = tab.querySelector('#' + prefix + '-personal-allowance')
-    const ageBand = tab.querySelector('#' + prefix + '-age-band')
+    // The IS/PC form names its fields differently: Single or Couple is
+    // a14StandardAmountType, and the Rate list and standard amount stand in
+    // for the age band and personal allowance.
+    const pc = form === 'pcispc'
+    const allowance = tab.querySelector(pc ? '#a14-standard-amount' : '#' + prefix + '-personal-allowance')
+    const ageBand = tab.querySelector(pc ? '#a14-standard-rate' : '#' + prefix + '-age-band')
 
     function picked (name) {
       const radio = root.querySelector('input[name="' + name + '"]:checked')
@@ -1524,7 +1521,7 @@ window.GOVUKPrototypeKit.documentReady(() => {
     }
 
     function update () {
-      const group = picked(prefix + 'ClientGroup')
+      const group = picked(pc ? 'a14StandardAmountType' : prefix + 'ClientGroup')
       const couple = group === 'couple'
       const band = ageBand ? ageBand.value : ''
 
@@ -1539,6 +1536,12 @@ window.GOVUKPrototypeKit.documentReady(() => {
         // them can apply at a time.
         allow('esaSupportComponent', 'yes', !assessment && picked('esaWorkRelatedActivityComponent') !== 'yes')
         allow('esaWorkRelatedActivityComponent', 'yes', !assessment && picked('esaSupportComponent') !== 'yes')
+      }
+
+      if (pc) {
+        // Higher and Both only apply to a couple.
+        allow('a14SevereDisability', 'higher', couple)
+        allow('a14CaringResponsibilities', 'both', couple)
       }
 
       if (form === 'isjsa') {
